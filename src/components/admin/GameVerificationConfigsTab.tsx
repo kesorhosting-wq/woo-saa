@@ -214,99 +214,42 @@ const GameVerificationConfigsTab: React.FC = () => {
     }
   };
 
-  // Sync game codes from G2Bulk API (fetches real game codes + region variants)
+  // Sync game codes from G2Bulk API (fetches real game codes and updates configs)
   const handleSyncFromG2Bulk = async () => {
     setSyncingG2Bulk(true);
     try {
-      toast({ title: 'Fetching games from G2Bulk...', description: 'This may take a moment.' });
+      toast({ title: 'Syncing codes from G2Bulk...', description: 'Fetching real API codes.' });
 
       const { data, error } = await supabase.functions.invoke('g2bulk-api', {
-        body: { action: 'get_games' }
+        body: { action: 'sync_verification_codes' }
       });
 
       if (error) throw error;
-      if (!data?.success || !data?.data?.games) {
-        throw new Error(data?.error || 'Failed to fetch games from G2Bulk');
+      if (!data?.success) {
+        throw new Error(data?.error || 'Failed to sync verification codes');
       }
 
-      const g2Games: { code: string; name: string }[] = data.data.games;
-      console.log(`[G2Bulk Sync] Fetched ${g2Games.length} games`);
+      const result = data.data;
+      console.log('[G2Bulk Sync] Result:', result);
 
-      // Build map of base game name -> codes (handles regional variants like "mlbb", "mlbb-ph", "mlbb-id")
-      const codesByBaseName = new Map<string, string[]>();
-      for (const g of g2Games) {
-        // Extract base name by removing common region suffixes
-        const baseName = g.name.toLowerCase()
-          .replace(/\s*\(.*\)$/, '') // Remove (Region) suffix
-          .replace(/\s+-\s+\w+$/, '') // Remove " - XX" suffix
-          .trim();
-
-        if (!codesByBaseName.has(baseName)) {
-          codesByBaseName.set(baseName, []);
-        }
-        codesByBaseName.get(baseName)!.push(g.code);
-      }
-
-      let updated = 0;
-      let created = 0;
-
-      for (const g of g2Games) {
-        const baseName = g.name.toLowerCase()
-          .replace(/\s*\(.*\)$/, '')
-          .replace(/\s+-\s+\w+$/, '')
-          .trim();
-
-        const allCodes = codesByBaseName.get(baseName) || [g.code];
-        const primaryCode = allCodes[0];
-        const alternateCodes = allCodes.slice(1);
-
-        // Check if config exists for this game name
-        const existingExact = configs.find(c => c.game_name.toLowerCase() === g.name.toLowerCase());
-        const existingBase = configs.find(c => c.game_name.toLowerCase() === baseName);
-
-        if (existingExact) {
-          // Update existing config with correct code + alternates
-          const { error: updateError } = await supabase
-            .from('game_verification_configs')
-            .update({
-              api_code: primaryCode,
-              api_provider: 'g2bulk',
-              alternate_api_codes: alternateCodes,
-            })
-            .eq('id', existingExact.id);
-
-          if (!updateError) updated++;
-        } else if (!existingBase) {
-          // Create new config
-          const needsZone = g.name.toLowerCase().includes('mobile legends') ||
-            g.name.toLowerCase().includes('mlbb') ||
-            g.name.toLowerCase().includes('magic chess');
-
-          const { error: insertError } = await supabase
-            .from('game_verification_configs')
-            .insert({
-              game_name: g.name,
-              api_code: primaryCode,
-              api_provider: 'g2bulk',
-              requires_zone: needsZone,
-              is_active: true,
-              alternate_api_codes: alternateCodes,
-            });
-
-          if (!insertError) created++;
-        }
+      // Show available codes for debugging
+      if (result.availableCodes) {
+        console.log('[G2Bulk Sync] Available G2Bulk game codes:');
+        result.availableCodes.forEach((g: { code: string; name: string }) => {
+          console.log(`  - ${g.code}: ${g.name}`);
+        });
       }
 
       toast({
-        title: 'G2Bulk sync complete!',
-        description: `Created ${created} configs, updated ${updated} codes.`
+        title: 'Verification codes synced!',
+        description: `Updated ${result.updated} codes, ${result.matched} already correct. ${result.g2BulkGames} games available in G2Bulk.`
       });
       fetchConfigs();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('G2Bulk sync error:', error);
       toast({
         title: 'G2Bulk sync failed',
-        description: error?.message || 'Check console for details',
+        description: error instanceof Error ? error.message : 'Check console for details',
         variant: 'destructive'
       });
     } finally {
