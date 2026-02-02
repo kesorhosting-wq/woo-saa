@@ -163,7 +163,7 @@ async function getG2BulkApiKey(): Promise<string | null> {
   return data.api_secret || null;
 }
 
-// Try to verify player via G2Bulk checkPlayerIdPublic endpoint
+// Try to verify player via G2Bulk checkPlayerId endpoint
 async function verifyWithG2Bulk(
   apiKey: string,
   gameCode: string,
@@ -178,9 +178,9 @@ async function verifyWithG2Bulk(
     body.server_id = serverId;
   }
 
-  log('DEBUG', 'Calling G2Bulk checkPlayerIdPublic', { gameCode, userId, hasServerId: !!serverId });
+  log('DEBUG', 'Calling G2Bulk checkPlayerId', { gameCode, userId, hasServerId: !!serverId });
 
-  const response = await fetch(`${G2BULK_API_URL}/games/checkPlayerIdPublic`, {
+  const response = await fetch(`${G2BULK_API_URL}/games/checkPlayerId`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -190,7 +190,7 @@ async function verifyWithG2Bulk(
   });
 
   const text = await response.text();
-  log('DEBUG', 'G2Bulk checkPlayerIdPublic response', { status: response.status, body: text.substring(0, 500) });
+  log('DEBUG', 'G2Bulk checkPlayerId response', { status: response.status, body: text.substring(0, 500) });
 
   if (!response.ok) {
     return { success: false, error: `G2Bulk API returned ${response.status}` };
