@@ -667,6 +667,113 @@ serve(async (req) => {
         );
       }
 
+      // ============ SYNC VERIFICATION CODES FROM G2BULK ============
+      case 'sync_verification_codes': {
+        console.log('[G2Bulk-API] Syncing verification codes from G2Bulk...');
+
+        // Fetch all games from G2Bulk
+        const gamesRequest = buildG2BulkRequest('/games', apiKey);
+        const gamesResponse = await fetch(gamesRequest.url, gamesRequest.options);
+        const gamesResult = await gamesResponse.json();
+
+        if (!gamesResult.success || !gamesResult.games) {
+          throw new Error('Failed to fetch games from G2Bulk');
+        }
+
+        const g2Games: Array<{ code: string; name: string }> = gamesResult.games;
+        console.log(`[G2Bulk-API] Found ${g2Games.length} games from G2Bulk`);
+
+        // Build a map of normalized names to G2Bulk codes
+        const codeMap = new Map<string, { code: string; name: string }>();
+        for (const g of g2Games) {
+          // Map by exact lowercase name
+          codeMap.set(g.name.toLowerCase(), g);
+          
+          // Map by common abbreviations/aliases
+          const normalized = g.name.toLowerCase()
+            .replace(/\s*\(.*\)$/, '')
+            .replace(/\s+-\s+\w+$/, '')
+            .trim();
+          if (!codeMap.has(normalized)) {
+            codeMap.set(normalized, g);
+          }
+        }
+
+        // Get all existing verification configs
+        const { data: configs, error: configError } = await supabase
+          .from('game_verification_configs')
+          .select('id, game_name, api_code');
+
+        if (configError) throw configError;
+
+        let updated = 0;
+        let matched = 0;
+
+        for (const config of configs || []) {
+          const nameLower = config.game_name.toLowerCase();
+          
+          // Try to find matching G2Bulk game
+          let match = codeMap.get(nameLower);
+          
+          // Try fuzzy matching - remove region/special suffixes
+          if (!match) {
+            const baseName = nameLower
+              .replace(/\s*(special|global|indonesia|middle east|singapore|ខ្មែរ|cambodia)$/i, '')
+              .trim();
+            match = codeMap.get(baseName);
+          }
+          
+          // Try matching by keywords
+          if (!match) {
+            if (nameLower.includes('mobile legends') || nameLower.includes('mlbb')) {
+              match = codeMap.get('mobile legends: bang bang') || 
+                      Array.from(codeMap.values()).find(g => g.code === 'mlbb');
+            } else if (nameLower.includes('free fire') || nameLower.includes('freefire')) {
+              match = codeMap.get('free fire') || 
+                      Array.from(codeMap.values()).find(g => g.code.includes('freefire') || g.code.includes('free_fire'));
+            } else if (nameLower.includes('pubg')) {
+              match = codeMap.get('pubg mobile') || 
+                      Array.from(codeMap.values()).find(g => g.code === 'pubgm' || g.code === 'pubg');
+            } else if (nameLower.includes('blood strike')) {
+              match = Array.from(codeMap.values()).find(g => g.code.includes('blood') || g.name.toLowerCase().includes('blood strike'));
+            } else if (nameLower.includes('hok') || nameLower.includes('honor of kings')) {
+              match = Array.from(codeMap.values()).find(g => g.code === 'hok' || g.name.toLowerCase().includes('honor of kings'));
+            }
+          }
+
+          if (match && config.api_code !== match.code) {
+            // Update with correct code
+            const { error: updateError } = await supabase
+              .from('game_verification_configs')
+              .update({ api_code: match.code })
+              .eq('id', config.id);
+
+            if (!updateError) {
+              console.log(`[G2Bulk-API] Updated ${config.game_name}: ${config.api_code} -> ${match.code}`);
+              updated++;
+            }
+          } else if (match) {
+            matched++;
+          }
+        }
+
+        console.log(`[G2Bulk-API] Sync complete: ${updated} updated, ${matched} already correct`);
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            data: {
+              updated,
+              matched,
+              totalConfigs: (configs || []).length,
+              g2BulkGames: g2Games.length,
+              availableCodes: g2Games.map(g => ({ code: g.code, name: g.name }))
+            }
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
       default:
         return new Response(
           JSON.stringify({ success: false, error: `Unknown action: ${action}` }),
