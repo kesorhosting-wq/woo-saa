@@ -530,8 +530,8 @@ const OrdersTab: React.FC = () => {
                           </Button>
                         )}
                         
-                        {/* Process Now - Primary action for paid orders */}
-                        {order.status === 'paid' && order.g2bulk_product_id && (
+                        {/* Process Now - Primary action for pending/paid orders */}
+                        {(order.status === 'pending' || order.status === 'paid') && order.g2bulk_product_id && (
                           <Button 
                             size="sm" 
                             className="bg-emerald-500 hover:bg-emerald-600 text-white"
