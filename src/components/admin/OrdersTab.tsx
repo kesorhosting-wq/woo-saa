@@ -573,23 +573,6 @@ const OrdersTab: React.FC = () => {
                           </Button>
                         )}
                         
-                        {/* Confirm Payment - for pending orders to manually trigger webhook */}
-                        {order.status === 'pending' && (
-                          <Button 
-                            size="sm" 
-                            className="bg-gold hover:bg-gold/90 text-primary-foreground"
-                            disabled={checkingG2Bulk[order.id]}
-                            onClick={() => confirmPayment(order)}
-                          >
-                            {checkingG2Bulk[order.id] ? (
-                              <RefreshCw className="w-4 h-4 mr-1 animate-spin" />
-                            ) : (
-                              <CreditCard className="w-4 h-4 mr-1" />
-                            )}
-                            Confirm Payment
-                          </Button>
-                        )}
-                        
                         {/* Process Now - Primary action for paid orders with G2Bulk */}
                         {order.status === 'paid' && order.g2bulk_product_id && (
                           <Button 
