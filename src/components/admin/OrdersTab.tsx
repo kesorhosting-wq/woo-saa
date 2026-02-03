@@ -256,31 +256,38 @@ const OrdersTab: React.FC = () => {
     }
   };
 
-  // Manual payment confirmation - simulates webhook callback
+  // Manual payment confirmation - update status and trigger fulfillment
   const confirmPayment = async (order: Order) => {
     setCheckingG2Bulk(prev => ({ ...prev, [order.id]: true }));
     try {
-      // Call the webhook directly to simulate payment confirmation
-      const webhookUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ikhode-webhook/${order.id}`;
-      
-      const response = await fetch(webhookUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          transaction_id: `MANUAL-${Date.now()}`,
-          amount: order.amount,
-          fee: 0
-        }),
-      });
+      // First update order status to processing
+      const { error: updateError } = await supabase
+        .from('topup_orders')
+        .update({
+          status: 'processing',
+          payment_method: 'Manual Confirm',
+          status_message: 'Payment manually confirmed by admin. Processing order...',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', order.id);
 
-      const data = await response.json();
+      if (updateError) throw updateError;
 
-      if (response.ok && data.status === 'success') {
-        toast({ title: '✓ Payment confirmed!', description: 'Order is now being processed.' });
+      // Then trigger fulfillment if G2Bulk product is linked
+      if (order.g2bulk_product_id) {
+        const { data, error } = await supabase.functions.invoke('process-topup', {
+          body: { action: 'fulfill', orderId: order.id },
+        });
+
+        if (error) throw error;
+
+        if (data?.success) {
+          toast({ title: '✓ Payment confirmed!', description: 'Order sent to G2Bulk for processing.' });
+        } else {
+          toast({ title: 'Fulfillment issue', description: data?.error || 'Order confirmed but fulfillment may need retry.', variant: 'destructive' });
+        }
       } else {
-        toast({ title: 'Confirmation failed', description: data.message || 'Failed to confirm payment', variant: 'destructive' });
+        toast({ title: '✓ Payment confirmed!', description: 'Order marked as processing (no G2Bulk product linked).' });
       }
       
       loadOrders();
