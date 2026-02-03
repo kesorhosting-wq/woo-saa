@@ -483,7 +483,7 @@ const TopupPage: React.FC = () => {
       g2bulkTypeId: pkg.g2bulkTypeId,
     });
 
-    toast({ title: "✓ បានបន្ថែមទៅកន្ត្រក!", description: `${pkg.name} សម្រាប់ ${verifiedUser.username}` });
+    toast({ title: "✓ កំពុងបន្តទៅបង់ប្រាក់!", description: `${pkg.name} សម្រាប់ ${verifiedUser.username}` });
     navigate("/checkout");
   };
 
