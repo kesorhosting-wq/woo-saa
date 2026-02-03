@@ -248,7 +248,7 @@ const AuthPage: React.FC = () => {
                   </p>
                   <div className="flex justify-center gap-4 text-xs">
                     <span className="flex items-center gap-1 text-gold">
-                      <Wallet className="w-3 h-3" /> Xavier Wallet
+                      <Wallet className="w-3 h-3" /> Woo Saa Wallet
                     </span>
                     <span className="flex items-center gap-1 text-gold">
                       <User className="w-3 h-3" /> Order History

@@ -205,7 +205,7 @@ serve(async (req) => {
         .from("topup_orders")
         .update({
           status: "processing",
-          payment_method: "Xavier KHQR",
+          payment_method: "Woo Saa KHQR",
           status_message: `Payment confirmed. Transaction: ${transactionId}. Processing order...`,
           updated_at: new Date().toISOString(),
         })
