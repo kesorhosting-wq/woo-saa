@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Settings, Receipt, ShoppingCart, Wallet, Plus, Menu, LogIn, LogOut, User, X } from 'lucide-react';
-import { useCart } from '@/contexts/CartContext';
+import { Settings, Receipt, Wallet, Plus, Menu, LogIn, LogOut, User } from 'lucide-react';
 import { useSite } from '@/contexts/SiteContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -21,12 +20,9 @@ const Header: React.FC = () => {
   const isMobile = useIsMobile();
   const { settings } = useSite();
   const { user, isAdmin, signOut } = useAuth();
-  const { items } = useCart();
   const { t } = useLanguage();
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  const cartItemCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
   // Fetch wallet balance for logged-in users
   useEffect(() => {
@@ -167,7 +163,6 @@ const Header: React.FC = () => {
                   )}
 
                   {/* Navigation Items */}
-                  <MobileMenuItem to="/cart" icon={ShoppingCart} label={t('header.cart')} />
                   
                   {user && (
                     <>
@@ -276,19 +271,6 @@ const Header: React.FC = () => {
           {/* Desktop Language Switcher */}
           {!isMobile && <LanguageSwitcher />}
           
-          {/* Cart Icon - always visible */}
-          <Link 
-            to="/cart" 
-            className="relative p-1.5 sm:p-2 rounded-lg border-2 border-gold/50 bg-card hover:bg-gold/20 transition-colors"
-            title={t('header.cart')}
-          >
-            <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 text-gold" />
-            {cartItemCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-red-500 text-white text-[10px] sm:text-xs font-bold rounded-full flex items-center justify-center">
-                {cartItemCount > 9 ? '9+' : cartItemCount}
-              </span>
-            )}
-          </Link>
 
           {/* Desktop-only navigation items */}
           {!isMobile && (
