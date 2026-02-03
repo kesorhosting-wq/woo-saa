@@ -41,7 +41,20 @@ serve(async (req) => {
     const pathParts = url.pathname.split("/");
     const orderIdFromPath = pathParts[pathParts.length - 1];
 
-    console.log(`[Webhook] Received for Order #${orderIdFromPath}`);
+    log('INFO', 'Webhook received', { orderIdFromPath });
+
+    // IMPORTANT: Read the body ONCE at the start to avoid stream consumption issues
+    let payload: Record<string, unknown> = {};
+    try {
+      const bodyText = await req.text();
+      if (bodyText) {
+        payload = JSON.parse(bodyText);
+      }
+    } catch (e) {
+      log('WARN', 'Failed to parse request body', { error: (e as Error).message });
+    }
+
+    log('DEBUG', 'Webhook payload', { payload });
 
     // 1. Get our stored secret from payment_gateways config
     const { data: gateway } = await supabase
@@ -50,17 +63,19 @@ serve(async (req) => {
       .eq("slug", "ikhode-bakong")
       .maybeSingle();
 
-    const expectedSecret = (gateway?.config as any)?.webhook_secret || "";
+    const expectedSecret = (gateway?.config as Record<string, unknown>)?.webhook_secret || "";
 
     // 2. Authorization Check (using Bearer token)
     const authHeader = req.headers.get("Authorization");
     const token = authHeader?.replace("Bearer ", "") || "";
 
-    console.log(`[Webhook] Expected Secret: ${expectedSecret ? "[SET]" : "[NOT SET]"}`);
-    console.log(`[Webhook] Received Token: ${token ? "[PROVIDED]" : "[MISSING]"}`);
+    log('DEBUG', 'Auth check', { 
+      hasExpectedSecret: !!expectedSecret, 
+      hasToken: !!token 
+    });
 
     if (expectedSecret && token !== expectedSecret) {
-      console.error("[Webhook] Unauthorized: Invalid secret key");
+      log('ERROR', 'Unauthorized: Invalid secret key');
       return new Response(
         JSON.stringify({ status: "error", message: "Unauthorized: Invalid secret key." }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -86,12 +101,8 @@ serve(async (req) => {
       
       const userIdPrefix = parts[1]; // First 8 chars of user ID
       
-      // Get payment data from request body
-      const payload = await req.json();
-      log('INFO', 'Wallet topup payload', { payload });
-      
-      const amount = parseFloat(payload.amount) || 0;
-      const transactionId = payload.transaction_id || payload.transactionId || orderIdFromPath;
+      const amount = parseFloat(String(payload.amount)) || 0;
+      const transactionId = String(payload.transaction_id || payload.transactionId || orderIdFromPath);
       
       if (amount <= 0) {
         log('ERROR', 'Invalid amount for wallet topup', { amount });
@@ -190,11 +201,8 @@ serve(async (req) => {
 
     log('INFO', 'Order is processable, proceeding with fulfillment', { status: order.status });
 
-    // 5. Process Data from Node.js API
-    const payload = await req.json();
-    log('DEBUG', 'Webhook payload', { payload });
-
-    const transactionId = payload.transaction_id || payload.transactionId || "N/A";
+    // 5. Process Data from payload (already parsed above)
+    const transactionId = String(payload.transaction_id || payload.transactionId || "N/A");
     const amount = payload.amount || order.amount;
 
     log('INFO', 'Processing payment', { amount, transactionId });
@@ -217,36 +225,50 @@ serve(async (req) => {
 
       log('INFO', 'Payment recorded, auto-processing order', { orderId: order.id });
 
-      // 7. Auto-trigger fulfillment (G2Bulk or manual)
-      log('INFO', 'Auto-triggering fulfillment', { orderId: order.id });
+      // 7. Auto-trigger fulfillment (G2Bulk or manual) using direct HTTP call
+      log('INFO', 'Auto-triggering fulfillment via HTTP', { orderId: order.id });
       
       try {
-        const { error: topupError } = await supabase.functions.invoke("process-topup", {
-          body: {
+        // Use direct HTTP call instead of supabase.functions.invoke for reliability
+        const processTopupUrl = `${SUPABASE_URL}/functions/v1/process-topup`;
+        
+        const fulfillResponse = await fetch(processTopupUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+          },
+          body: JSON.stringify({
             orderId: order.id,
             action: "fulfill"
-          },
+          }),
         });
 
-        if (topupError) {
-          log('ERROR', 'Auto-fulfillment error', { error: topupError });
+        if (!fulfillResponse.ok) {
+          const errorText = await fulfillResponse.text();
+          log('ERROR', 'Auto-fulfillment HTTP error', { 
+            status: fulfillResponse.status, 
+            error: errorText 
+          });
           await supabase
             .from("topup_orders")
             .update({
               status: "pending_manual",
-              status_message: `Payment confirmed. Auto-fulfillment failed: ${topupError.message}. Manual processing required.`,
+              status_message: `Payment confirmed. Auto-fulfillment failed (${fulfillResponse.status}). Manual processing required.`,
             })
             .eq("id", order.id);
         } else {
-          log('INFO', 'Auto-fulfillment triggered successfully');
+          const fulfillResult = await fulfillResponse.json();
+          log('INFO', 'Auto-fulfillment triggered successfully', { result: fulfillResult });
         }
-      } catch (fulfillErr: any) {
-        log('ERROR', 'Fulfillment call error', { error: fulfillErr?.message });
+      } catch (fulfillErr: unknown) {
+        const errorMessage = fulfillErr instanceof Error ? fulfillErr.message : 'Unknown error';
+        log('ERROR', 'Fulfillment call error', { error: errorMessage });
         await supabase
           .from("topup_orders")
           .update({
             status: "pending_manual",
-            status_message: `Payment confirmed. Fulfillment error: ${fulfillErr?.message || 'Unknown'}. Manual processing required.`,
+            status_message: `Payment confirmed. Fulfillment error: ${errorMessage}. Manual processing required.`,
           })
           .eq("id", order.id);
       }
@@ -257,16 +279,18 @@ serve(async (req) => {
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
 
-    } catch (paymentError: any) {
-      log('ERROR', 'FATAL PAYMENT ERROR', { orderId: order.id, error: paymentError?.message });
+    } catch (paymentError: unknown) {
+      const errorMessage = paymentError instanceof Error ? paymentError.message : 'Unknown error';
+      log('ERROR', 'FATAL PAYMENT ERROR', { orderId: order.id, error: errorMessage });
       return new Response(
         JSON.stringify({ status: "error", message: "Internal Server Error during payment processing." }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-  } catch (error: any) {
-    log('ERROR', 'Webhook error', { error: error?.message });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    log('ERROR', 'Webhook error', { error: errorMessage });
     return new Response(
       JSON.stringify({ status: "error", message: "An unexpected error occurred" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

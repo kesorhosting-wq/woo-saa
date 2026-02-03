@@ -58,35 +58,93 @@ const KHQRPaymentCard = ({
     return () => clearInterval(timer);
   }, []);
 
-  // WebSocket for real-time payment updates
+  // WebSocket for real-time payment updates with reconnection
   useEffect(() => {
     if (!wsUrl || paymentStatus !== "pending") return;
 
-    try {
-      const ws = new WebSocket(wsUrl);
+    let ws: WebSocket | null = null;
+    let reconnectTimeout: NodeJS.Timeout | null = null;
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 5;
+    const reconnectDelay = 3000;
+    let isCleaningUp = false;
+
+    const connect = () => {
+      if (isCleaningUp || paymentStatus !== "pending") return;
       
-      ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          if ((data.type === 'payment_success' || data.type === 'payment_confirmed') && 
-              (data.transactionId === orderId || data.orderId === orderId)) {
-            handlePaymentSuccess();
+      try {
+        console.log('[WS] Connecting to:', wsUrl);
+        ws = new WebSocket(wsUrl);
+        
+        ws.onopen = () => {
+          console.log('[WS] Connected successfully');
+          reconnectAttempts = 0;
+          // Send a subscription message if needed
+          if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type: 'subscribe', orderId }));
           }
-        } catch (e) {
-          console.error('WebSocket message parse error:', e);
+        };
+        
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            console.log('[WS] Message received:', data);
+            
+            // Check for various payment success message formats
+            if (
+              (data.type === 'payment_success' || 
+               data.type === 'payment_confirmed' || 
+               data.type === 'payment_complete' ||
+               data.status === 'paid' ||
+               data.status === 'success') && 
+              (data.transactionId === orderId || 
+               data.orderId === orderId ||
+               data.order_id === orderId ||
+               !data.orderId) // If no orderId in message, assume it's for us
+            ) {
+              console.log('[WS] Payment success detected!');
+              handlePaymentSuccess();
+            }
+          } catch (e) {
+            console.error('[WS] Message parse error:', e);
+          }
+        };
+
+        ws.onerror = (error) => {
+          console.error('[WS] Error:', error);
+        };
+
+        ws.onclose = (event) => {
+          console.log('[WS] Connection closed:', event.code, event.reason);
+          
+          // Attempt to reconnect if not cleaning up and status is still pending
+          if (!isCleaningUp && paymentStatus === "pending" && reconnectAttempts < maxReconnectAttempts) {
+            reconnectAttempts++;
+            console.log(`[WS] Reconnecting in ${reconnectDelay}ms (attempt ${reconnectAttempts}/${maxReconnectAttempts})`);
+            reconnectTimeout = setTimeout(connect, reconnectDelay);
+          }
+        };
+      } catch (error) {
+        console.error('[WS] Connection error:', error);
+        // Attempt reconnect on error
+        if (!isCleaningUp && paymentStatus === "pending" && reconnectAttempts < maxReconnectAttempts) {
+          reconnectAttempts++;
+          reconnectTimeout = setTimeout(connect, reconnectDelay);
         }
-      };
+      }
+    };
 
-      ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-      };
+    connect();
 
-      return () => {
-        ws.close();
-      };
-    } catch (error) {
-      console.error('WebSocket connection error:', error);
-    }
+    return () => {
+      isCleaningUp = true;
+      if (reconnectTimeout) {
+        clearTimeout(reconnectTimeout);
+      }
+      if (ws) {
+        ws.close(1000, 'Component unmounting');
+      }
+    };
   }, [wsUrl, paymentStatus, orderId]);
 
   // Polling for payment status (fallback)
