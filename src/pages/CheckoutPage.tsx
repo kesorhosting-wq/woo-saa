@@ -37,8 +37,9 @@ const CheckoutPage = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Redirect to home if no items (instead of cart page since we skip cart)
     if (items.length === 0 && !orderComplete && !generatedQR) {
-      navigate("/cart");
+      navigate("/");
     }
   }, [items.length, orderComplete, generatedQR, navigate]);
 
@@ -129,7 +130,8 @@ const CheckoutPage = () => {
   };
 
   const handleCancelPayment = () => {
-    navigate("/cart");
+    clearCart();
+    navigate("/");
   };
 
   // Order Success Screen
@@ -200,11 +202,11 @@ const CheckoutPage = () => {
         
         <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
           <Link 
-            to="/cart" 
+            to="/" 
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4 sm:mb-6 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            ត្រលប់ទៅកន្ត្រក
+            បោះបង់
           </Link>
 
           <h1 className="font-display text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 flex items-center gap-3">
