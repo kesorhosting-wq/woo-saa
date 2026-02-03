@@ -44,15 +44,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   }, [items]);
 
   const addToCart = (item: Omit<CartItem, "quantity">) => {
-    setItems((prev) => {
-      const existing = prev.find((i) => i.packageId === item.packageId);
-      if (existing) {
-        return prev.map((i) =>
-          i.packageId === item.packageId ? { ...i, quantity: i.quantity + 1 } : i
-        );
-      }
-      return [...prev, { ...item, quantity: 1 }];
-    });
+    // Direct purchase mode: Replace cart with single item (no accumulation)
+    setItems([{ ...item, quantity: 1 }]);
   };
 
   const removeFromCart = (id: string) => {
