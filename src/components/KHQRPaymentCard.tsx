@@ -63,7 +63,7 @@ const KHQRPaymentCard = ({
     if (!wsUrl || paymentStatus !== "pending") return;
 
     let ws: WebSocket | null = null;
-    let reconnectTimeout: NodeJS.Timeout | null = null;
+    let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
     let reconnectAttempts = 0;
     const maxReconnectAttempts = 5;
     const reconnectDelay = 3000;

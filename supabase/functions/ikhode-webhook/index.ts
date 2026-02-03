@@ -2,8 +2,9 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, Authorization",
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers':
+    'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version, Authorization, X-Webhook-Secret, X-Api-Key',
 };
 
 // Structured logging helper
@@ -65,9 +66,13 @@ serve(async (req) => {
 
     const expectedSecret = (gateway?.config as Record<string, unknown>)?.webhook_secret || "";
 
-    // 2. Authorization Check (using Bearer token)
-    const authHeader = req.headers.get("Authorization");
-    const token = authHeader?.replace("Bearer ", "") || "";
+    // 2. Authorization Check
+    // Accept secret via common header names to support different Node server implementations.
+    const authHeader = req.headers.get("Authorization") || '';
+    const headerToken = authHeader.replace(/^[Bb]earer\s+/, '').trim();
+    const xWebhookSecret = (req.headers.get('X-Webhook-Secret') || req.headers.get('x-webhook-secret') || '').trim();
+    const xApiKey = (req.headers.get('X-Api-Key') || req.headers.get('x-api-key') || '').trim();
+    const token = headerToken || xWebhookSecret || xApiKey;
 
     log('DEBUG', 'Auth check', { 
       hasExpectedSecret: !!expectedSecret, 
@@ -225,18 +230,20 @@ serve(async (req) => {
 
       log('INFO', 'Payment recorded, auto-processing order', { orderId: order.id });
 
-      // 7. Auto-trigger fulfillment (G2Bulk or manual) using direct HTTP call
+      // 7. Auto-trigger fulfillment (G2Bulk or manual)
+      // Use direct HTTP call with anon JWT for maximum compatibility with verify_jwt settings.
       log('INFO', 'Auto-triggering fulfillment via HTTP', { orderId: order.id });
       
       try {
         // Use direct HTTP call instead of supabase.functions.invoke for reliability
         const processTopupUrl = `${SUPABASE_URL}/functions/v1/process-topup`;
+        const anonJwt = Deno.env.get('SUPABASE_ANON_KEY') || '';
         
         const fulfillResponse = await fetch(processTopupUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+            ...(anonJwt ? { 'Authorization': `Bearer ${anonJwt}` } : {}),
           },
           body: JSON.stringify({
             orderId: order.id,

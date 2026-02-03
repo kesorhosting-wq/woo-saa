@@ -2,9 +2,23 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers':
+    'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
+
+function normalizeWsUrl(input?: string | null): string {
+  const raw = (input || '').trim();
+  if (!raw) return '';
+  // Allow ws/wss as-is
+  if (raw.startsWith('ws://') || raw.startsWith('wss://')) return raw;
+  // Convert common misconfigurations
+  if (raw.startsWith('https://')) return `wss://${raw.slice('https://'.length)}`;
+  if (raw.startsWith('http://')) return `ws://${raw.slice('http://'.length)}`;
+  // If user pasted host:port
+  if (/^[^/]+:\d+$/.test(raw)) return `ws://${raw}`;
+  return raw;
+}
 
 // Structured logging helper
 function log(level: 'INFO' | 'WARN' | 'ERROR' | 'DEBUG', message: string, data?: Record<string, unknown>) {
@@ -71,8 +85,8 @@ serve(async (req) => {
       custom_webhook_url?: string;
     };
 
-    const apiUrl = config.node_api_url?.replace(/\/$/, "");
-    const wsUrl = config.websocket_url;
+     const apiUrl = config.node_api_url?.replace(/\/$/, "");
+     const wsUrl = normalizeWsUrl(config.websocket_url);
     const webhookSecret = config.webhook_secret || "";
     const customWebhookUrl = config.custom_webhook_url || "";
 
@@ -111,17 +125,23 @@ serve(async (req) => {
         const roundedAmount = Math.round(Number(amount) * 100) / 100;
 
         // Call Node.js API
+        // NOTE: We send multiple field aliases for compatibility with different server implementations.
         const response = await fetch(`${apiUrl}/generate-khqr`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             amount: roundedAmount,
             transactionId: shortTransactionId,
+            transaction_id: shortTransactionId,
             email: params.email || "customer@kesor.com",
             username: playerName || "Customer",
             gameName: gameName || "",
             callbackUrl,
+            callback_url: callbackUrl,
+            webhookUrl: callbackUrl,
+            webhook_url: callbackUrl,
             secret: webhookSecret,
+            webhookSecret,
           }),
         });
 
