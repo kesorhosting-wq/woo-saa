@@ -64,28 +64,37 @@ serve(async (req) => {
       .eq("slug", "ikhode-bakong")
       .maybeSingle();
 
-    const expectedSecret = (gateway?.config as Record<string, unknown>)?.webhook_secret || "";
+    const expectedSecret = String((gateway?.config as Record<string, unknown>)?.webhook_secret || "");
 
-    // 2. Authorization Check
-    // Accept secret via common header names to support different Node server implementations.
+    // 2. Authorization Check - be permissive for debugging
     const authHeader = req.headers.get("Authorization") || '';
     const headerToken = authHeader.replace(/^[Bb]earer\s+/, '').trim();
     const xWebhookSecret = (req.headers.get('X-Webhook-Secret') || req.headers.get('x-webhook-secret') || '').trim();
     const xApiKey = (req.headers.get('X-Api-Key') || req.headers.get('x-api-key') || '').trim();
     const token = headerToken || xWebhookSecret || xApiKey;
 
-    log('DEBUG', 'Auth check', { 
-      hasExpectedSecret: !!expectedSecret, 
-      hasToken: !!token 
+    log('DEBUG', 'Auth check details', { 
+      hasExpectedSecret: !!expectedSecret,
+      expectedSecretLength: expectedSecret.length,
+      hasToken: !!token,
+      tokenLength: token.length,
+      authHeaderPresent: !!authHeader,
+      match: token === expectedSecret
     });
 
-    if (expectedSecret && token !== expectedSecret) {
-      log('ERROR', 'Unauthorized: Invalid secret key');
+    // Skip auth check if no secret is configured (for testing)
+    if (expectedSecret && expectedSecret.length > 0 && token !== expectedSecret) {
+      log('ERROR', 'Unauthorized: Invalid secret key', { 
+        expectedLength: expectedSecret.length, 
+        receivedLength: token.length 
+      });
       return new Response(
         JSON.stringify({ status: "error", message: "Unauthorized: Invalid secret key." }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+    
+    log('INFO', 'Auth passed, processing webhook');
 
     // 3. Check if this is a wallet top-up or regular order
     const isWalletTopup = orderIdFromPath?.startsWith("wallet-");

@@ -256,6 +256,42 @@ const OrdersTab: React.FC = () => {
     }
   };
 
+  // Manual payment confirmation - simulates webhook callback
+  const confirmPayment = async (order: Order) => {
+    setCheckingG2Bulk(prev => ({ ...prev, [order.id]: true }));
+    try {
+      // Call the webhook directly to simulate payment confirmation
+      const webhookUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ikhode-webhook/${order.id}`;
+      
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          transaction_id: `MANUAL-${Date.now()}`,
+          amount: order.amount,
+          fee: 0
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.status === 'success') {
+        toast({ title: '✓ Payment confirmed!', description: 'Order is now being processed.' });
+      } else {
+        toast({ title: 'Confirmation failed', description: data.message || 'Failed to confirm payment', variant: 'destructive' });
+      }
+      
+      loadOrders();
+    } catch (error) {
+      console.error('Error confirming payment:', error);
+      toast({ title: 'Failed to confirm payment', variant: 'destructive' });
+    } finally {
+      setCheckingG2Bulk(prev => ({ ...prev, [order.id]: false }));
+    }
+  };
+
   const filteredOrders = filter === 'all' 
     ? orders 
     : orders.filter(o => o.status === filter);
@@ -530,8 +566,25 @@ const OrdersTab: React.FC = () => {
                           </Button>
                         )}
                         
-                        {/* Process Now - Primary action for pending/paid orders */}
-                        {(order.status === 'pending' || order.status === 'paid') && order.g2bulk_product_id && (
+                        {/* Confirm Payment - for pending orders to manually trigger webhook */}
+                        {order.status === 'pending' && (
+                          <Button 
+                            size="sm" 
+                            className="bg-gold hover:bg-gold/90 text-primary-foreground"
+                            disabled={checkingG2Bulk[order.id]}
+                            onClick={() => confirmPayment(order)}
+                          >
+                            {checkingG2Bulk[order.id] ? (
+                              <RefreshCw className="w-4 h-4 mr-1 animate-spin" />
+                            ) : (
+                              <CreditCard className="w-4 h-4 mr-1" />
+                            )}
+                            Confirm Payment
+                          </Button>
+                        )}
+                        
+                        {/* Process Now - Primary action for paid orders with G2Bulk */}
+                        {order.status === 'paid' && order.g2bulk_product_id && (
                           <Button 
                             size="sm" 
                             className="bg-emerald-500 hover:bg-emerald-600 text-white"
