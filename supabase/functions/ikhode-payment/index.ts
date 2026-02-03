@@ -115,34 +115,33 @@ serve(async (req) => {
         // KHQR billNumber has max 25 characters - shorten the UUID
         const shortTransactionId = `ORD-${orderId.slice(0, 8)}-${Date.now().toString().slice(-6)}`;
 
-        console.log(`[Ikhode] Generating KHQR:`);
-        console.log(`  - Amount: ${amount}`);
-        console.log(`  - Order ID: ${orderId}`);
-        console.log(`  - Short Transaction ID: ${shortTransactionId}`);
-        console.log(`  - Callback URL: ${callbackUrl}`);
+        log('INFO', 'Generating KHQR', {
+          amount,
+          orderId,
+          shortTransactionId,
+          callbackUrl,
+          apiUrl,
+        });
 
         // Round amount to 2 decimal places to avoid floating point issues
         const roundedAmount = Math.round(Number(amount) * 100) / 100;
 
-        // Call Node.js API
-        // NOTE: We send multiple field aliases for compatibility with different server implementations.
+        // Call Node.js API - matching EXACTLY the expected format from localhost server
+        const requestBody = {
+          amount: roundedAmount,
+          transactionId: shortTransactionId,
+          email: params.email || "customer@kesor.com",
+          username: playerName || "Customer",
+          callbackUrl: callbackUrl,
+          secret: webhookSecret,
+        };
+
+        log('DEBUG', 'Request body to Node.js API', { requestBody, targetUrl: `${apiUrl}/generate-khqr` });
+
         const response = await fetch(`${apiUrl}/generate-khqr`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            amount: roundedAmount,
-            transactionId: shortTransactionId,
-            transaction_id: shortTransactionId,
-            email: params.email || "customer@kesor.com",
-            username: playerName || "Customer",
-            gameName: gameName || "",
-            callbackUrl,
-            callback_url: callbackUrl,
-            webhookUrl: callbackUrl,
-            webhook_url: callbackUrl,
-            secret: webhookSecret,
-            webhookSecret,
-          }),
+          body: JSON.stringify(requestBody),
         });
 
         if (!response.ok) {
