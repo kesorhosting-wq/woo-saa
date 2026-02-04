@@ -139,6 +139,17 @@ export interface SiteSettings {
   // Custom font settings
   customFontKhmer: string;
   customFontEnglish: string;
+  // Section header styling
+  sectionHeaderTitleColor: string;
+  sectionHeaderSubtitleColor: string;
+  sectionHeaderBgColor: string;
+  sectionHeaderBorderColor: string;
+  sectionHeaderBorderWidth: number;
+  sectionHeaderBorderRadius: number;
+  sectionHeaderPaddingX: number;
+  sectionHeaderPaddingY: number;
+  sectionHeaderLineColor: string;
+  sectionHeaderDotColor: string;
 }
 
 interface SiteContextType {
@@ -249,6 +260,17 @@ const defaultSettings: SiteSettings = {
   // Custom font defaults
   customFontKhmer: '',
   customFontEnglish: '',
+  // Section header styling defaults
+  sectionHeaderTitleColor: '',
+  sectionHeaderSubtitleColor: '',
+  sectionHeaderBgColor: '',
+  sectionHeaderBorderColor: '',
+  sectionHeaderBorderWidth: 0,
+  sectionHeaderBorderRadius: 0,
+  sectionHeaderPaddingX: 0,
+  sectionHeaderPaddingY: 0,
+  sectionHeaderLineColor: '',
+  sectionHeaderDotColor: '',
 };
 
 const SiteContext = createContext<SiteContextType | undefined>(undefined);
@@ -459,6 +481,17 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           // Payment methods are now static (ABA, Wing, KHQR), skip loading from site_settings
           if (row.key === 'siteIcon') loadedSettings.siteIcon = row.value as string;
           if (row.key === 'browserTitle') loadedSettings.browserTitle = row.value as string;
+          // Section header styling
+          if (row.key === 'sectionHeaderTitleColor') loadedSettings.sectionHeaderTitleColor = row.value as string;
+          if (row.key === 'sectionHeaderSubtitleColor') loadedSettings.sectionHeaderSubtitleColor = row.value as string;
+          if (row.key === 'sectionHeaderBgColor') loadedSettings.sectionHeaderBgColor = row.value as string;
+          if (row.key === 'sectionHeaderBorderColor') loadedSettings.sectionHeaderBorderColor = row.value as string;
+          if (row.key === 'sectionHeaderBorderWidth') loadedSettings.sectionHeaderBorderWidth = row.value as number;
+          if (row.key === 'sectionHeaderBorderRadius') loadedSettings.sectionHeaderBorderRadius = row.value as number;
+          if (row.key === 'sectionHeaderPaddingX') loadedSettings.sectionHeaderPaddingX = row.value as number;
+          if (row.key === 'sectionHeaderPaddingY') loadedSettings.sectionHeaderPaddingY = row.value as number;
+          if (row.key === 'sectionHeaderLineColor') loadedSettings.sectionHeaderLineColor = row.value as string;
+          if (row.key === 'sectionHeaderDotColor') loadedSettings.sectionHeaderDotColor = row.value as string;
         });
         setSettings(prev => ({ ...prev, ...loadedSettings }));
       }

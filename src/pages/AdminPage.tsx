@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Settings, Package, CreditCard, Palette, Plus, Trash2, Edit2, LogOut, User, Save, X, ChevronDown, ChevronUp, DollarSign, Home, ArrowUp, ArrowDown, Key, ShoppingCart, QrCode, Link2, Link2Off, Shield, RefreshCw, Copy, Star, Wallet, Search, Database, Gamepad2 } from 'lucide-react';
+import { ArrowLeft, Settings, Package, CreditCard, Palette, Plus, Trash2, Edit2, LogOut, User, Save, X, ChevronDown, ChevronUp, DollarSign, Home, ArrowUp, ArrowDown, Key, ShoppingCart, QrCode, Link2, Link2Off, Shield, RefreshCw, Copy, Star, Wallet, Search, Database, Gamepad2, Type } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,6 +35,7 @@ import { AdminWalletTab } from '@/components/admin/AdminWalletTab';
 import DataExportTab from '@/components/admin/DataExportTab';
 import FontUploadSettings from '@/components/admin/FontUploadSettings';
 import ThemeTab from '@/components/admin/ThemeTab';
+import SectionHeadersTab from '@/components/admin/SectionHeadersTab';
 
 const AdminPage: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -300,7 +301,7 @@ const AdminPage: React.FC = () => {
         
         <div className="container mx-auto px-4 py-6">
           <Tabs defaultValue="settings" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-11 bg-card border border-border">
+            <TabsList className="grid w-full grid-cols-12 bg-card border border-border">
               <TabsTrigger value="settings" className="data-[state=active]:bg-gold data-[state=active]:text-primary-foreground text-xs sm:text-sm">
                 <Settings className="w-4 h-4 sm:mr-2" />
                 <span className="hidden sm:inline">Site</span>
@@ -312,6 +313,10 @@ const AdminPage: React.FC = () => {
               <TabsTrigger value="home-edit" className="data-[state=active]:bg-gold data-[state=active]:text-primary-foreground text-xs sm:text-sm">
                 <Home className="w-4 h-4 sm:mr-2" />
                 <span className="hidden sm:inline">Home</span>
+              </TabsTrigger>
+              <TabsTrigger value="headers" className="data-[state=active]:bg-gold data-[state=active]:text-primary-foreground text-xs sm:text-sm">
+                <Type className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Headers</span>
               </TabsTrigger>
               <TabsTrigger value="games" className="data-[state=active]:bg-gold data-[state=active]:text-primary-foreground text-xs sm:text-sm">
                 <Package className="w-4 h-4 sm:mr-2" />
@@ -498,6 +503,11 @@ const AdminPage: React.FC = () => {
             {/* Theme Tab */}
             <TabsContent value="theme">
               <ThemeTab />
+            </TabsContent>
+
+            {/* Section Headers Tab */}
+            <TabsContent value="headers">
+              <SectionHeadersTab />
             </TabsContent>
 
             {/* Home Edit */}
