@@ -76,7 +76,15 @@ export default {
           foreground: "hsl(var(--card-foreground))",
         },
 
-        /* 🔥 DARK BLUE THEME (replaces GOLD entirely) */
+        /* ✅ ORIGINAL GOLD (UNCHANGED) */
+        gold: {
+          DEFAULT: "hsl(var(--gold))",
+          light: "hsl(var(--gold-light))",
+          dark: "hsl(var(--gold-dark))",
+          glow: "hsl(var(--gold-glow))",
+        },
+
+        /* 🆕 DARK BLUE (SAFE ADDITION) */
         darkBlue: {
           DEFAULT: "hsl(var(--dark-blue))",
           light: "hsl(var(--dark-blue-light))",
@@ -122,7 +130,17 @@ export default {
           to: { height: "0" },
         },
 
-        /* 🔥 Dark blue pulse (replaces pulse-gold) */
+        /* ✅ ORIGINAL GOLD ANIMATION */
+        "pulse-gold": {
+          "0%, 100%": {
+            boxShadow: "0 0 20px hsl(43 74% 49% / 0.4)",
+          },
+          "50%": {
+            boxShadow: "0 0 40px hsl(43 74% 49% / 0.6)",
+          },
+        },
+
+        /* 🆕 DARK BLUE ANIMATION */
         "pulse-darkBlue": {
           "0%, 100%": {
             boxShadow: "0 0 20px hsl(var(--dark-blue) / 0.4)",
@@ -146,19 +164,26 @@ export default {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "pulse-gold": "pulse-gold 2s ease-in-out infinite",
         "pulse-darkBlue": "pulse-darkBlue 2s ease-in-out infinite",
         shimmer: "shimmer 2s infinite",
         "fade-in": "fade-in 0.3s ease-out",
       },
 
       backgroundImage: {
+        /* ✅ ORIGINAL */
+        "gradient-gold": "var(--gradient-gold)",
+
+        /* 🆕 DARK BLUE */
         "gradient-darkBlue": "var(--gradient-dark-blue)",
+
         "gradient-cream": "var(--gradient-cream)",
         "gradient-hero": "var(--gradient-hero)",
         "gradient-card": "var(--gradient-card)",
       },
 
       boxShadow: {
+        gold: "var(--shadow-gold)",
         darkBlue: "var(--shadow-dark-blue)",
         elegant: "var(--shadow-elegant)",
       },
