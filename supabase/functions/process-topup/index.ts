@@ -198,18 +198,8 @@ async function fulfillRechargeOrder(
     console.log(`[Fulfill-Recharge] From g2bulk_products: gameCode=${gameCode}, catalogueName=${catalogueName}`);
   }
 
-  // PRIORITY 2: Extract game_code from g2bulk_product_id format: game_{CODE}_{id}
-  if (!gameCode && order.g2bulk_product_id?.startsWith('game_')) {
-    const parts = order.g2bulk_product_id.split('_');
-    // Format: game_CODE_id - extract CODE (can have underscores like ragnarok_idle)
-    if (parts.length >= 3) {
-      // Remove 'game' prefix and last part (id)
-      gameCode = parts.slice(1, -1).join('_');
-      console.log(`[Fulfill-Recharge] Extracted gameCode from product_id: ${gameCode}`);
-    }
-  }
-
-  // PRIORITY 3: Fallback to packages + games table
+  // PRIORITY 2: Lookup from packages/games table (contains original catalogue names)
+  // The package name IS the catalogue_name from G2Bulk when imported
   if (!gameCode || !catalogueName) {
     console.log(`[Fulfill-Recharge] Looking up from packages/games tables...`);
     
@@ -224,11 +214,40 @@ async function fulfillRechargeOrder(
         gameCode = packageData.games.g2bulk_category_id;
         console.log(`[Fulfill-Recharge] Got gameCode from games.g2bulk_category_id: ${gameCode}`);
       }
-      // Only use package name as catalogue if we couldn't find from g2bulk_products
+      // Package name IS the catalogue_name (imported from G2Bulk)
       if (!catalogueName && packageData.name) {
         catalogueName = packageData.name;
         console.log(`[Fulfill-Recharge] Using package name as catalogue: ${catalogueName}`);
       }
+    } else {
+      // Try special_packages table as fallback
+      const { data: specialPackageData } = await supabase
+        .from('special_packages')
+        .select('name, games!inner(g2bulk_category_id)')
+        .eq('g2bulk_product_id', order.g2bulk_product_id)
+        .maybeSingle();
+      
+      if (specialPackageData) {
+        if (!gameCode && specialPackageData.games?.g2bulk_category_id) {
+          gameCode = specialPackageData.games.g2bulk_category_id;
+          console.log(`[Fulfill-Recharge] Got gameCode from special_packages.games.g2bulk_category_id: ${gameCode}`);
+        }
+        if (!catalogueName && specialPackageData.name) {
+          catalogueName = specialPackageData.name;
+          console.log(`[Fulfill-Recharge] Using special_package name as catalogue: ${catalogueName}`);
+        }
+      }
+    }
+  }
+
+  // PRIORITY 3: Extract game_code from g2bulk_product_id format: game_{CODE}_{id}
+  if (!gameCode && order.g2bulk_product_id?.startsWith('game_')) {
+    const parts = order.g2bulk_product_id.split('_');
+    // Format: game_CODE_id - extract CODE (can have underscores like ragnarok_idle)
+    if (parts.length >= 3) {
+      // Remove 'game' prefix and last part (id)
+      gameCode = parts.slice(1, -1).join('_');
+      console.log(`[Fulfill-Recharge] Extracted gameCode from product_id: ${gameCode}`);
     }
   }
 
