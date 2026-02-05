@@ -7,13 +7,13 @@ import { useFavicon } from "@/hooks/useFavicon";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Trash2, ShoppingCart, ArrowRight, Plus, Minus, ArrowLeft } from "lucide-react";
+import { ShoppingCart, ArrowRight, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const CartPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { items, removeFromCart, updateQuantity, getTotal, itemCount } = useCart();
+  const { items, getTotal, itemCount } = useCart();
   const { settings } = useSite();
 
   useFavicon(settings.siteIcon);
@@ -95,49 +95,20 @@ const CartPage = () => {
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex justify-between items-start gap-2">
-                            <div className="min-w-0">
-                              <h3 className="font-semibold text-base sm:text-lg truncate">{item.gameName}</h3>
-                              <p className="text-muted-foreground text-sm truncate">{item.packageName}</p>
-                              <p className="text-xs sm:text-sm text-gold font-medium mt-1">{item.amount}</p>
-                              {/* Player Info */}
-                              <div className="mt-2 text-xs text-muted-foreground space-y-0.5">
-                                <p>👤 {item.playerName} ({item.playerId}{item.serverId ? ` - ${item.serverId}` : ''})</p>
-                                <p>💳 {item.paymentMethodName}</p>
-                              </div>
+                          <div className="min-w-0">
+                            <h3 className="font-semibold text-base sm:text-lg truncate">{item.gameName}</h3>
+                            <p className="text-muted-foreground text-sm truncate">{item.packageName}</p>
+                            <p className="text-xs sm:text-sm text-gold font-medium mt-1">{item.amount}</p>
+                            {/* Player Info */}
+                            <div className="mt-2 text-xs text-muted-foreground space-y-0.5">
+                              <p>👤 {item.playerName} ({item.playerId}{item.serverId ? ` - ${item.serverId}` : ''})</p>
+                              <p>💳 {item.paymentMethodName}</p>
                             </div>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => removeFromCart(item.id)}
-                              className="text-destructive hover:text-destructive flex-shrink-0"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
                           </div>
                           <div className="mt-3 sm:mt-4 flex items-center justify-between">
                             <span className="text-lg sm:text-xl font-bold text-gold">
                               ${(item.price * item.quantity).toFixed(2)}
                             </span>
-                            <div className="flex items-center gap-2">
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                className="h-7 w-7 sm:h-8 sm:w-8"
-                                onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                              >
-                                <Minus className="w-3 h-3 sm:w-4 sm:h-4" />
-                              </Button>
-                              <span className="w-6 sm:w-8 text-center font-medium text-sm sm:text-base">{item.quantity}</span>
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                className="h-7 w-7 sm:h-8 sm:w-8"
-                                onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                              >
-                                <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
-                              </Button>
-                            </div>
                           </div>
                         </div>
                       </div>
