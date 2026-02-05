@@ -13,6 +13,7 @@ import { useCart } from "@/contexts/CartContext";
 import { useSite } from "@/contexts/SiteContext";
 import { useFavicon } from "@/hooks/useFavicon";
 import KHQRPaymentCard from "@/components/KHQRPaymentCard";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface GeneratedQR {
   qrCodeData: string;
@@ -26,6 +27,7 @@ const CheckoutPage = () => {
   const { toast } = useToast();
   const { items, getTotal, clearCart, itemCount } = useCart();
   const { settings, ikhodePayment } = useSite();
+  const { user } = useAuth();
 
   useFavicon(settings.siteIcon);
 
@@ -69,6 +71,7 @@ const CheckoutPage = () => {
           currency: settings.packageCurrency || 'USD',
           payment_method: 'Xavier KHQR',
           g2bulk_product_id: firstItem.g2bulkProductId || null,
+          user_id: user?.id || null,
         },
       });
 

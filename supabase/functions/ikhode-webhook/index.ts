@@ -150,6 +150,36 @@ async function fulfillG2BulkOrder(supabase: any, orderId: string) {
       }
     }
 
+    // If we have gameCode but no catalogueName, try to query for it
+    if (gameCode && !catalogueName && g2bulkProductId) {
+      log('INFO', 'Looking for product name from g2bulk_products by exact ID...');
+      
+      // Try exact match again (maybe fields wasn't populated but product_name exists)
+      const { data: exactProduct } = await supabase
+        .from('g2bulk_products')
+        .select('product_name')
+        .eq('g2bulk_product_id', g2bulkProductId)
+        .maybeSingle();
+      
+      if (exactProduct?.product_name) {
+        catalogueName = exactProduct.product_name;
+        log('INFO', 'Found product_name from exact match', { catalogueName });
+      } else {
+        // Product might have been removed from G2Bulk catalog - look up from package
+        log('WARN', 'Product not found in g2bulk_products, checking packages table...');
+        const { data: pkg } = await supabase
+          .from('packages')
+          .select('name')
+          .eq('g2bulk_product_id', g2bulkProductId)
+          .maybeSingle();
+        
+        if (pkg?.name) {
+          catalogueName = pkg.name;
+          log('INFO', 'Using package name as fallback catalogueName', { catalogueName });
+        }
+      }
+    }
+
     log('INFO', 'Product info', { gameCode, catalogueName, productType: g2bulkProduct?.product_type });
 
     // Check if it's a card/voucher type
