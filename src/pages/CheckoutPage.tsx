@@ -13,7 +13,6 @@ import { useCart } from "@/contexts/CartContext";
 import { useSite } from "@/contexts/SiteContext";
 import { useFavicon } from "@/hooks/useFavicon";
 import KHQRPaymentCard from "@/components/KHQRPaymentCard";
-import { useAuth } from "@/contexts/AuthContext";
 
 interface GeneratedQR {
   qrCodeData: string;
@@ -27,7 +26,6 @@ const CheckoutPage = () => {
   const { toast } = useToast();
   const { items, getTotal, clearCart, itemCount } = useCart();
   const { settings, ikhodePayment } = useSite();
-  const { user } = useAuth();
 
   useFavicon(settings.siteIcon);
 
@@ -39,8 +37,9 @@ const CheckoutPage = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Redirect to home if no items (instead of cart page since we skip cart)
     if (items.length === 0 && !orderComplete && !generatedQR) {
-      navigate("/cart");
+      navigate("/");
     }
   }, [items.length, orderComplete, generatedQR, navigate]);
 
@@ -69,9 +68,8 @@ const CheckoutPage = () => {
           player_name: firstItem.playerName,
           amount: getTotal(),
           currency: settings.packageCurrency || 'USD',
-          payment_method: 'Xavier KHQR',
+          payment_method: 'Woo Saa KHQR',
           g2bulk_product_id: firstItem.g2bulkProductId || null,
-          user_id: user?.id || null,
         },
       });
 
@@ -132,7 +130,8 @@ const CheckoutPage = () => {
   };
 
   const handleCancelPayment = () => {
-    navigate("/cart");
+    clearCart();
+    navigate("/");
   };
 
   // Order Success Screen
@@ -203,11 +202,11 @@ const CheckoutPage = () => {
         
         <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
           <Link 
-            to="/cart" 
+            to="/" 
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4 sm:mb-6 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            ត្រលប់ទៅកន្ត្រក
+            បោះបង់
           </Link>
 
           <h1 className="font-display text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 flex items-center gap-3">
@@ -260,7 +259,7 @@ const CheckoutPage = () => {
 
                 {/* Payment Method Info */}
                 <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
-                  <p className="text-sm font-medium">វិធីបង់ប្រាក់: Xavier KHQR</p>
+                  <p className="text-sm font-medium">វិធីបង់ប្រាក់: Woo Saa KHQR</p>
                   <p className="text-xs text-muted-foreground">ស្កេន QR ជាមួយកម្មវិធី Bakong ឬធនាគារ</p>
                 </div>
               </CardContent>
@@ -295,7 +294,7 @@ const CheckoutPage = () => {
                   description={`${items.length} កញ្ចប់`}
                   onCancel={handleCancelPayment}
                   onComplete={handlePaymentComplete}
-                  paymentMethod="Xavier KHQR"
+                  paymentMethod="Woo Saa KHQR"
                   wsUrl={generatedQR.wsUrl}
                 />
               ) : !isIkhodeConfigured ? (
@@ -303,7 +302,7 @@ const CheckoutPage = () => {
                   <CardContent className="py-8 text-center">
                     <CreditCard className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
                     <p className="text-muted-foreground mb-4">
-                      Xavier KHQR មិនទាន់បានកំណត់។ សូមទាក់ទងអ្នកគ្រប់គ្រង។
+                      Woo Saa KHQR មិនទាន់បានកំណត់។ សូមទាក់ទងអ្នកគ្រប់គ្រង។
                     </p>
                   </CardContent>
                 </Card>
