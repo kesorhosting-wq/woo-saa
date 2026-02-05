@@ -209,6 +209,37 @@ async function fulfillRechargeOrder(
     }
   }
 
+  // PRIORITY 2.5: If we have gameCode but no catalogueName, try to find a similar product
+  if (gameCode && !catalogueName && order.g2bulk_product_id) {
+    console.log(`[Fulfill-Recharge] Looking for similar products with gameCode=${gameCode}...`);
+    
+    // Try to find any product with the same game_code
+    const { data: similarProducts } = await supabase
+      .from('g2bulk_products')
+      .select('product_name, g2bulk_product_id, fields')
+      .filter('fields->game_code', 'eq', gameCode)
+      .limit(1);
+    
+    if (similarProducts && similarProducts.length > 0) {
+      // Use the product_name pattern - typically the denomination from the product ID
+      // Format: game_{gameCode}_{id} - extract last number as potential denomination lookup
+      const productIdParts = order.g2bulk_product_id.split('_');
+      const productIdNum = productIdParts[productIdParts.length - 1];
+      
+      // Look for exact product by denomination or id pattern
+      const { data: exactMatch } = await supabase
+        .from('g2bulk_products')
+        .select('product_name')
+        .eq('g2bulk_product_id', order.g2bulk_product_id)
+        .maybeSingle();
+      
+      if (exactMatch?.product_name) {
+        catalogueName = exactMatch.product_name;
+        console.log(`[Fulfill-Recharge] Found exact match catalogueName: ${catalogueName}`);
+      }
+    }
+  }
+
   // PRIORITY 3: Fallback to packages + games table
   if (!gameCode || !catalogueName) {
     console.log(`[Fulfill-Recharge] Looking up from packages/games tables...`);
