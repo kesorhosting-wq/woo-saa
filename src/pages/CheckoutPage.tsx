@@ -3,7 +3,6 @@ import { useNavigate, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
-import HeaderSpacer from "@/components/HeaderSpacer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -38,21 +37,18 @@ const CheckoutPage = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Redirect to home if no items (instead of cart page since we skip cart)
     if (items.length === 0 && !orderComplete && !generatedQR) {
       navigate("/");
     }
   }, [items.length, orderComplete, generatedQR, navigate]);
 
-  // Generate dynamic KHQR when checkout loads - use ref to prevent double calls
-  const qrGenerationStarted = useState(false)[0];
-  const [hasStartedGeneration, setHasStartedGeneration] = useState(false);
-
+  // Generate dynamic KHQR when checkout loads
   useEffect(() => {
-    if (ikhodePayment?.isEnabled && items.length > 0 && !generatedQR && !generatingQR && !hasStartedGeneration) {
-      setHasStartedGeneration(true);
+    if (ikhodePayment?.isEnabled && items.length > 0 && !generatedQR && !generatingQR) {
       generateKHQR();
     }
-  }, [ikhodePayment?.isEnabled, items.length, generatedQR, generatingQR, hasStartedGeneration]);
+  }, [ikhodePayment, items.length]);
 
   const generateKHQR = async () => {
     if (items.length === 0) return;
@@ -72,7 +68,7 @@ const CheckoutPage = () => {
           player_name: firstItem.playerName,
           amount: getTotal(),
           currency: settings.packageCurrency || "USD",
-          payment_method: "Kesor KHQR",
+          payment_method: "Woo Saa KHQR",
           g2bulk_product_id: firstItem.g2bulkProductId || null,
         },
       });
@@ -127,11 +123,14 @@ const CheckoutPage = () => {
       title: "✓ បង់ប្រាក់បានជោគជ័យ!",
       description: "ការបញ្ជាទិញរបស់អ្នកកំពុងដំណើរការ",
     });
-    // Navigate to homepage after successful payment
-    navigate("/");
+    // Navigate to invoice page
+    if (orderId) {
+      navigate(`/invoice/${orderId}`);
+    }
   };
 
   const handleCancelPayment = () => {
+    clearCart();
     navigate("/");
   };
 
@@ -154,7 +153,6 @@ const CheckoutPage = () => {
           }}
         >
           <Header />
-          <HeaderSpacer />
 
           <div className="container mx-auto px-4 py-12 max-w-lg">
             <Card className="text-center">
@@ -195,7 +193,6 @@ const CheckoutPage = () => {
         }}
       >
         <Header />
-        <HeaderSpacer />
 
         <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
           <Link
@@ -203,7 +200,7 @@ const CheckoutPage = () => {
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4 sm:mb-6 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            ត្រលប់ទៅទំព័រដើម
+            បោះបង់
           </Link>
 
           <h1 className="font-display text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 flex items-center gap-3">
@@ -238,9 +235,10 @@ const CheckoutPage = () => {
                         👤 {item.playerName} ({item.playerId}
                         {item.serverId ? ` - ${item.serverId}` : ""})
                       </p>
+                      <p className="text-xs text-muted-foreground">x{item.quantity}</p>
                     </div>
                     <Badge variant="secondary" className="flex-shrink-0">
-                      ${item.price.toFixed(2)}
+                      ${(item.price * item.quantity).toFixed(2)}
                     </Badge>
                   </div>
                 ))}
@@ -254,7 +252,7 @@ const CheckoutPage = () => {
 
                 {/* Payment Method Info */}
                 <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
-                  <p className="text-sm font-medium">វិធីបង់ប្រាក់: Kesor KHQR</p>
+                  <p className="text-sm font-medium">វិធីបង់ប្រាក់: Woo Saa KHQR</p>
                   <p className="text-xs text-muted-foreground">ស្កេន QR ជាមួយកម្មវិធី Bakong ឬធនាគារ</p>
                 </div>
               </CardContent>
@@ -289,14 +287,14 @@ const CheckoutPage = () => {
                   description={`${items.length} កញ្ចប់`}
                   onCancel={handleCancelPayment}
                   onComplete={handlePaymentComplete}
-                  paymentMethod="Kesor KHQR"
+                  paymentMethod="Xavier KHQR"
                   wsUrl={generatedQR.wsUrl}
                 />
               ) : !isIkhodeConfigured ? (
                 <Card>
                   <CardContent className="py-8 text-center">
                     <CreditCard className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground mb-4">Kesor KHQR មិនទាន់បានកំណត់។ សូមទាក់ទងអ្នកគ្រប់គ្រង។</p>
+                    <p className="text-muted-foreground mb-4">Xavier KHQR មិនទាន់បានកំណត់។ សូមទាក់ទងអ្នកគ្រប់គ្រង។</p>
                   </CardContent>
                 </Card>
               ) : (
