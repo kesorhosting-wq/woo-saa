@@ -47,13 +47,24 @@ const ModernPackageCard: React.FC<ModernPackageCardProps> = ({
       <div 
         className={cn(
           "relative overflow-hidden rounded-lg transition-all duration-300",
-          "bg-card/80",
+          !settings.packageBgColor && !settings.packageBgImage && "bg-card/80",
           "border",
           selected 
-            ? "border-gold shadow-lg shadow-gold/20" 
-            : "border-border/40 hover:border-gold/50",
-          isFeatured && "bg-gradient-to-br from-amber-900/20 via-card to-amber-900/10"
+            ? "shadow-lg shadow-gold/20" 
+            : "hover:border-gold/50",
+          isFeatured && !settings.packageBgColor && !settings.packageBgImage && "bg-gradient-to-br from-amber-900/20 via-card to-amber-900/10"
         )}
+        style={{
+          background: settings.packageBgImage
+            ? `url(${settings.packageBgImage})`
+            : settings.packageBgColor || undefined,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          borderColor: selected 
+            ? (settings.packageBorderColor || 'var(--gold)') 
+            : (settings.packageBorderColor ? `${settings.packageBorderColor}66` : undefined),
+          borderWidth: settings.packageBorderWidth ? `${settings.packageBorderWidth}px` : undefined,
+        }}
       >
         {/* Label Badge */}
         {pkg.label && (
@@ -92,13 +103,20 @@ const ModernPackageCard: React.FC<ModernPackageCardProps> = ({
           {/* Left side - Price and Name */}
           <div className="flex-1 min-w-0 text-left">
             {/* Price */}
-            <div className="text-amber-400 font-bold text-sm sm:text-base">
+            <div 
+              className="font-bold text-sm sm:text-base"
+              style={{ color: settings.packagePriceColor || '#fbbf24' }}
+            >
               {settings.packageCurrencySymbol || '$'}{pkg.price.toFixed(2)}
             </div>
             
             {/* Amount/Name */}
             <div 
-              className="text-xs sm:text-sm text-muted-foreground line-clamp-1 mt-0.5"
+              className="text-xs sm:text-sm line-clamp-1 mt-0.5"
+              style={{ 
+                color: settings.packageTextColor || undefined,
+                fontWeight: settings.packageTextWeight || 400,
+              }}
             >
               {pkg.amount}
             </div>
