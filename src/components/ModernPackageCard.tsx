@@ -47,13 +47,19 @@ const ModernPackageCard: React.FC<ModernPackageCardProps> = ({
       <div 
         className={cn(
           "relative overflow-hidden rounded-lg transition-all duration-300",
-          "bg-card/80",
+          !settings.packageBgColor && "bg-card/80",
           "border",
           selected 
             ? "border-gold shadow-lg shadow-gold/20" 
             : "border-border/40 hover:border-gold/50",
-          isFeatured && "bg-gradient-to-br from-amber-900/20 via-card to-amber-900/10"
+          isFeatured && !settings.packageBgColor && "bg-gradient-to-br from-amber-900/20 via-card to-amber-900/10"
         )}
+        style={{
+          backgroundColor: settings.packageBgColor || undefined,
+          backgroundImage: settings.packageBgImage ? `url(${settings.packageBgImage})` : undefined,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
       >
         {/* Label Badge */}
         {pkg.label && (
