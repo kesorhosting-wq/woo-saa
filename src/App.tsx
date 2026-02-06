@@ -39,7 +39,6 @@ const App = () => (
                   <Routes>
                     <Route path="/" element={<Index />} />
                     <Route path="/topup/:gameSlug" element={<TopupPage />} />
-                    <Route path="/cart" element={<Navigate to="/checkout" replace />} />
                     <Route path="/checkout" element={<CheckoutPage />} />
                     <Route path="/invoice/:orderId" element={<InvoicePage />} />
                     <Route path="/orders" element={<OrderHistoryPage />} />
