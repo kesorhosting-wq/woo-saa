@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
+import HeaderSpacer from "@/components/HeaderSpacer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -37,18 +38,21 @@ const CheckoutPage = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Redirect to home if no items (instead of cart page since we skip cart)
     if (items.length === 0 && !orderComplete && !generatedQR) {
       navigate("/");
     }
   }, [items.length, orderComplete, generatedQR, navigate]);
 
-  // Generate dynamic KHQR when checkout loads
+  // Generate dynamic KHQR when checkout loads - use ref to prevent double calls
+  const qrGenerationStarted = useState(false)[0];
+  const [hasStartedGeneration, setHasStartedGeneration] = useState(false);
+
   useEffect(() => {
-    if (ikhodePayment?.isEnabled && items.length > 0 && !generatedQR && !generatingQR) {
+    if (ikhodePayment?.isEnabled && items.length > 0 && !generatedQR && !generatingQR && !hasStartedGeneration) {
+      setHasStartedGeneration(true);
       generateKHQR();
     }
-  }, [ikhodePayment, items.length]);
+  }, [ikhodePayment?.isEnabled, items.length, generatedQR, generatingQR, hasStartedGeneration]);
 
   const generateKHQR = async () => {
     if (items.length === 0) return;
@@ -59,7 +63,7 @@ const CheckoutPage = () => {
     try {
       // First create the order with G2Bulk product ID
       const firstItem = items[0];
-      const { data: orderData, error: orderError } = await supabase.functions.invoke('process-topup', {
+      const { data: orderData, error: orderError } = await supabase.functions.invoke("process-topup", {
         body: {
           game_name: firstItem.gameName,
           package_name: firstItem.packageName,
@@ -67,23 +71,23 @@ const CheckoutPage = () => {
           server_id: firstItem.serverId || null,
           player_name: firstItem.playerName,
           amount: getTotal(),
-          currency: settings.packageCurrency || 'USD',
-          payment_method: 'Woo Saa KHQR',
+          currency: settings.packageCurrency || "USD",
+          payment_method: "Kesor KHQR",
           g2bulk_product_id: firstItem.g2bulkProductId || null,
         },
       });
 
       if (orderError) throw orderError;
-      
+
       const newOrderId = orderData?.order_id;
-      if (!newOrderId) throw new Error('Failed to create order');
-      
+      if (!newOrderId) throw new Error("Failed to create order");
+
       setOrderId(newOrderId);
 
       // Now generate KHQR
-      const { data, error } = await supabase.functions.invoke('ikhode-payment', {
+      const { data, error } = await supabase.functions.invoke("ikhode-payment", {
         body: {
-          action: 'generate-khqr',
+          action: "generate-khqr",
           amount: getTotal(),
           orderId: newOrderId,
           playerName: firstItem.playerName,
@@ -101,11 +105,11 @@ const CheckoutPage = () => {
           amount: data.amount,
         });
       } else {
-        throw new Error(data?.error || 'Failed to generate QR code');
+        throw new Error(data?.error || "Failed to generate QR code");
       }
     } catch (err: any) {
-      console.error('KHQR generation error:', err);
-      setError(err.message || 'Failed to generate payment QR');
+      console.error("KHQR generation error:", err);
+      setError(err.message || "Failed to generate payment QR");
       toast({
         title: "QR កំហុស",
         description: err.message || "Failed to generate payment QR",
@@ -123,14 +127,11 @@ const CheckoutPage = () => {
       title: "✓ បង់ប្រាក់បានជោគជ័យ!",
       description: "ការបញ្ជាទិញរបស់អ្នកកំពុងដំណើរការ",
     });
-    // Navigate to invoice page
-    if (orderId) {
-      navigate(`/invoice/${orderId}`);
-    }
+    // Navigate to homepage after successful payment
+    navigate("/");
   };
 
   const handleCancelPayment = () => {
-    clearCart();
     navigate("/");
   };
 
@@ -142,34 +143,29 @@ const CheckoutPage = () => {
           <title>បញ្ជាទិញជោគជ័យ - {settings.siteName}</title>
         </Helmet>
 
-        <div 
+        <div
           className="min-h-screen pb-8"
           style={{
             backgroundColor: settings.topupBackgroundColor || undefined,
             backgroundImage: settings.topupBackgroundImage ? `url(${settings.topupBackgroundImage})` : undefined,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundAttachment: 'fixed'
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundAttachment: "fixed",
           }}
         >
           <Header />
-          
+          <HeaderSpacer />
+
           <div className="container mx-auto px-4 py-12 max-w-lg">
             <Card className="text-center">
               <CardContent className="py-8">
                 <CheckCircle className="w-16 h-16 mx-auto text-green-500 mb-4" />
                 <h1 className="text-2xl font-bold mb-2">បញ្ជាទិញជោគជ័យ!</h1>
-                {orderId && (
-                  <p className="text-muted-foreground mb-4">
-                    លេខបញ្ជាទិញ: #{orderId.slice(0, 8)}
-                  </p>
-                )}
+                {orderId && <p className="text-muted-foreground mb-4">លេខបញ្ជាទិញ: #{orderId.slice(0, 8)}</p>}
                 <p className="text-sm text-muted-foreground mb-6">
                   សូមអរគុណសម្រាប់ការបញ្ជាទិញ។ យើងនឹងដំណើរការការបញ្ជាទិញរបស់អ្នកក្នុងពេលឆាប់ៗ។
                 </p>
-                <Button onClick={() => navigate("/")}>
-                  ត្រឡប់ទៅទំព័រដើម
-                </Button>
+                <Button onClick={() => navigate("/")}>ត្រឡប់ទៅទំព័រដើម</Button>
               </CardContent>
             </Card>
           </div>
@@ -188,33 +184,32 @@ const CheckoutPage = () => {
         <meta name="description" content="Complete your purchase" />
       </Helmet>
 
-      <div 
+      <div
         className="min-h-screen pb-8"
         style={{
           backgroundColor: settings.topupBackgroundColor || undefined,
           backgroundImage: settings.topupBackgroundImage ? `url(${settings.topupBackgroundImage})` : undefined,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundAttachment: 'fixed'
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundAttachment: "fixed",
         }}
       >
         <Header />
-        
+        <HeaderSpacer />
+
         <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
-          <Link 
-            to="/" 
+          <Link
+            to="/"
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4 sm:mb-6 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            បោះបង់
+            ត្រលប់ទៅទំព័រដើម
           </Link>
 
           <h1 className="font-display text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 flex items-center gap-3">
             <CreditCard className="w-7 h-7 sm:w-8 sm:h-8 text-gold" />
             បង់ប្រាក់
-            <span className="text-sm font-normal text-muted-foreground">
-              ({itemCount} កញ្ចប់)
-            </span>
+            <span className="text-sm font-normal text-muted-foreground">({itemCount} កញ្ចប់)</span>
           </h1>
 
           <div className="grid lg:grid-cols-2 gap-6 sm:gap-8">
@@ -240,12 +235,12 @@ const CheckoutPage = () => {
                       <h3 className="font-semibold text-sm truncate">{item.gameName}</h3>
                       <p className="text-xs text-muted-foreground truncate">{item.packageName}</p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        👤 {item.playerName} ({item.playerId}{item.serverId ? ` - ${item.serverId}` : ''})
+                        👤 {item.playerName} ({item.playerId}
+                        {item.serverId ? ` - ${item.serverId}` : ""})
                       </p>
-                      <p className="text-xs text-muted-foreground">x{item.quantity}</p>
                     </div>
                     <Badge variant="secondary" className="flex-shrink-0">
-                      ${(item.price * item.quantity).toFixed(2)}
+                      ${item.price.toFixed(2)}
                     </Badge>
                   </div>
                 ))}
@@ -259,7 +254,7 @@ const CheckoutPage = () => {
 
                 {/* Payment Method Info */}
                 <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
-                  <p className="text-sm font-medium">វិធីបង់ប្រាក់: Woo Saa KHQR</p>
+                  <p className="text-sm font-medium">វិធីបង់ប្រាក់: Kesor KHQR</p>
                   <p className="text-xs text-muted-foreground">ស្កេន QR ជាមួយកម្មវិធី Bakong ឬធនាគារ</p>
                 </div>
               </CardContent>
@@ -294,16 +289,14 @@ const CheckoutPage = () => {
                   description={`${items.length} កញ្ចប់`}
                   onCancel={handleCancelPayment}
                   onComplete={handlePaymentComplete}
-                  paymentMethod="Woo Saa KHQR"
+                  paymentMethod="Kesor KHQR"
                   wsUrl={generatedQR.wsUrl}
                 />
               ) : !isIkhodeConfigured ? (
                 <Card>
                   <CardContent className="py-8 text-center">
                     <CreditCard className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground mb-4">
-                      Woo Saa KHQR មិនទាន់បានកំណត់។ សូមទាក់ទងអ្នកគ្រប់គ្រង។
-                    </p>
+                    <p className="text-muted-foreground mb-4">Kesor KHQR មិនទាន់បានកំណត់។ សូមទាក់ទងអ្នកគ្រប់គ្រង។</p>
                   </CardContent>
                 </Card>
               ) : (
