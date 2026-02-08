@@ -3,7 +3,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers':
+    'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
 // G2Bulk API base
@@ -39,7 +40,7 @@ interface GameVerificationConfig {
 // Cache for game configs (refreshed every 5 minutes)
 let configCache: Map<string, GameVerificationConfig> | null = null;
 let cacheTimestamp = 0;
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const CACHE_TTL = 60 * 1000; // 1 minute
 
 async function getGameConfigs(): Promise<Map<string, GameVerificationConfig>> {
   const now = Date.now();
@@ -120,6 +121,22 @@ function normalizeGameName(gameName: string): string {
   return gameName;
 }
 
+function expandG2BulkGameCodes(code: string): string[] {
+  const raw = (code || '').toString().trim();
+  if (!raw) return [];
+
+  const lc = raw.toLowerCase();
+  const variants: string[] = [lc];
+
+  // Common mismatches between stored codes and provider codes
+  if (lc.includes('-')) variants.push(lc.replaceAll('-', '_'));
+  if (lc.includes('_')) variants.push(lc.replaceAll('_', '-'));
+  if (lc.includes('-') || lc.includes('_')) variants.push(lc.replace(/[-_]/g, ''));
+
+  // De-dupe while preserving order
+  return Array.from(new Set(variants)).filter(Boolean);
+}
+
 // Find game config from database
 async function findGameConfig(gameName: string): Promise<GameVerificationConfig | null> {
   const configs = await getGameConfigs();
@@ -169,7 +186,7 @@ async function verifyWithG2Bulk(
   gameCode: string,
   userId: string,
   serverId?: string
-): Promise<{ success: boolean; name?: string; openid?: string; error?: string }> {
+): Promise<{ success: boolean; name?: string; openid?: string; error?: string; status?: number }> {
   const body: Record<string, string> = {
     game: gameCode,
     user_id: userId,
@@ -193,25 +210,45 @@ async function verifyWithG2Bulk(
   log('DEBUG', 'G2Bulk checkPlayerId response', { status: response.status, body: text.substring(0, 500) });
 
   if (!response.ok) {
-    return { success: false, error: `G2Bulk API returned ${response.status}` };
+    let msg = `G2Bulk API returned ${response.status}`;
+    try {
+      const parsed = JSON.parse(text) as Record<string, unknown>;
+      msg =
+        (parsed.detail as string) ||
+        (parsed.message as string) ||
+        (parsed.error as string) ||
+        msg;
+    } catch {
+      // ignore
+    }
+
+    const lower = String(msg).toLowerCase();
+    if (
+      response.status === 400 &&
+      (lower.includes('invalid game') || lower.includes('game invalid') || lower.includes('invalid_game'))
+    ) {
+      msg = 'Game code is invalid or not configured yet. Please ask admin to sync game codes.';
+    }
+
+    return { success: false, error: msg, status: response.status };
   }
 
   let data: Record<string, unknown>;
   try {
     data = JSON.parse(text);
   } catch {
-    return { success: false, error: 'Invalid JSON from G2Bulk' };
+    return { success: false, error: 'Invalid JSON from G2Bulk', status: response.status };
   }
 
   // Expected response: { valid: "valid", name: "...", openid: "..." } or { valid: "invalid", ... }
   if (data.valid === 'valid' && data.name) {
-    return { success: true, name: data.name as string, openid: data.openid as string };
+    return { success: true, name: data.name as string, openid: data.openid as string, status: response.status };
   }
 
   // Check for alternate success formats
   if (data.success === true && (data.name || data.nickname || data.username)) {
     const name = (data.name || data.nickname || data.username) as string;
-    return { success: true, name, openid: data.openid as string };
+    return { success: true, name, openid: data.openid as string, status: response.status };
   }
 
   // Determine error message
@@ -220,7 +257,7 @@ async function verifyWithG2Bulk(
   else if (data.error) errorMsg = data.error as string;
   else if (data.valid === 'invalid') errorMsg = 'Invalid player ID';
 
-  return { success: false, error: errorMsg };
+  return { success: false, error: errorMsg, status: response.status };
 }
 
 serve(async (req) => {
@@ -231,9 +268,15 @@ serve(async (req) => {
   }
 
   try {
-    const { gameName, userId, serverId } = await req.json();
+    const { gameName, userId, serverId, regionOverride } = await req.json();
 
-    log('INFO', 'Verification request received', { requestId, gameName, userId, serverId: serverId || 'N/A' });
+    log('INFO', 'Verification request received', {
+      requestId,
+      gameName,
+      userId,
+      serverId: serverId || 'N/A',
+      regionOverride: regionOverride || 'N/A',
+    });
 
     if (!gameName || !userId) {
       log('WARN', 'Missing required parameters', { requestId, gameName, userId });
@@ -278,32 +321,44 @@ serve(async (req) => {
 
     const effectiveServerId = serverId || gameConfig.default_zone || undefined;
 
-    // Build list of game codes to try (primary + alternates)
-    const codesToTry = [gameConfig.api_code, ...gameConfig.alternate_api_codes];
+    // Build list of game codes to try (override → primary → alternates)
+    // and expand each code to tolerate common formatting mismatches ("_" vs "-" vs none).
+    const baseCodes = [
+      ...(regionOverride ? [String(regionOverride)] : []),
+      gameConfig.api_code,
+      ...(gameConfig.alternate_api_codes || []),
+    ];
+
     const triedCodes: string[] = [];
+    const seenCodes = new Set<string>();
     let lastError = 'Verification failed';
 
-    for (const code of codesToTry) {
-      triedCodes.push(code);
-      const result = await verifyWithG2Bulk(apiKey, code, userId, effectiveServerId);
+    for (const baseCode of baseCodes) {
+      for (const code of expandG2BulkGameCodes(baseCode)) {
+        if (seenCodes.has(code)) continue;
+        seenCodes.add(code);
 
-      if (result.success && result.name) {
-        log('INFO', 'Verification successful', { requestId, gameName, code, name: result.name });
-        return new Response(
-          JSON.stringify({
-            success: true,
-            username: result.name,
-            userId: userId,
-            serverId: effectiveServerId || undefined,
-            accountName: result.name,
-            verifiedBy: 'G2Bulk',
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        triedCodes.push(code);
+        const result = await verifyWithG2Bulk(apiKey, code, userId, effectiveServerId);
+
+        if (result.success && result.name) {
+          log('INFO', 'Verification successful', { requestId, gameName, code, name: result.name });
+          return new Response(
+            JSON.stringify({
+              success: true,
+              username: result.name,
+              userId: userId,
+              serverId: effectiveServerId || undefined,
+              accountName: result.name,
+              verifiedBy: 'G2Bulk',
+            }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        lastError = result.error || 'Player ID not found';
+        log('DEBUG', 'Code failed, trying next', { requestId, code, error: lastError });
       }
-
-      lastError = result.error || 'Player ID not found';
-      log('DEBUG', 'Code failed, trying next', { requestId, code, error: lastError });
     }
 
     // All codes failed – suggest trying alternate region
@@ -313,15 +368,15 @@ serve(async (req) => {
       ? ` You may be registered in a different region. Try selecting another region.`
       : '';
 
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: `${lastError}${alternateHint}`,
-        triedCodes,
-        alternateRegions: gameConfig.alternate_api_codes,
-      }),
-      { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: `${lastError}${alternateHint}`,
+          triedCodes,
+          alternateRegions: gameConfig.alternate_api_codes,
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
 
   } catch (error) {
     log('ERROR', 'Verification error', { error: String(error) });
