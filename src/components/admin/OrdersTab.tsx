@@ -479,6 +479,21 @@ const OrdersTab: React.FC = () => {
                         {order.status_message && (
                           <p className="text-xs text-muted-foreground mt-2">{order.status_message}</p>
                         )}
+                        {/* Show Player ID details for failed orders */}
+                        {order.status === 'failed' && (
+                          <div className="mt-2 p-2 rounded bg-red-500/10 border border-red-500/30">
+                            <p className="text-xs text-red-400">
+                              <span className="font-medium">Player ID entered: </span>
+                              <span className="font-mono">{order.player_id}</span>
+                              {order.server_id && (
+                                <span className="ml-2">
+                                  <span className="font-medium">Server: </span>
+                                  <span className="font-mono">{order.server_id}</span>
+                                </span>
+                              )}
+                            </p>
+                          </div>
+                        )}
                         {order.g2bulk_order_id && (
                           <p className="text-xs text-muted-foreground mt-1">G2Bulk: {order.g2bulk_order_id}</p>
                         )}
