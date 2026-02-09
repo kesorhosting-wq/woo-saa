@@ -83,6 +83,13 @@ const ModernPackageCard: React.FC<ModernPackageCardProps> = ({
           </div>
         )}
 
+        {/* Quantity Badge */}
+        {pkg.quantity != null && pkg.quantity > 0 && (
+          <div className="absolute top-0 right-0 z-10 py-0.5 px-1.5 rounded-bl-md bg-blue-500">
+            <span className="text-[8px] font-bold text-white">x{pkg.quantity}</span>
+          </div>
+        )}
+
         {/* Selection Indicator */}
         {selected && (
           <div className="absolute top-1 right-1 z-20 w-4 h-4 bg-gold rounded-full flex items-center justify-center shadow-md">
