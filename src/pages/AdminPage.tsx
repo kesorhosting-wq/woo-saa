@@ -85,13 +85,13 @@ const AdminPage: React.FC = () => {
   const [expandedGame, setExpandedGame] = useState<string | null>(null);
   const [packageListSort, setPackageListSort] = useState<'price' | 'manual'>('price');
   const [editingPackage, setEditingPackage] = useState<string | null>(null);
-  const [newPackage, setNewPackage] = useState({ name: '', amount: '', price: 0, currency: 'USD', icon: '', label: '', labelBgColor: '#dc2626', labelTextColor: '#ffffff', labelIcon: '', g2bulkProductId: '', g2bulkTypeId: '' });
-  const [editPackageData, setEditPackageData] = useState({ name: '', amount: '', price: 0, currency: 'USD', icon: '', label: '', labelBgColor: '#dc2626', labelTextColor: '#ffffff', labelIcon: '', g2bulkProductId: '', g2bulkTypeId: '' });
+  const [newPackage, setNewPackage] = useState({ name: '', amount: '', price: 0, currency: 'USD', icon: '', label: '', labelBgColor: '#dc2626', labelTextColor: '#ffffff', labelIcon: '', g2bulkProductId: '', g2bulkTypeId: '', quantity: 1 });
+  const [editPackageData, setEditPackageData] = useState({ name: '', amount: '', price: 0, currency: 'USD', icon: '', label: '', labelBgColor: '#dc2626', labelTextColor: '#ffffff', labelIcon: '', g2bulkProductId: '', g2bulkTypeId: '', quantity: 1 });
 
   // Special Package state
   const [editingSpecialPackage, setEditingSpecialPackage] = useState<string | null>(null);
-  const [newSpecialPackage, setNewSpecialPackage] = useState({ name: '', amount: '', price: 0, currency: 'USD', icon: '', label: '', labelBgColor: '#dc2626', labelTextColor: '#ffffff', labelIcon: '', g2bulkProductId: '', g2bulkTypeId: '' });
-  const [editSpecialPackageData, setEditSpecialPackageData] = useState({ name: '', amount: '', price: 0, currency: 'USD', icon: '', label: '', labelBgColor: '#dc2626', labelTextColor: '#ffffff', labelIcon: '', g2bulkProductId: '', g2bulkTypeId: '' });
+  const [newSpecialPackage, setNewSpecialPackage] = useState({ name: '', amount: '', price: 0, currency: 'USD', icon: '', label: '', labelBgColor: '#dc2626', labelTextColor: '#ffffff', labelIcon: '', g2bulkProductId: '', g2bulkTypeId: '', quantity: 1 });
+  const [editSpecialPackageData, setEditSpecialPackageData] = useState({ name: '', amount: '', price: 0, currency: 'USD', icon: '', label: '', labelBgColor: '#dc2626', labelTextColor: '#ffffff', labelIcon: '', g2bulkProductId: '', g2bulkTypeId: '', quantity: 1 });
 
   // Payment state
   const [newPayment, setNewPayment] = useState({ name: '', icon: '' });
@@ -157,9 +157,10 @@ const AdminPage: React.FC = () => {
       labelTextColor: newPackage.labelTextColor || undefined,
       labelIcon: newPackage.labelIcon || undefined,
       g2bulkProductId: newPackage.g2bulkProductId || undefined,
-      g2bulkTypeId: newPackage.g2bulkTypeId || undefined
+      g2bulkTypeId: newPackage.g2bulkTypeId || undefined,
+      quantity: newPackage.quantity || 1
     });
-    setNewPackage({ name: '', amount: '', price: 0, currency: 'USD', icon: '', label: '', labelBgColor: '#dc2626', labelTextColor: '#ffffff', labelIcon: '', g2bulkProductId: '', g2bulkTypeId: '' });
+    setNewPackage({ name: '', amount: '', price: 0, currency: 'USD', icon: '', label: '', labelBgColor: '#dc2626', labelTextColor: '#ffffff', labelIcon: '', g2bulkProductId: '', g2bulkTypeId: '', quantity: 1 });
     toast({ title: "Package added!" });
   };
 
@@ -176,7 +177,8 @@ const AdminPage: React.FC = () => {
       labelTextColor: pkg.labelTextColor || '#ffffff',
       labelIcon: pkg.labelIcon || '',
       g2bulkProductId: pkg.g2bulkProductId || '',
-      g2bulkTypeId: pkg.g2bulkTypeId || ''
+      g2bulkTypeId: pkg.g2bulkTypeId || '',
+      quantity: pkg.quantity || 1
     });
   };
 
@@ -204,9 +206,10 @@ const AdminPage: React.FC = () => {
       labelTextColor: newSpecialPackage.labelTextColor || undefined,
       labelIcon: newSpecialPackage.labelIcon || undefined,
       g2bulkProductId: newSpecialPackage.g2bulkProductId || undefined,
-      g2bulkTypeId: newSpecialPackage.g2bulkTypeId || undefined
+      g2bulkTypeId: newSpecialPackage.g2bulkTypeId || undefined,
+      quantity: newSpecialPackage.quantity || 1
     });
-    setNewSpecialPackage({ name: '', amount: '', price: 0, currency: 'USD', icon: '', label: '', labelBgColor: '#dc2626', labelTextColor: '#ffffff', labelIcon: '', g2bulkProductId: '', g2bulkTypeId: '' });
+    setNewSpecialPackage({ name: '', amount: '', price: 0, currency: 'USD', icon: '', label: '', labelBgColor: '#dc2626', labelTextColor: '#ffffff', labelIcon: '', g2bulkProductId: '', g2bulkTypeId: '', quantity: 1 });
     toast({ title: "Special package added!" });
   };
 
@@ -223,7 +226,8 @@ const AdminPage: React.FC = () => {
       labelTextColor: pkg.labelTextColor || '#ffffff',
       labelIcon: pkg.labelIcon || '',
       g2bulkProductId: pkg.g2bulkProductId || '',
-      g2bulkTypeId: pkg.g2bulkTypeId || ''
+      g2bulkTypeId: pkg.g2bulkTypeId || '',
+      quantity: pkg.quantity || 1
     });
   };
 
@@ -1909,7 +1913,7 @@ const AdminPage: React.FC = () => {
                               {/* Add New Package */}
                               <div className="bg-secondary/50 rounded-lg p-3 space-y-3">
                                 <p className="text-sm font-medium">Add New Package</p>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
                                   <div className="col-span-2">
                                     <Input 
                                       placeholder="Package Name"
@@ -1932,6 +1936,15 @@ const AdminPage: React.FC = () => {
                                     value={newPackage.price || ''}
                                     onChange={(e) => setNewPackage(prev => ({ ...prev, price: Number(e.target.value) }))}
                                     className="border-gold/50 text-sm"
+                                  />
+                                  <Input 
+                                    type="number"
+                                    min="1"
+                                    placeholder="Qty"
+                                    value={newPackage.quantity || 1}
+                                    onChange={(e) => setNewPackage(prev => ({ ...prev, quantity: Number(e.target.value) || 1 }))}
+                                    className="border-gold/50 text-sm"
+                                    title="Quantity (how many times customer purchases)"
                                   />
                                 </div>
                                 {/* G2Bulk Product Selector for new package */}
@@ -2086,6 +2099,16 @@ const AdminPage: React.FC = () => {
                                             value={editPackageData.price}
                                             onChange={(e) => setEditPackageData(prev => ({ ...prev, price: Number(e.target.value) }))}
                                             className="border-gold/50 text-sm"
+                                            placeholder="Price"
+                                          />
+                                          <Input 
+                                            type="number"
+                                            min="1"
+                                            value={editPackageData.quantity}
+                                            onChange={(e) => setEditPackageData(prev => ({ ...prev, quantity: Number(e.target.value) || 1 }))}
+                                            className="border-gold/50 text-sm"
+                                            placeholder="Qty"
+                                            title="Quantity"
                                           />
                                         </div>
                                         <div className="flex gap-2 items-center flex-wrap">
@@ -2174,7 +2197,10 @@ const AdminPage: React.FC = () => {
                                               productStatus={pkg.g2bulkProductId ? checkProductStatus(pkg.g2bulkProductId) : undefined}
                                             />
                                           </div>
-                                          <p className="text-xs text-muted-foreground">{pkg.amount} units{pkg.label && ` • ${pkg.label}`}</p>
+                                          <p className="text-xs text-muted-foreground">
+                                            {pkg.amount} units{pkg.label && ` • ${pkg.label}`}
+                                            {(pkg.quantity || 1) > 1 && <span className="ml-1 text-gold font-medium">× {pkg.quantity}</span>}
+                                          </p>
                                           <G2BulkProductSelector
                                             value={pkg.g2bulkProductId}
                                             gameName={game.name}
@@ -2215,6 +2241,31 @@ const AdminPage: React.FC = () => {
                                           <Button 
                                             variant="ghost" 
                                             size="icon"
+                                            className="h-7 w-7 text-blue-500 hover:text-blue-600 hover:bg-blue-500/10"
+                                            title="Clone Package"
+                                            onClick={async () => {
+                                              await addPackage(game.id, {
+                                                name: `${pkg.name} (Copy)`,
+                                                amount: pkg.amount,
+                                                price: pkg.price,
+                                                currency: pkg.currency,
+                                                icon: pkg.icon || undefined,
+                                                label: pkg.label || undefined,
+                                                labelBgColor: pkg.labelBgColor || undefined,
+                                                labelTextColor: pkg.labelTextColor || undefined,
+                                                labelIcon: pkg.labelIcon || undefined,
+                                                g2bulkProductId: pkg.g2bulkProductId || undefined,
+                                                g2bulkTypeId: pkg.g2bulkTypeId || undefined,
+                                                quantity: pkg.quantity || 1
+                                              });
+                                              toast({ title: "Package cloned!", description: `${pkg.name} has been duplicated` });
+                                            }}
+                                          >
+                                            <Copy className="w-3 h-3" />
+                                          </Button>
+                                          <Button 
+                                            variant="ghost" 
+                                            size="icon"
                                             className="h-7 w-7 text-orange-500 hover:text-orange-600 hover:bg-orange-500/10"
                                             title="Clone to Special Package"
                                             onClick={async () => {
@@ -2229,7 +2280,8 @@ const AdminPage: React.FC = () => {
                                                 labelTextColor: pkg.labelTextColor || undefined,
                                                 labelIcon: pkg.labelIcon || undefined,
                                                 g2bulkProductId: pkg.g2bulkProductId || undefined,
-                                                g2bulkTypeId: pkg.g2bulkTypeId || undefined
+                                                g2bulkTypeId: pkg.g2bulkTypeId || undefined,
+                                                quantity: pkg.quantity || 1
                                               });
                                               toast({ title: "Cloned to Special Packages!", description: `${pkg.name} has been added to Special Packages` });
                                             }}

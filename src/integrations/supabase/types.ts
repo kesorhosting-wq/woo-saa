@@ -194,6 +194,7 @@ export type Database = {
           label_text_color: string | null
           name: string
           price: number
+          quantity: number
           sort_order: number | null
           updated_at: string
         }
@@ -211,6 +212,7 @@ export type Database = {
           label_text_color?: string | null
           name: string
           price: number
+          quantity?: number
           sort_order?: number | null
           updated_at?: string
         }
@@ -228,6 +230,7 @@ export type Database = {
           label_text_color?: string | null
           name?: string
           price?: number
+          quantity?: number
           sort_order?: number | null
           updated_at?: string
         }
@@ -382,6 +385,7 @@ export type Database = {
           label_text_color: string | null
           name: string
           price: number
+          quantity: number
           sort_order: number | null
           updated_at: string
         }
@@ -399,6 +403,7 @@ export type Database = {
           label_text_color?: string | null
           name: string
           price: number
+          quantity?: number
           sort_order?: number | null
           updated_at?: string
         }
@@ -416,6 +421,7 @@ export type Database = {
           label_text_color?: string | null
           name?: string
           price?: number
+          quantity?: number
           sort_order?: number | null
           updated_at?: string
         }
