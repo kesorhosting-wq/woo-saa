@@ -108,6 +108,9 @@ const ModernPackageCard: React.FC<ModernPackageCardProps> = ({
               style={{ color: settings.packagePriceColor || '#fbbf24' }}
             >
               {settings.packageCurrencySymbol || '$'}{pkg.price.toFixed(2)}
+              {(pkg.quantity || 1) > 1 && (
+                <span className="ml-1 text-[10px] sm:text-xs font-normal opacity-80">× {pkg.quantity}</span>
+              )}
             </div>
             
             {/* Amount/Name */}

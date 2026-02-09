@@ -29,6 +29,7 @@ export interface Package {
   labelIcon?: string;
   g2bulkProductId?: string;
   g2bulkTypeId?: string;
+  quantity?: number;
 }
 
 export interface PaymentMethod {
@@ -520,7 +521,8 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               labelTextColor: (pkg as any).label_text_color || undefined,
               labelIcon: (pkg as any).label_icon || undefined,
               g2bulkProductId: (pkg as any).g2bulk_product_id || undefined,
-              g2bulkTypeId: (pkg as any).g2bulk_type_id || undefined
+              g2bulkTypeId: (pkg as any).g2bulk_type_id || undefined,
+              quantity: (pkg as any).quantity || 1
             })),
           specialPackages: (specialPackagesData || [])
             .filter(pkg => pkg.game_id === game.id)
@@ -536,7 +538,8 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               labelTextColor: (pkg as any).label_text_color || undefined,
               labelIcon: (pkg as any).label_icon || undefined,
               g2bulkProductId: (pkg as any).g2bulk_product_id || undefined,
-              g2bulkTypeId: (pkg as any).g2bulk_type_id || undefined
+              g2bulkTypeId: (pkg as any).g2bulk_type_id || undefined,
+              quantity: (pkg as any).quantity || 1
             }))
         }));
         setGames(gamesWithPackages);
@@ -585,7 +588,8 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               labelTextColor: (pkg as any).label_text_color || undefined,
               labelIcon: (pkg as any).label_icon || undefined,
               g2bulkProductId: (pkg as any).g2bulk_product_id || undefined,
-              g2bulkTypeId: (pkg as any).g2bulk_type_id || undefined
+              g2bulkTypeId: (pkg as any).g2bulk_type_id || undefined,
+              quantity: (pkg as any).quantity || 1
             })),
           specialPackages: (specialPackagesData || [])
             .filter(pkg => pkg.game_id === game.id)
@@ -601,7 +605,8 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               labelTextColor: (pkg as any).label_text_color || undefined,
               labelIcon: (pkg as any).label_icon || undefined,
               g2bulkProductId: (pkg as any).g2bulk_product_id || undefined,
-              g2bulkTypeId: (pkg as any).g2bulk_type_id || undefined
+              g2bulkTypeId: (pkg as any).g2bulk_type_id || undefined,
+              quantity: (pkg as any).quantity || 1
             }))
         }));
         setGames(gamesWithPackages);
@@ -830,7 +835,8 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           label_text_color: pkg.labelTextColor || null,
           label_icon: pkg.labelIcon || null,
           g2bulk_product_id: pkg.g2bulkProductId || null,
-          g2bulk_type_id: pkg.g2bulkTypeId || null
+          g2bulk_type_id: pkg.g2bulkTypeId || null,
+          quantity: pkg.quantity || 1
         })
         .select()
         .single();
@@ -851,7 +857,8 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 labelTextColor: (data as any).label_text_color || undefined,
                 labelIcon: (data as any).label_icon || undefined,
                 g2bulkProductId: (data as any).g2bulk_product_id || undefined,
-                g2bulkTypeId: (data as any).g2bulk_type_id || undefined
+                g2bulkTypeId: (data as any).g2bulk_type_id || undefined,
+                quantity: (data as any).quantity || 1
               }] }
             : g
         ));
@@ -874,6 +881,7 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (updatedPkg.labelIcon !== undefined) updateData.label_icon = updatedPkg.labelIcon || null;
       if (updatedPkg.g2bulkProductId !== undefined) updateData.g2bulk_product_id = updatedPkg.g2bulkProductId || null;
       if (updatedPkg.g2bulkTypeId !== undefined) updateData.g2bulk_type_id = updatedPkg.g2bulkTypeId || null;
+      if (updatedPkg.quantity !== undefined) updateData.quantity = updatedPkg.quantity;
 
       const { error } = await supabase
         .from('packages')
@@ -952,7 +960,8 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           label_text_color: pkg.labelTextColor || null,
           label_icon: pkg.labelIcon || null,
           g2bulk_product_id: pkg.g2bulkProductId || null,
-          g2bulk_type_id: pkg.g2bulkTypeId || null
+          g2bulk_type_id: pkg.g2bulkTypeId || null,
+          quantity: pkg.quantity || 1
         })
         .select()
         .single();
@@ -973,7 +982,8 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 labelTextColor: (data as any).label_text_color || undefined,
                 labelIcon: (data as any).label_icon || undefined,
                 g2bulkProductId: (data as any).g2bulk_product_id || undefined,
-                g2bulkTypeId: (data as any).g2bulk_type_id || undefined
+                g2bulkTypeId: (data as any).g2bulk_type_id || undefined,
+                quantity: (data as any).quantity || 1
               }] }
             : g
         ));
@@ -996,6 +1006,7 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (updatedPkg.labelIcon !== undefined) updateData.label_icon = updatedPkg.labelIcon || null;
       if (updatedPkg.g2bulkProductId !== undefined) updateData.g2bulk_product_id = updatedPkg.g2bulkProductId || null;
       if (updatedPkg.g2bulkTypeId !== undefined) updateData.g2bulk_type_id = updatedPkg.g2bulkTypeId || null;
+      if (updatedPkg.quantity !== undefined) updateData.quantity = updatedPkg.quantity;
 
       const { error } = await supabase
         .from('special_packages')
