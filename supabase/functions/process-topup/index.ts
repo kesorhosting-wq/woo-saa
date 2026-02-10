@@ -493,13 +493,39 @@ async function fulfillG2BulkOrder(supabase: any, orderId: string) {
 
   const apiKey = apiConfig.api_secret;
 
-  try {
+   try {
+    // Check package quantity - if > 1, we need to trigger G2Bulk multiple times
+    let fulfillQuantity = 1;
+    const { data: pkgQty } = await supabase
+      .from('packages')
+      .select('quantity')
+      .eq('g2bulk_product_id', g2bulkProductIdFinal)
+      .eq('name', order.package_name)
+      .maybeSingle();
+    
+    if (pkgQty?.quantity && pkgQty.quantity > 1) {
+      fulfillQuantity = pkgQty.quantity;
+    } else {
+      // Also check special_packages
+      const { data: spkgQty } = await supabase
+        .from('special_packages')
+        .select('quantity')
+        .eq('g2bulk_product_id', g2bulkProductIdFinal)
+        .eq('name', order.package_name)
+        .maybeSingle();
+      if (spkgQty?.quantity && spkgQty.quantity > 1) {
+        fulfillQuantity = spkgQty.quantity;
+      }
+    }
+
+    console.log(`[Fulfill] Quantity to fulfill: ${fulfillQuantity}`);
+
     // Update order to processing
     await supabase
       .from('topup_orders')
       .update({ 
         status: 'processing',
-        status_message: 'Sending to G2Bulk for fulfillment...'
+        status_message: `Sending to G2Bulk for fulfillment (x${fulfillQuantity})...`
       })
       .eq('id', orderId);
 
@@ -507,12 +533,63 @@ async function fulfillG2BulkOrder(supabase: any, orderId: string) {
     const orderForFulfillment = { ...order, g2bulk_product_id: g2bulkProductIdFinal };
     const productType = await getProductType(supabase, g2bulkProductIdFinal);
     console.log(`[Fulfill] Product type: ${productType}`);
-    
-    if (productType === 'card') {
-      return await fulfillCardOrder(supabase, orderId, orderForFulfillment, apiKey);
-    } else {
-      return await fulfillRechargeOrder(supabase, orderId, orderForFulfillment, apiKey);
+
+    // Execute fulfillment N times based on quantity
+    const results: any[] = [];
+    let allSuccess = true;
+
+    for (let i = 0; i < fulfillQuantity; i++) {
+      console.log(`[Fulfill] Fulfilling iteration ${i + 1}/${fulfillQuantity}...`);
+      
+      let result;
+      if (productType === 'card') {
+        result = await fulfillCardOrder(supabase, orderId, orderForFulfillment, apiKey);
+      } else {
+        result = await fulfillRechargeOrder(supabase, orderId, orderForFulfillment, apiKey);
+      }
+      results.push(result);
+
+      if (!result.success) {
+        allSuccess = false;
+        // Update status with partial info
+        await supabase
+          .from('topup_orders')
+          .update({
+            status: 'failed',
+            status_message: `Failed on fulfillment ${i + 1}/${fulfillQuantity}: ${result.error}. ${i} completed successfully.`
+          })
+          .eq('id', orderId);
+        break;
+      }
+
+      // Small delay between API calls to avoid rate limiting
+      if (i < fulfillQuantity - 1) {
+        await new Promise(resolve => setTimeout(resolve, 1500));
+      }
     }
+
+    if (allSuccess && fulfillQuantity > 1) {
+      const g2bulkOrderIds = results.map(r => r.g2bulk_order_id).filter(Boolean).join(', ');
+      await supabase
+        .from('topup_orders')
+        .update({
+          status: 'completed',
+          status_message: `All ${fulfillQuantity} fulfillments completed. G2Bulk Orders: ${g2bulkOrderIds}`,
+          g2bulk_order_id: g2bulkOrderIds
+        })
+        .eq('id', orderId);
+
+      await sendTelegramNotification(
+        `<b>Bundle Order Completed (x${fulfillQuantity})</b>\n` +
+        `🎮 Game: ${order.game_name}\n` +
+        `📦 Package: ${order.package_name}\n` +
+        `👤 Player: ${order.player_id}\n` +
+        `💰 Amount: $${order.amount}\n` +
+        `🔢 G2Bulk Orders: ${g2bulkOrderIds}`
+      );
+    }
+
+    return results[results.length - 1] || { success: false, error: 'No fulfillment executed' };
   } catch (g2bulkError: any) {
     console.error('[Fulfill] G2Bulk processing error:', g2bulkError);
     await supabase
