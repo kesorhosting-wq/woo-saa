@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Game } from '@/contexts/SiteContext';
+import { Game, useSite } from '@/contexts/SiteContext';
 import { Star } from 'lucide-react';
 
 interface KiraStyleGameCardProps {
@@ -8,10 +8,19 @@ interface KiraStyleGameCardProps {
 }
 
 const KiraStyleGameCard: React.FC<KiraStyleGameCardProps> = ({ game }) => {
+  const { settings } = useSite();
+  
   return (
     <Link 
       to={`/topup/${game.slug || game.id}`} 
-      className="group relative block rounded-xl overflow-hidden bg-card/80 border border-border/30 hover:border-gold/50 transition-all duration-300 hover:shadow-lg hover:shadow-gold/10"
+      className="group relative block rounded-xl overflow-hidden border transition-all duration-300 hover:shadow-lg hover:shadow-gold/10"
+      style={{
+        backgroundColor: settings.gameCardBgColor || undefined,
+        borderColor: settings.gameCardBorderColor || undefined,
+        backgroundImage: settings.gameCardFrameImage ? `url(${settings.gameCardFrameImage})` : undefined,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
     >
       {/* Game Image - Square 1:1 aspect ratio */}
       <div className="relative aspect-square overflow-hidden rounded-t-xl">
@@ -25,7 +34,12 @@ const KiraStyleGameCard: React.FC<KiraStyleGameCardProps> = ({ game }) => {
       </div>
       
       {/* Content below image */}
-      <div className="p-1.5 sm:p-2 bg-card/95 space-y-1">
+      <div 
+        className="p-1.5 sm:p-2 space-y-1"
+        style={{
+          backgroundColor: settings.gameCardBgColor || undefined,
+        }}
+      >
         {/* Game name */}
         <h3 className="font-medium text-foreground text-[10px] sm:text-xs line-clamp-1">
           {game.name}
