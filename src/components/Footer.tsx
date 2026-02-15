@@ -166,7 +166,7 @@ const Footer: React.FC<FooterProps> = ({
       >
         <div className="container mx-auto px-3 sm:px-4 text-center">
           <p className="text-xs sm:text-sm" style={{ color: textColor }}>
-            {copyrightText || `© ${new Date().getFullYear()} ${settings.siteName}. Built & Maintained by: Ahnajak Team`}
+            {copyrightText || `© ${new Date().getFullYear()} ${settings.siteName}. Built & Maintained by: @lengsonmeng`}
           </p>
           <div className="mt-2 sm:mt-3 flex items-center justify-center gap-2 sm:gap-3 flex-wrap">
             <p className="text-[10px] sm:text-xs uppercase tracking-wide" style={{ color: textColor }}>
