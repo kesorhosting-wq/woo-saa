@@ -528,7 +528,7 @@ const TopupPage: React.FC = () => {
             <div className="flex-1 order-2 lg:order-1">
               {/* Featured Bundles / Special Packages */}
               {game.specialPackages && game.specialPackages.length > 0 && (
-                <div className="mb-6 p-4 rounded-lg border border-border/20 bg-card/30 backdrop-blur-sm">
+                <div className="mb-6 p-4 rounded-lg border border-border/20 backdrop-blur-sm" style={{ backgroundColor: settings.packageBgColor || undefined, backgroundImage: settings.packageBgImage ? `url(${settings.packageBgImage})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center' }}>
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
                       <Gift className="w-5 h-5 text-amber-400" />
@@ -555,7 +555,7 @@ const TopupPage: React.FC = () => {
               )}
 
               {/* More Bundles / Regular Packages */}
-              <div className="p-4 rounded-lg border border-border/20 bg-card/30 backdrop-blur-sm">
+              <div className="p-4 rounded-lg border border-border/20 backdrop-blur-sm" style={{ backgroundColor: settings.packageBgColor || undefined, backgroundImage: settings.packageBgImage ? `url(${settings.packageBgImage})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center' }}>
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-amber-400 font-bold">Best Selling</span>
                   <span className="text-xs text-gray-400 flex items-center gap-1"><Sparkles className="w-3 h-3" />{game.packages.length}</span>
@@ -589,7 +589,7 @@ const TopupPage: React.FC = () => {
                 )}
 
                 {/* Game Info Card with Enter ID */}
-                <div className="p-4 rounded-lg border border-border/20 bg-card/50 backdrop-blur-sm">
+                <div className="p-4 rounded-lg border border-border/20 backdrop-blur-sm" style={{ backgroundColor: settings.idSectionBgColor || undefined, backgroundImage: settings.idSectionBgImage ? `url(${settings.idSectionBgImage})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center' }}>
                   <div className="flex items-center gap-3 mb-3">
                     <img src={game.image} alt={game.name} className="w-12 h-12 rounded-lg object-cover" />
                     <div>
