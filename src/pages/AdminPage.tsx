@@ -1222,6 +1222,47 @@ const AdminPage: React.FC = () => {
                   </CardContent>
                 </Card>
 
+                {/* Topup Page Settings */}
+                <Card className="border-gold/30">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Palette className="w-5 h-5 text-gold" />
+                      Topup Page Settings
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">Page Background Color</label>
+                        <div className="flex gap-2">
+                          <input 
+                            type="color" 
+                            value={settings.topupBackgroundColor || '#4a4a4a'}
+                            onChange={(e) => handleUpdateSettings('topupBackgroundColor', e.target.value)}
+                            className="w-12 h-10 rounded cursor-pointer"
+                          />
+                          <Input 
+                            value={settings.topupBackgroundColor || ''}
+                            onChange={(e) => handleUpdateSettings('topupBackgroundColor', e.target.value)}
+                            className="flex-1 border-gold/50"
+                            placeholder="#4a4a4a"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">Page Background Image</label>
+                        <ImageUpload
+                          value={settings.topupBackgroundImage}
+                          onChange={(url) => handleUpdateSettings('topupBackgroundImage', url)}
+                          folder="topup-bg"
+                          aspectRatio="wide"
+                          placeholder="Upload Background"
+                        />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
                 {/* Footer Settings */}
                 <Card className="border-gold/30">
                   <CardHeader>

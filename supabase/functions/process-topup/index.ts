@@ -73,6 +73,68 @@ async function getProductType(supabase: any, productId: string): Promise<'card' 
 }
 
 // Fulfill card/voucher order (immediate delivery of codes/keys)
+// Auto refund wallet if order was paid via wallet
+async function autoRefundWallet(supabase: any, order: any) {
+  if (order.payment_method !== 'Wallet' || !order.user_id) {
+    log('DEBUG', 'No wallet refund needed', { payment_method: order.payment_method, user_id: order.user_id });
+    return;
+  }
+
+  try {
+    log('INFO', 'Processing auto wallet refund', { orderId: order.id, amount: order.amount, userId: order.user_id });
+
+    // Get current balance
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('wallet_balance')
+      .eq('user_id', order.user_id)
+      .single();
+
+    if (profileError || !profile) {
+      log('ERROR', 'Failed to get user profile for refund', { error: profileError?.message });
+      return;
+    }
+
+    const currentBalance = profile.wallet_balance || 0;
+    const refundAmount = Math.abs(order.amount);
+    const newBalance = currentBalance + refundAmount;
+
+    // Create refund transaction
+    const { error: txError } = await supabase
+      .from('wallet_transactions')
+      .insert({
+        user_id: order.user_id,
+        type: 'refund',
+        amount: refundAmount,
+        balance_before: currentBalance,
+        balance_after: newBalance,
+        description: `Auto refund for failed order: ${order.game_name} - ${order.package_name}`,
+        reference_id: `refund-${order.id}`
+      });
+
+    if (txError) {
+      log('ERROR', 'Failed to create refund transaction', { error: txError.message });
+      return;
+    }
+
+    log('INFO', 'Wallet refund successful', { userId: order.user_id, refundAmount, newBalance });
+
+    // Send Telegram notification for refund
+    await sendTelegramNotification(
+      `<b>💰 Auto Wallet Refund</b>\n` +
+      `🎮 Game: ${order.game_name}\n` +
+      `📦 Package: ${order.package_name}\n` +
+      `👤 Player: ${order.player_id}\n` +
+      `💵 Refund: $${refundAmount.toFixed(2)}\n` +
+      `💰 New Balance: $${newBalance.toFixed(2)}\n` +
+      `🔢 Order ID: ${order.id}`
+    );
+  } catch (error: any) {
+    log('ERROR', 'Auto refund error', { error: error.message, orderId: order.id });
+  }
+}
+
+// Fulfill card/voucher order (immediate delivery of codes/keys)
 async function fulfillCardOrder(
   supabase: any, 
   orderId: string, 
@@ -157,6 +219,9 @@ async function fulfillCardOrder(
       `⚠️ Error: ${errorMsg}`,
       true
     );
+
+    // Auto refund wallet
+    await autoRefundWallet(supabase, order);
 
     return { success: false, error: errorMsg };
   }
@@ -394,6 +459,9 @@ async function fulfillRechargeOrder(
       `⚠️ Error: ${errorMsg}`,
       true
     );
+
+    // Auto refund wallet
+    await autoRefundWallet(supabase, order);
 
     console.log(`[Fulfill-Recharge] ========== FAILED ==========`);
     return { success: false, error: errorMsg };

@@ -59,6 +59,54 @@ async function sendTelegramNotification(message: string, isError: boolean = fals
   }
 }
 
+// Auto refund wallet if order was paid via wallet
+async function autoRefundWallet(supabase: any, order: any) {
+  if (order.payment_method !== 'Wallet' || !order.user_id) {
+    return;
+  }
+
+  try {
+    console.log(`[G2Bulk-Webhook] Processing auto wallet refund for order ${order.id}`);
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('wallet_balance')
+      .eq('user_id', order.user_id)
+      .single();
+
+    if (!profile) return;
+
+    const currentBalance = profile.wallet_balance || 0;
+    const refundAmount = Math.abs(order.amount);
+    const newBalance = currentBalance + refundAmount;
+
+    await supabase
+      .from('wallet_transactions')
+      .insert({
+        user_id: order.user_id,
+        type: 'refund',
+        amount: refundAmount,
+        balance_before: currentBalance,
+        balance_after: newBalance,
+        description: `Auto refund for failed order: ${order.game_name} - ${order.package_name}`,
+        reference_id: `refund-${order.id}`
+      });
+
+    console.log(`[G2Bulk-Webhook] Wallet refund successful: $${refundAmount} to user ${order.user_id}`);
+
+    await sendTelegramNotification(
+      `<b>💰 Auto Wallet Refund (Webhook)</b>\n` +
+      `🎮 Game: ${order.game_name}\n` +
+      `📦 Package: ${order.package_name}\n` +
+      `💵 Refund: $${refundAmount.toFixed(2)}\n` +
+      `💰 New Balance: $${newBalance.toFixed(2)}\n` +
+      `🔢 Order ID: ${order.id}`
+    );
+  } catch (error: any) {
+    console.error(`[G2Bulk-Webhook] Auto refund error:`, error);
+  }
+}
+
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -235,6 +283,9 @@ serve(async (req) => {
           `⚠️ Message: ${message}`,
           true
         );
+
+        // Auto refund wallet for failed orders
+        await autoRefundWallet(supabase, order);
       }
     }
 
