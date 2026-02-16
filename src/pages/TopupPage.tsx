@@ -503,7 +503,7 @@ const TopupPage: React.FC = () => {
       <div
         className="min-h-screen"
         style={{
-          backgroundColor: "#4a4a4a",
+          backgroundColor: settings.topupBackgroundColor || "#4a4a4a",
           backgroundImage: settings.topupBackgroundImage ? `url(${settings.topupBackgroundImage})` : undefined,
           backgroundSize: "cover",
           backgroundPosition: "center",
@@ -593,7 +593,7 @@ const TopupPage: React.FC = () => {
                   <div className="flex items-center gap-3 mb-3">
                     <img src={game.image} alt={game.name} className="w-12 h-12 rounded-lg object-cover" />
                     <div>
-                      <h1 className="font-bold text-white text-lg">{game.name}</h1>
+                      <h1 className="font-bold text-lg" style={{ color: settings.idSectionTextColor || 'white' }}>{game.name}</h1>
                       <div className="flex items-center gap-2 text-xs">
                         <span className="flex items-center gap-1 text-emerald-400">
                           <Shield className="w-3 h-3" />
@@ -609,7 +609,7 @@ const TopupPage: React.FC = () => {
 
                   {/* Enter Your ID Section */}
                   <div className="border-t border-border/20 pt-4">
-                    <h3 className="text-amber-400 font-bold mb-3">Enter Your ID & Server</h3>
+                    <h3 className="font-bold mb-3" style={{ color: settings.idSectionTextColor || '#fbbf24' }}>Enter Your ID & Server</h3>
 
                     <div className="space-y-3">
                       {gameIdConfig?.fields.map((field) => (
@@ -697,14 +697,14 @@ const TopupPage: React.FC = () => {
 
               {/* Payment Selection Card (order-3 on mobile - LAST) */}
               <div className="order-3 lg:order-none">
-                <div className="p-4 rounded-lg border border-border/20 bg-card/50 backdrop-blur-sm">
+                <div className="p-4 rounded-lg border border-border/20 backdrop-blur-sm" style={{ backgroundColor: settings.paymentSectionBgColor || undefined, backgroundImage: settings.paymentSectionBgImage ? `url(${settings.paymentSectionBgImage})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center' }}>
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-8 h-8 rounded-md bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-sm">
                       P
                     </div>
                     <div>
-                      <p className="font-bold text-white text-sm">Payments Selection</p>
-                      <p className="text-xs text-gray-400">Scan to pay with any banking app</p>
+                      <p className="font-bold text-sm" style={{ color: settings.paymentSectionTextColor || 'white' }}>Payments Selection</p>
+                      <p className="text-xs" style={{ color: settings.paymentSectionTextColor ? `${settings.paymentSectionTextColor}99` : '#9ca3af' }}>Scan to pay with any banking app</p>
                     </div>
                   </div>
 
@@ -766,8 +766,8 @@ const TopupPage: React.FC = () => {
                   {/* Total and Pay Now */}
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs text-gray-400">Total:</p>
-                      <p className="text-2xl font-bold text-white">${selectedPkg?.price.toFixed(2) || "0.00"}</p>
+                      <p className="text-xs" style={{ color: settings.paymentSectionTextColor ? `${settings.paymentSectionTextColor}99` : '#9ca3af' }}>Total:</p>
+                      <p className="text-2xl font-bold" style={{ color: settings.paymentSectionTextColor || 'white' }}>${selectedPkg?.price.toFixed(2) || "0.00"}</p>
                     </div>
                     <Button
                       onClick={handleSubmit}

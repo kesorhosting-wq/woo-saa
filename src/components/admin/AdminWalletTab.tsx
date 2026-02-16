@@ -165,7 +165,16 @@ export const AdminWalletTab: React.FC = () => {
                 <SelectValue placeholder="Select a user..." />
               </SelectTrigger>
               <SelectContent className="max-h-[300px]">
-                {filteredUsers.map((user) => (
+                {users
+                  .filter((user) => {
+                    if (!searchQuery.trim()) return true;
+                    const query = searchQuery.toLowerCase();
+                    return (
+                      user.email?.toLowerCase().includes(query) ||
+                      user.display_name?.toLowerCase().includes(query)
+                    );
+                  })
+                  .map((user) => (
                   <SelectItem key={user.user_id} value={user.user_id}>
                     <div className="flex items-center gap-2">
                       <User className="w-4 h-4 text-muted-foreground" />
@@ -176,7 +185,11 @@ export const AdminWalletTab: React.FC = () => {
                     </div>
                   </SelectItem>
                 ))}
-                {filteredUsers.length === 0 && (
+                {users.filter((u) => {
+                  if (!searchQuery.trim()) return true;
+                  const query = searchQuery.toLowerCase();
+                  return u.email?.toLowerCase().includes(query) || u.display_name?.toLowerCase().includes(query);
+                }).length === 0 && (
                   <div className="p-2 text-center text-muted-foreground text-sm">
                     No users found
                   </div>
