@@ -333,7 +333,7 @@ const PreorderAdminTab: React.FC = () => {
                     </div>
                     <G2BulkProductSelector
                       value={newPkg.g2bulkProductId}
-                      onSelect={(productId, typeId) => setNewPkg({ ...newPkg, g2bulkProductId: productId, g2bulkTypeId: typeId })}
+                      onChange={(productId, typeId) => setNewPkg({ ...newPkg, g2bulkProductId: productId || '', g2bulkTypeId: typeId || '' })}
                     />
                     <Button size="sm" onClick={() => handleAddPackage(pg.id)}>
                       <Plus className="w-3 h-3 mr-1" /> Add Package
