@@ -5,6 +5,7 @@ import ModernHeroBanner from '@/components/ModernHeroBanner';
 import FeaturedGamesSection from '@/components/FeaturedGamesSection';
 import AllGamesSection from '@/components/AllGamesSection';
 import Footer from '@/components/Footer';
+import PreorderSection from '@/components/PreorderSection';
 import { useSite } from '@/contexts/SiteContext';
 import { useFavicon } from '@/hooks/useFavicon';
 import { Loader2, Gamepad2 } from 'lucide-react';
@@ -73,8 +74,11 @@ const Index: React.FC = () => {
             </div>
           ) : (
             <>
-              {/* Featured Games Section - Games with special packages */}
+              {/* Featured Games Section */}
               <FeaturedGamesSection games={games} />
+              
+              {/* Pre-Order Section */}
+              <PreorderSection />
               
               {/* All Games Section */}
               <AllGamesSection games={games} />

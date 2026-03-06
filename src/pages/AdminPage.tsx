@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Settings, Package, CreditCard, Palette, Plus, Trash2, Edit2, LogOut, User, Save, X, ChevronDown, ChevronUp, DollarSign, Home, ArrowUp, ArrowDown, Key, ShoppingCart, QrCode, Link2, Link2Off, Shield, RefreshCw, Copy, Star, Wallet, Search, Database, Gamepad2 } from 'lucide-react';
+import { ArrowLeft, Settings, Package, CreditCard, Palette, Plus, Trash2, Edit2, LogOut, User, Save, X, ChevronDown, ChevronUp, DollarSign, Home, ArrowUp, ArrowDown, Key, ShoppingCart, QrCode, Link2, Link2Off, Shield, RefreshCw, Copy, Star, Wallet, Search, Database, Gamepad2, Calendar } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,6 +35,7 @@ import { AdminWalletTab } from '@/components/admin/AdminWalletTab';
 import DataExportTab from '@/components/admin/DataExportTab';
 import FontUploadSettings from '@/components/admin/FontUploadSettings';
 import ThemeTab from '@/components/admin/ThemeTab';
+import PreorderAdminTab from '@/components/admin/PreorderAdminTab';
 
 const AdminPage: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -308,7 +309,7 @@ const AdminPage: React.FC = () => {
         
         <div className="container mx-auto px-4 py-6">
           <Tabs defaultValue="settings" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-11 bg-card border border-border">
+            <TabsList className="grid w-full grid-cols-12 bg-card border border-border">
               <TabsTrigger value="settings" className="data-[state=active]:bg-gold data-[state=active]:text-primary-foreground text-xs sm:text-sm">
                 <Settings className="w-4 h-4 sm:mr-2" />
                 <span className="hidden sm:inline">Site</span>
@@ -352,6 +353,10 @@ const AdminPage: React.FC = () => {
               <TabsTrigger value="export" className="data-[state=active]:bg-gold data-[state=active]:text-primary-foreground text-xs sm:text-sm">
                 <Database className="w-4 h-4 sm:mr-2" />
                 <span className="hidden sm:inline">Export</span>
+              </TabsTrigger>
+              <TabsTrigger value="preorders" className="data-[state=active]:bg-gold data-[state=active]:text-primary-foreground text-xs sm:text-sm">
+                <Calendar className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Pre-Order</span>
               </TabsTrigger>
             </TabsList>
             
@@ -2825,6 +2830,21 @@ const AdminPage: React.FC = () => {
             {/* Export Database */}
             <TabsContent value="export">
               <DataExportTab />
+            </TabsContent>
+
+            {/* Pre-Orders */}
+            <TabsContent value="preorders">
+              <Card className="border-gold/30">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-gold" />
+                    Pre-Order Management
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <PreorderAdminTab />
+                </CardContent>
+              </Card>
             </TabsContent>
           </Tabs>
         </div>

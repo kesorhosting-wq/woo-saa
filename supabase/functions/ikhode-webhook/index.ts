@@ -521,22 +521,29 @@ serve(async (req) => {
 
     log('INFO', 'Found Order', { orderId: order.id, status: order.status, g2bulk_product_id: order.g2bulk_product_id });
 
-    // 4. Already Processed Check
-    const processableStatuses = ["pending", "paid"];
-    if (!processableStatuses.includes(order.status)) {
-      log('INFO', 'Order already processed', { orderId: order.id, status: order.status });
+    // 4. Use atomic lock to prevent race conditions
+    // Instead of checking status then updating, do a conditional UPDATE
+    const { data: lockResult } = await supabase
+      .from("topup_orders")
+      .update({
+        status: "paid",
+        payment_method: "Xavier KHQR",
+        status_message: `Payment confirmed. Transaction: ${transactionId}. Starting fulfillment...`,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", order.id)
+      .in("status", ["pending", "paid", "notpaid"])
+      .select("id");
+
+    if (!lockResult || lockResult.length === 0) {
+      log('INFO', 'Order already being processed (atomic lock failed)', { orderId: order.id, status: order.status });
       return new Response(
-        JSON.stringify({ status: "success", message: `Order already ${order.status}.` }),
+        JSON.stringify({ status: "success", message: `Order already being processed.` }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    log('INFO', 'Order is processable, proceeding with fulfillment', { status: order.status });
-
-    const transactionId = payload.transaction_id || payload.transactionId || "N/A";
-    const amount = payload.amount || order.amount;
-
-    log('INFO', 'Processing payment', { amount, transactionId });
+    log('INFO', 'Atomic lock acquired, starting fulfillment', { orderId: order.id });
 
     // Send Telegram notification for payment received
     await sendTelegramNotification(
@@ -550,20 +557,7 @@ serve(async (req) => {
       `⏳ Auto-processing...`
     );
 
-    // 5. Update order to paid first
-    await supabase
-      .from("topup_orders")
-      .update({
-        status: "paid",
-        payment_method: "Xavier KHQR",
-        status_message: `Payment confirmed. Transaction: ${transactionId}. Starting fulfillment...`,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", order.id);
-
-    log('INFO', 'Payment recorded, starting G2Bulk fulfillment', { orderId: order.id });
-
-    // 6. Fulfill G2Bulk order directly (not via function invoke to avoid internal call issues)
+    // 5. Fulfill G2Bulk order directly
     const fulfillResult = await fulfillG2BulkOrder(supabase, order.id);
     
     log('INFO', 'Fulfillment result', { fulfillResult });
