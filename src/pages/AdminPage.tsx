@@ -309,7 +309,7 @@ const AdminPage: React.FC = () => {
         
         <div className="container mx-auto px-4 py-6">
           <Tabs defaultValue="settings" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-11 bg-card border border-border">
+            <TabsList className="grid w-full grid-cols-12 bg-card border border-border">
               <TabsTrigger value="settings" className="data-[state=active]:bg-gold data-[state=active]:text-primary-foreground text-xs sm:text-sm">
                 <Settings className="w-4 h-4 sm:mr-2" />
                 <span className="hidden sm:inline">Site</span>
