@@ -2831,6 +2831,21 @@ const AdminPage: React.FC = () => {
             <TabsContent value="export">
               <DataExportTab />
             </TabsContent>
+
+            {/* Pre-Orders */}
+            <TabsContent value="preorders">
+              <Card className="border-gold/30">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-gold" />
+                    Pre-Order Management
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <PreorderAdminTab />
+                </CardContent>
+              </Card>
+            </TabsContent>
           </Tabs>
         </div>
       </div>
