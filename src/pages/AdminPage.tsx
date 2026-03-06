@@ -354,6 +354,10 @@ const AdminPage: React.FC = () => {
                 <Database className="w-4 h-4 sm:mr-2" />
                 <span className="hidden sm:inline">Export</span>
               </TabsTrigger>
+              <TabsTrigger value="preorders" className="data-[state=active]:bg-gold data-[state=active]:text-primary-foreground text-xs sm:text-sm">
+                <Calendar className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Pre-Order</span>
+              </TabsTrigger>
             </TabsList>
             
             {/* Site Settings */}
