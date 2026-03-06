@@ -35,6 +35,7 @@ import { AdminWalletTab } from '@/components/admin/AdminWalletTab';
 import DataExportTab from '@/components/admin/DataExportTab';
 import FontUploadSettings from '@/components/admin/FontUploadSettings';
 import ThemeTab from '@/components/admin/ThemeTab';
+import PreorderAdminTab from '@/components/admin/PreorderAdminTab';
 
 const AdminPage: React.FC = () => {
   const { user, signOut } = useAuth();
