@@ -74,8 +74,11 @@ const Index: React.FC = () => {
             </div>
           ) : (
             <>
-              {/* Featured Games Section - Games with special packages */}
+              {/* Featured Games Section */}
               <FeaturedGamesSection games={games} />
+              
+              {/* Pre-Order Section */}
+              <PreorderSection />
               
               {/* All Games Section */}
               <AllGamesSection games={games} />
