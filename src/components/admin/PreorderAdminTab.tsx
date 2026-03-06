@@ -274,7 +274,7 @@ const PreorderAdminTab: React.FC = () => {
                           </div>
                           <G2BulkProductSelector
                             value={editPkgData.g2bulkProductId}
-                            onSelect={(productId, typeId) => setEditPkgData({ ...editPkgData, g2bulkProductId: productId, g2bulkTypeId: typeId })}
+                            onChange={(productId, typeId) => setEditPkgData({ ...editPkgData, g2bulkProductId: productId, g2bulkTypeId: typeId })}
                           />
                           <div className="flex gap-2">
                             <Button size="sm" onClick={() => handleSavePackage(pkg.id)}><Save className="w-3 h-3 mr-1" />Save</Button>
