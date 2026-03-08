@@ -724,7 +724,8 @@ const TopupPage: React.FC = () => {
                         "w-full mt-4 py-3 rounded-md font-bold",
                         verifiedUser
                           ? "bg-emerald-500 hover:bg-emerald-600"
-                          : "bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700",
+                          : "bg-gradient-to-r from-primary to-accent text-primary-foreground hover:brightness-110",
+                      )}
                       )}
                     >
                       {isVerifying ? (
