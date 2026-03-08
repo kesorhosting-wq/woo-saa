@@ -54,7 +54,7 @@ const KiraStyleGameCard: React.FC<KiraStyleGameCardProps> = ({ game }) => {
         )}
         
         {/* TOP UP button with gradient */}
-        <button className="w-full py-1 sm:py-1.5 px-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 text-white text-[8px] sm:text-[10px] font-bold uppercase tracking-wide hover:from-amber-600 hover:to-amber-700 transition-all shadow-md">
+        <button className="w-full py-1 sm:py-1.5 px-1.5 rounded-lg bg-gradient-to-r from-primary to-accent text-primary-foreground text-[8px] sm:text-[10px] font-bold uppercase tracking-wide hover:brightness-110 transition-all shadow-md">
           TOP UP
         </button>
       </div>

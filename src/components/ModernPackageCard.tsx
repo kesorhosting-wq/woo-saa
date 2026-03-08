@@ -105,7 +105,7 @@ const ModernPackageCard: React.FC<ModernPackageCardProps> = ({
           {/* Left side - Price and Name */}
           <div className="flex-1 min-w-0 text-left">
             {/* Price */}
-            <div className="text-amber-400 font-bold text-sm sm:text-base">
+            <div className="text-primary font-bold text-sm sm:text-base">
               {settings.packageCurrencySymbol || '$'}{pkg.price.toFixed(2)}
             </div>
             
