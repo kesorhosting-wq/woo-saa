@@ -61,6 +61,15 @@ const TopupPage: React.FC = () => {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [walletBalance, setWalletBalance] = useState<number>(0);
+  
+  // Inline QR payment state
+  const [inlineQR, setInlineQR] = useState<{
+    qrCode: string;
+    orderId: string;
+    amount: number;
+    wsUrl?: string;
+  } | null>(null);
+  const [generatingQR, setGeneratingQR] = useState(false);
 
   const [gameVerificationConfig, setGameVerificationConfig] = useState<GameVerificationConfig | null>(null);
 
