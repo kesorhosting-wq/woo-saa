@@ -278,9 +278,14 @@ async function fulfillOrder(supabase: any, orderId: string, options: { isPreorde
   const apiKey = apiConfig.api_secret;
 
   try {
-    // Resolve quantity
-    const fulfillQuantity = await resolveQuantity(supabase, g2bulkProductId, order.package_name);
-    log('INFO', `Fulfilling x${fulfillQuantity}`, { orderId, g2bulkProductId });
+    // Use fulfill_quantity from order record if available, otherwise fall back to resolveQuantity
+    let fulfillQuantity = 1;
+    if (order.fulfill_quantity && order.fulfill_quantity > 0) {
+      fulfillQuantity = order.fulfill_quantity;
+    } else {
+      fulfillQuantity = await resolveQuantity(supabase, g2bulkProductId, order.package_name);
+    }
+    log('INFO', `Fulfilling x${fulfillQuantity}`, { orderId, g2bulkProductId, source: order.fulfill_quantity ? 'order_record' : 'resolved' });
 
     await supabase.from(tableName).update({
       status: 'processing',
