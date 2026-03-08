@@ -80,11 +80,14 @@ const Header: React.FC = () => {
 
   return (
     <header 
-      className="relative px-4 py-3 border-b border-border/30"
+      className="relative px-4 py-3 border-b"
       style={{
+        backgroundColor: settings.headerBgColor || undefined,
+        borderColor: settings.headerBorderColor || undefined,
         backgroundImage: settings.headerImage ? `url(${settings.headerImage})` : undefined,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
+        color: settings.headerTextColor || undefined,
       }}
     >
       {settings.headerImage && <div className="absolute inset-0 bg-background/80" />}

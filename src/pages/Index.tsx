@@ -26,6 +26,7 @@ const Index: React.FC = () => {
       <div 
         className="min-h-screen flex flex-col"
         style={{
+          backgroundColor: settings.backgroundColor || undefined,
           backgroundImage: settings.backgroundImage ? `url(${settings.backgroundImage})` : undefined,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
