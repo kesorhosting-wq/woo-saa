@@ -357,6 +357,7 @@ export type Database = {
           card_codes: Json | null
           created_at: string
           currency: string | null
+          fulfill_quantity: number | null
           g2bulk_order_id: string | null
           g2bulk_product_id: string | null
           game_name: string
@@ -377,6 +378,7 @@ export type Database = {
           card_codes?: Json | null
           created_at?: string
           currency?: string | null
+          fulfill_quantity?: number | null
           g2bulk_order_id?: string | null
           g2bulk_product_id?: string | null
           game_name: string
@@ -397,6 +399,7 @@ export type Database = {
           card_codes?: Json | null
           created_at?: string
           currency?: string | null
+          fulfill_quantity?: number | null
           g2bulk_order_id?: string | null
           g2bulk_product_id?: string | null
           game_name?: string
@@ -607,6 +610,7 @@ export type Database = {
           card_codes: Json | null
           created_at: string
           currency: string | null
+          fulfill_quantity: number | null
           g2bulk_order_id: string | null
           g2bulk_product_id: string | null
           game_name: string
@@ -626,6 +630,7 @@ export type Database = {
           card_codes?: Json | null
           created_at?: string
           currency?: string | null
+          fulfill_quantity?: number | null
           g2bulk_order_id?: string | null
           g2bulk_product_id?: string | null
           game_name: string
@@ -645,6 +650,7 @@ export type Database = {
           card_codes?: Json | null
           created_at?: string
           currency?: string | null
+          fulfill_quantity?: number | null
           g2bulk_order_id?: string | null
           g2bulk_product_id?: string | null
           game_name?: string
