@@ -822,7 +822,7 @@ const TopupPage: React.FC = () => {
                     <Button
                       onClick={handleSubmit}
                       disabled={isSubmitting || !agreedToTerms || !selectedPackage || !selectedPayment || !verifiedUser}
-                      className="px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold rounded-full disabled:opacity-50"
+                      className="px-6 py-3 bg-gradient-to-r from-primary to-accent text-primary-foreground font-bold rounded-full disabled:opacity-50"
                     >
                       {isSubmitting ? (
                         <span className="flex items-center gap-2">
