@@ -38,7 +38,7 @@ const App = () => (
                   <Routes>
                     <Route path="/" element={<Index />} />
                     <Route path="/topup/:gameSlug" element={<TopupPage />} />
-                    <Route path="/checkout" element={<CheckoutPage />} />
+                    <Route path="/checkout" element={<Navigate to="/" replace />} />
                     <Route path="/invoice/:orderId" element={<InvoicePage />} />
                     <Route path="/orders" element={<OrderHistoryPage />} />
                     <Route path="/wallet" element={<WalletPage />} />
