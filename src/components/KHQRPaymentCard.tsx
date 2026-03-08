@@ -215,62 +215,20 @@ const KHQRPaymentCard = ({
   }
 
   return (
-    <Card className="overflow-hidden border-0 shadow-2xl bg-gradient-to-b from-card to-card/95">
-      {/* Premium Header */}
-      <div className="relative overflow-hidden">
-        {/* Gradient Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700" />
-        
-        {/* Animated Pattern Overlay */}
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `radial-gradient(circle at 25% 25%, white 2px, transparent 2px),
-                             radial-gradient(circle at 75% 75%, white 1px, transparent 1px)`,
-            backgroundSize: '50px 50px, 30px 30px',
-          }} />
-        </div>
+    <Card className="overflow-hidden border-0 shadow-2xl bg-white">
+      {/* KHQR Red Header Bar */}
+      <div className="bg-gradient-to-r from-red-600 to-red-500 px-6 py-3 flex items-center justify-center">
+        <span className="text-white font-bold text-xl tracking-wider">KHQR</span>
+      </div>
 
-        {/* Glow Effect */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-white/20 blur-3xl rounded-full -translate-y-1/2" />
-
-        <div className="relative p-6 text-white">
-          {/* Top Bar */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl flex items-center justify-center">
-                <Wallet className="w-6 h-6" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold flex items-center gap-2">
-                  KHQR Payment
-                  <Sparkles className="w-4 h-4 text-yellow-300" />
-                </h2>
-                <p className="text-white/70 text-sm">{paymentMethod}</p>
-              </div>
-            </div>
-            <Badge className="bg-white/10 backdrop-blur-sm text-white border border-white/20 px-3 py-1">
-              <Shield className="w-3 h-3 mr-1.5" />
-              Secure
-            </Badge>
-          </div>
-
-          {/* Amount Display */}
-          <div className="text-center py-4">
-            <p className="text-white/60 text-sm uppercase tracking-wider mb-2">ចំនួនទឹកប្រាក់</p>
-            <div className="flex items-baseline justify-center">
-              <span className="text-3xl font-medium text-white/80">{currency === "USD" ? "$" : "៛"}</span>
-              <span className="text-6xl font-bold mx-1 bg-clip-text text-transparent bg-gradient-to-r from-white to-white/90">
-                {currency === "KHR" ? amount.toLocaleString() : amount.toFixed(2)}
-              </span>
-              <span className="text-lg font-medium text-white/70 ml-1">{currency}</span>
-            </div>
-            {description && (
-              <p className="text-white/60 text-sm mt-3 flex items-center justify-center gap-2">
-                <Zap className="w-4 h-4" />
-                {description}
-              </p>
-            )}
-          </div>
+      {/* Merchant Info */}
+      <div className="px-6 pt-5 pb-2 text-center">
+        <h2 className="text-2xl font-bold text-gray-900">{description || "Xavier TopUp"}</h2>
+        <div className="flex items-baseline justify-center mt-1">
+          <span className="text-3xl font-bold text-gray-900">
+            {currency === "KHR" ? amount.toLocaleString() : amount.toFixed(2)}
+          </span>
+          <span className="text-xl font-bold text-gray-900 ml-1">{currency === "USD" ? "$" : "៛"}</span>
         </div>
       </div>
 
