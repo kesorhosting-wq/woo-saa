@@ -477,6 +477,15 @@ serve(async (req) => {
       is_preorder, scheduled_fulfill_at, fulfill_quantity
     } = body;
 
+    // Guard: required fields must be present
+    if (!game_name || !package_name || !player_id) {
+      log('ERROR', 'Missing required fields for order creation', { game_name, package_name, player_id });
+      return new Response(
+        JSON.stringify({ success: false, error: 'Missing required fields: game_name, package_name, player_id' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     log('INFO', 'Creating order', { game_name, package_name, is_preorder, fulfill_quantity });
 
     const tableName = is_preorder ? 'preorder_orders' : 'topup_orders';
