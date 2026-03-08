@@ -268,47 +268,25 @@ const KHQRPaymentCard = ({
         </div>
 
         {/* Instructions */}
-        <div className="bg-gradient-to-br from-muted/50 to-muted/30 rounded-2xl p-5 mb-6 border border-border/50">
-          <h3 className="font-semibold text-sm text-foreground mb-4 flex items-center gap-2">
-            <Smartphone className="w-4 h-4 text-violet-500" />
+        <div className="bg-gray-50 rounded-xl p-4 mb-4 border border-gray-200">
+          <h3 className="font-semibold text-sm text-gray-800 mb-3 flex items-center gap-2">
+            <Smartphone className="w-4 h-4 text-primary" />
             របៀបបង់ប្រាក់
           </h3>
-          <div className="space-y-3">
+          <div className="space-y-2">
             {[
               { step: 1, text: "បើកកម្មវិធី Bakong ឬកម្មវិធីធនាគារ" },
               { step: 2, text: "ចុច Scan QR ហើយស្កេនកូដខាងលើ" },
               { step: 3, text: "បញ្ជាក់ការទូទាត់ - ប្រព័ន្ធនឹងដំណើរការដោយស្វ័យប្រវត្តិ" },
             ].map(({ step, text }) => (
-              <div key={step} className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0 shadow-lg">
+              <div key={step} className="flex items-start gap-2">
+                <div className="w-5 h-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold flex-shrink-0">
                   {step}
                 </div>
-                <p className="text-sm text-muted-foreground pt-0.5">{text}</p>
+                <p className="text-sm text-gray-600 pt-0.5">{text}</p>
               </div>
             ))}
           </div>
-          
-          {/* Auto-confirm notice */}
-          <div className="mt-4 pt-4 border-t border-border/50 flex items-center gap-2 text-xs text-emerald-600 dark:text-emerald-400">
-            <CheckCircle2 className="w-4 h-4" />
-            <span>ប្រព័ន្ធនឹងបញ្ជាក់ការទូទាត់ដោយស្វ័យប្រវត្តិក្រោយពេលស្កេនជោគជ័យ</span>
-          </div>
-        </div>
-
-        {/* Order ID */}
-        <div className="flex items-center justify-between p-3 bg-muted/50 rounded-xl border border-border/50 mb-6">
-          <div>
-            <p className="text-xs text-muted-foreground uppercase tracking-wider">Order ID</p>
-            <p className="font-mono text-sm font-medium truncate max-w-[180px]">{orderId.slice(0, 12)}...</p>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => copyToClipboard(orderId, "Order ID")}
-            className="h-9 w-9 rounded-lg hover:bg-background"
-          >
-            {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
-          </Button>
         </div>
 
         {/* Actions */}
@@ -316,7 +294,7 @@ const KHQRPaymentCard = ({
           <Button
             onClick={() => checkPaymentStatus(false)}
             disabled={checking || isExpired}
-            className="w-full h-12 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white rounded-xl font-semibold shadow-lg shadow-violet-500/25 transition-all duration-300 hover:shadow-violet-500/40"
+            className="w-full h-12 bg-gradient-to-r from-primary to-accent text-primary-foreground rounded-xl font-semibold shadow-lg transition-all duration-300 hover:brightness-110"
           >
             {checking ? (
               <>
@@ -336,7 +314,7 @@ const KHQRPaymentCard = ({
             <Button 
               variant="ghost" 
               onClick={onCancel} 
-              className="w-full h-11 rounded-xl text-muted-foreground hover:text-foreground"
+              className="w-full h-11 rounded-xl text-gray-500 hover:text-gray-800"
             >
               បោះបង់ការបញ្ជាទិញ
             </Button>
@@ -344,23 +322,13 @@ const KHQRPaymentCard = ({
         </div>
 
         {/* Footer */}
-        <div className="mt-6 pt-4 border-t border-border/50">
-          <p className="text-xs text-center text-muted-foreground mb-3">
-            គាំទ្រដោយធនាគារ Bakong ទាំងអស់
-          </p>
-          <div className="flex items-center justify-center gap-2 text-muted-foreground/60">
+        <div className="mt-4 pt-3 border-t border-gray-200">
+          <div className="flex items-center justify-center gap-2 text-gray-400">
             <Shield className="w-4 h-4" />
             <span className="text-xs">Secured Payment by KHQR</span>
           </div>
         </div>
       </CardContent>
-
-      <style>{`
-        @keyframes scanLine {
-          0%, 100% { transform: translateY(0); opacity: 0; }
-          50% { transform: translateY(250px); opacity: 0.8; }
-        }
-      `}</style>
     </Card>
   );
 };
