@@ -78,6 +78,9 @@ export interface SiteSettings {
   // Home Edit settings
   backgroundImage: string;
   headerImage: string;
+  headerBgColor: string;
+  headerTextColor: string;
+  headerBorderColor: string;
   bannerImage: string;
   bannerImages: string[];
   bannerHeight: number;
