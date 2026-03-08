@@ -12,7 +12,6 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import CustomFontLoader from "./components/CustomFontLoader";
 import Index from "./pages/Index";
 import TopupPage from "./pages/TopupPage";
-import CheckoutPage from "./pages/CheckoutPage";
 import { Navigate } from "react-router-dom";
 import InvoicePage from "./pages/InvoicePage";
 import OrderHistoryPage from "./pages/OrderHistoryPage";
