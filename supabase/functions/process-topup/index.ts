@@ -469,18 +469,20 @@ serve(async (req) => {
     const {
       game_name, package_name, player_id, server_id, player_name,
       amount, currency, payment_method, g2bulk_product_id, user_id,
-      is_preorder, scheduled_fulfill_at
+      is_preorder, scheduled_fulfill_at, fulfill_quantity
     } = body;
 
-    log('INFO', 'Creating order', { game_name, package_name, is_preorder });
+    log('INFO', 'Creating order', { game_name, package_name, is_preorder, fulfill_quantity });
 
     const tableName = is_preorder ? 'preorder_orders' : 'topup_orders';
+    const resolvedQty = (fulfill_quantity && fulfill_quantity > 0) ? fulfill_quantity : 1;
     const insertData: any = {
       game_name, package_name, player_id, server_id, player_name, amount,
       currency: currency || 'USD', payment_method,
       g2bulk_product_id: g2bulk_product_id || null,
       user_id: user_id || null,
-      status: 'pending'
+      status: 'pending',
+      fulfill_quantity: resolvedQty
     };
     if (is_preorder && scheduled_fulfill_at) {
       insertData.scheduled_fulfill_at = scheduled_fulfill_at;
