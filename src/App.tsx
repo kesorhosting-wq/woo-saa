@@ -12,7 +12,6 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import CustomFontLoader from "./components/CustomFontLoader";
 import Index from "./pages/Index";
 import TopupPage from "./pages/TopupPage";
-import CheckoutPage from "./pages/CheckoutPage";
 import { Navigate } from "react-router-dom";
 import InvoicePage from "./pages/InvoicePage";
 import OrderHistoryPage from "./pages/OrderHistoryPage";
@@ -39,7 +38,7 @@ const App = () => (
                   <Routes>
                     <Route path="/" element={<Index />} />
                     <Route path="/topup/:gameSlug" element={<TopupPage />} />
-                    <Route path="/checkout" element={<CheckoutPage />} />
+                    <Route path="/checkout" element={<Navigate to="/" replace />} />
                     <Route path="/invoice/:orderId" element={<InvoicePage />} />
                     <Route path="/orders" element={<OrderHistoryPage />} />
                     <Route path="/wallet" element={<WalletPage />} />
