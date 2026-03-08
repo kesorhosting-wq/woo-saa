@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Battambang:wght@400;700;900&family=Cinzel:wght@400;600;700&family=Noto+Sans:wght@400;500;600;700&family=Noto+Sans+Khmer:wght@400;500;600;700&family=Noto+Sans+Symbols+2&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Battambang:wght@400;700;900&family=Noto+Sans:wght@400;500;600;700&family=Noto+Sans+Khmer:wght@400;500;600;700&family=Noto+Sans+Symbols+2&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,115 +6,115 @@
 
 @layer base {
   :root {
-    --background: 39 45% 96%;
-    --foreground: 30 20% 15%;
+    --background: 220 40% 7%;
+    --foreground: 210 20% 95%;
 
-    --card: 39 35% 92%;
-    --card-foreground: 30 20% 15%;
+    --card: 220 35% 12%;
+    --card-foreground: 210 20% 95%;
 
-    --popover: 39 35% 95%;
-    --popover-foreground: 30 20% 15%;
+    --popover: 220 35% 10%;
+    --popover-foreground: 210 20% 95%;
 
-    --primary: 43 74% 49%;
-    --primary-foreground: 30 20% 10%;
+    --primary: 195 100% 50%;
+    --primary-foreground: 220 40% 7%;
 
-    --secondary: 39 30% 85%;
-    --secondary-foreground: 30 20% 20%;
+    --secondary: 220 30% 18%;
+    --secondary-foreground: 210 20% 90%;
 
-    --muted: 39 20% 88%;
-    --muted-foreground: 30 10% 45%;
+    --muted: 220 25% 15%;
+    --muted-foreground: 210 15% 55%;
 
-    --accent: 25 80% 45%;
-    --accent-foreground: 39 45% 96%;
+    --accent: 195 90% 45%;
+    --accent-foreground: 220 40% 7%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 43 50% 75%;
-    --input: 43 40% 88%;
-    --ring: 43 74% 49%;
+    --border: 195 50% 30%;
+    --input: 220 30% 18%;
+    --ring: 195 100% 50%;
 
     --radius: 0.75rem;
 
-    /* Custom Khmer-inspired tokens */
-    --gold: 43 74% 49%;
-    --gold-light: 43 60% 65%;
-    --gold-dark: 35 70% 35%;
-    --gold-glow: 43 80% 55%;
-    --cream: 39 45% 96%;
-    --cream-dark: 39 35% 88%;
+    /* Custom tokens */
+    --gold: 195 100% 50%;
+    --gold-light: 195 80% 65%;
+    --gold-dark: 200 90% 35%;
+    --gold-glow: 195 100% 55%;
+    --cream: 220 40% 7%;
+    --cream-dark: 220 35% 12%;
     --burgundy: 350 50% 30%;
     --burgundy-light: 350 45% 45%;
 
     /* Gradients */
-    --gradient-gold: linear-gradient(135deg, hsl(43 74% 55%), hsl(35 70% 40%));
-    --gradient-cream: linear-gradient(180deg, hsl(39 45% 98%), hsl(39 35% 88%));
-    --gradient-hero: linear-gradient(180deg, hsl(43 60% 65%) 0%, hsl(39 45% 96%) 100%);
-    --gradient-card: linear-gradient(145deg, hsl(43 50% 80%), hsl(39 40% 90%));
+    --gradient-gold: linear-gradient(135deg, hsl(195 100% 55%), hsl(200 90% 40%));
+    --gradient-cream: linear-gradient(180deg, hsl(220 40% 9%), hsl(220 40% 7%));
+    --gradient-hero: linear-gradient(180deg, hsl(220 35% 15%) 0%, hsl(220 40% 7%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(220 30% 16%), hsl(220 35% 10%));
 
     /* Shadows */
-    --shadow-gold: 0 4px 20px -4px hsl(43 74% 49% / 0.4);
-    --shadow-elegant: 0 10px 40px -10px hsl(30 20% 15% / 0.2);
+    --shadow-gold: 0 4px 20px -4px hsl(195 100% 50% / 0.3);
+    --shadow-elegant: 0 10px 40px -10px hsl(220 40% 5% / 0.5);
 
-    --sidebar-background: 39 35% 92%;
-    --sidebar-foreground: 30 20% 15%;
-    --sidebar-primary: 43 74% 49%;
-    --sidebar-primary-foreground: 30 20% 10%;
-    --sidebar-accent: 39 30% 85%;
-    --sidebar-accent-foreground: 30 20% 20%;
-    --sidebar-border: 43 50% 75%;
-    --sidebar-ring: 43 74% 49%;
+    --sidebar-background: 220 35% 10%;
+    --sidebar-foreground: 210 20% 95%;
+    --sidebar-primary: 195 100% 50%;
+    --sidebar-primary-foreground: 220 40% 7%;
+    --sidebar-accent: 220 30% 18%;
+    --sidebar-accent-foreground: 210 20% 90%;
+    --sidebar-border: 195 50% 30%;
+    --sidebar-ring: 195 100% 50%;
   }
 
   .dark {
-    --background: 30 20% 8%;
-    --foreground: 39 45% 96%;
+    --background: 220 40% 7%;
+    --foreground: 210 20% 95%;
 
-    --card: 30 20% 12%;
-    --card-foreground: 39 45% 96%;
+    --card: 220 35% 12%;
+    --card-foreground: 210 20% 95%;
 
-    --popover: 30 20% 10%;
-    --popover-foreground: 39 45% 96%;
+    --popover: 220 35% 10%;
+    --popover-foreground: 210 20% 95%;
 
-    --primary: 43 74% 49%;
-    --primary-foreground: 30 20% 10%;
+    --primary: 195 100% 50%;
+    --primary-foreground: 220 40% 7%;
 
-    --secondary: 30 20% 18%;
-    --secondary-foreground: 39 45% 90%;
+    --secondary: 220 30% 18%;
+    --secondary-foreground: 210 20% 90%;
 
-    --muted: 30 15% 20%;
-    --muted-foreground: 39 20% 60%;
+    --muted: 220 25% 15%;
+    --muted-foreground: 210 15% 55%;
 
-    --accent: 25 80% 50%;
-    --accent-foreground: 39 45% 96%;
+    --accent: 195 90% 45%;
+    --accent-foreground: 220 40% 7%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 30 20% 25%;
-    --input: 30 20% 20%;
-    --ring: 43 74% 49%;
+    --border: 195 50% 30%;
+    --input: 220 30% 18%;
+    --ring: 195 100% 50%;
 
-    --gold: 43 74% 55%;
-    --gold-light: 43 60% 70%;
-    --gold-dark: 35 70% 40%;
-    --cream: 30 20% 8%;
-    --cream-dark: 30 20% 15%;
+    --gold: 195 100% 55%;
+    --gold-light: 195 80% 70%;
+    --gold-dark: 200 90% 40%;
+    --cream: 220 40% 7%;
+    --cream-dark: 220 35% 12%;
     --burgundy: 350 50% 35%;
 
-    --gradient-gold: linear-gradient(135deg, hsl(43 74% 60%), hsl(35 70% 45%));
-    --gradient-cream: linear-gradient(180deg, hsl(30 20% 12%), hsl(30 20% 8%));
-    --gradient-hero: linear-gradient(180deg, hsl(35 40% 20%) 0%, hsl(30 20% 8%) 100%);
-    --gradient-card: linear-gradient(145deg, hsl(30 25% 18%), hsl(30 20% 12%));
+    --gradient-gold: linear-gradient(135deg, hsl(195 100% 60%), hsl(200 90% 45%));
+    --gradient-cream: linear-gradient(180deg, hsl(220 35% 12%), hsl(220 40% 7%));
+    --gradient-hero: linear-gradient(180deg, hsl(220 30% 18%) 0%, hsl(220 40% 7%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(220 25% 18%), hsl(220 35% 12%));
 
-    --sidebar-background: 30 20% 10%;
-    --sidebar-foreground: 39 45% 96%;
-    --sidebar-primary: 43 74% 55%;
-    --sidebar-primary-foreground: 30 20% 10%;
-    --sidebar-accent: 30 20% 18%;
-    --sidebar-accent-foreground: 39 45% 90%;
-    --sidebar-border: 30 20% 25%;
-    --sidebar-ring: 43 74% 49%;
+    --sidebar-background: 220 35% 10%;
+    --sidebar-foreground: 210 20% 95%;
+    --sidebar-primary: 195 100% 55%;
+    --sidebar-primary-foreground: 220 40% 7%;
+    --sidebar-accent: 220 30% 18%;
+    --sidebar-accent-foreground: 210 20% 90%;
+    --sidebar-border: 195 50% 30%;
+    --sidebar-ring: 195 100% 50%;
   }
 }
 
@@ -130,7 +130,7 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Cinzel', serif;
+    font-family: 'Noto Sans', 'Noto Sans Khmer', sans-serif;
   }
 
   .font-khmer {

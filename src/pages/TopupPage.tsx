@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import KHQRPaymentCard from "@/components/KHQRPaymentCard";
 import ModernPackageCard from "@/components/ModernPackageCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,6 +62,15 @@ const TopupPage: React.FC = () => {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [walletBalance, setWalletBalance] = useState<number>(0);
+  
+  // Inline QR payment state
+  const [inlineQR, setInlineQR] = useState<{
+    qrCode: string;
+    orderId: string;
+    amount: number;
+    wsUrl?: string;
+  } | null>(null);
+  const [generatingQR, setGeneratingQR] = useState(false);
 
   const [gameVerificationConfig, setGameVerificationConfig] = useState<GameVerificationConfig | null>(null);
 
@@ -464,29 +474,67 @@ const TopupPage: React.FC = () => {
       return;
     }
 
+    // Generate QR inline on topup page
     const paymentMethod = paymentMethods.find((p) => p.id === selectedPayment);
+    setGeneratingQR(true);
+    setIsSubmitting(true);
 
-    addToCart({
-      id: `${pkg.id}-${userId}-${Date.now()}`,
-      packageId: pkg.id,
-      gameId: game.id,
-      gameName: game.name,
-      gameIcon: game.image || "",
-      packageName: pkg.name,
-      amount: pkg.amount,
-      price: pkg.price,
-      playerId: userId.trim(),
-      serverId: serverId.trim() || undefined,
-      playerName: verifiedUser.username,
-      paymentMethodId: selectedPayment,
-      paymentMethodName: paymentMethod?.name || "Unknown",
-      g2bulkProductId: pkg.g2bulkProductId,
-      g2bulkTypeId: pkg.g2bulkTypeId,
-      fulfillQuantity: pkg.quantity && pkg.quantity > 0 ? pkg.quantity : 1,
-    });
+    try {
+      // Create order
+      const { data: orderData, error: orderError } = await supabase.functions.invoke("process-topup", {
+        body: {
+          game_name: game.name,
+          package_name: pkg.name,
+          player_id: userId.trim(),
+          server_id: serverId.trim() || null,
+          player_name: verifiedUser.username,
+          amount: pkg.price,
+          currency: settings.packageCurrency || "USD",
+          payment_method: paymentMethod?.name || "KHQR",
+          g2bulk_product_id: pkg.g2bulkProductId || null,
+          fulfill_quantity: pkg.quantity && pkg.quantity > 0 ? pkg.quantity : 1,
+        },
+      });
 
-    toast({ title: "✓ បានបន្ថែមទៅកន្ត្រក!", description: `${pkg.name} សម្រាប់ ${verifiedUser.username}` });
-    navigate("/checkout");
+      if (orderError) throw orderError;
+      const newOrderId = orderData?.order_id;
+      if (!newOrderId) throw new Error("Failed to create order");
+
+      // Generate KHQR
+      const { data: qrData, error: qrError } = await supabase.functions.invoke("ikhode-payment", {
+        body: {
+          action: "generate-khqr",
+          amount: pkg.price,
+          orderId: newOrderId,
+          playerName: verifiedUser.username,
+          gameName: game.name,
+        },
+      });
+
+      if (qrError) throw qrError;
+      if (!qrData?.qrCodeData) throw new Error(qrData?.error || "Failed to generate QR");
+
+      setInlineQR({
+        qrCode: qrData.qrCodeData,
+        orderId: newOrderId,
+        amount: qrData.amount || pkg.price,
+        wsUrl: qrData.wsUrl,
+      });
+
+      // Scroll to QR section
+      setTimeout(() => {
+        document.getElementById("inline-qr-section")?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    } catch (error: any) {
+      toast({
+        title: "QR កំហុស",
+        description: error.message || "Failed to generate payment QR",
+        variant: "destructive",
+      });
+    } finally {
+      setGeneratingQR(false);
+      setIsSubmitting(false);
+    }
   };
 
   const selectedPkg = selectedPackage
@@ -676,7 +724,7 @@ const TopupPage: React.FC = () => {
                         "w-full mt-4 py-3 rounded-md font-bold",
                         verifiedUser
                           ? "bg-emerald-500 hover:bg-emerald-600"
-                          : "bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700",
+                          : "bg-gradient-to-r from-primary to-accent text-primary-foreground hover:brightness-110",
                       )}
                     >
                       {isVerifying ? (
@@ -774,7 +822,7 @@ const TopupPage: React.FC = () => {
                     <Button
                       onClick={handleSubmit}
                       disabled={isSubmitting || !agreedToTerms || !selectedPackage || !selectedPayment || !verifiedUser}
-                      className="px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold rounded-full disabled:opacity-50"
+                      className="px-6 py-3 bg-gradient-to-r from-primary to-accent text-primary-foreground font-bold rounded-full disabled:opacity-50"
                     >
                       {isSubmitting ? (
                         <span className="flex items-center gap-2">
@@ -788,6 +836,25 @@ const TopupPage: React.FC = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Inline QR Payment Section */}
+              {inlineQR && (
+                <div id="inline-qr-section" className="order-4 lg:order-none">
+                  <KHQRPaymentCard
+                    qrCode={inlineQR.qrCode}
+                    amount={inlineQR.amount}
+                    currency={settings.packageCurrency || "USD"}
+                    orderId={inlineQR.orderId}
+                    description={`${game.name} - ${selectedPkg?.name || ""}`}
+                    onComplete={() => {
+                      setInlineQR(null);
+                      navigate(`/invoice/${inlineQR.orderId}`);
+                    }}
+                    onCancel={() => setInlineQR(null)}
+                    wsUrl={inlineQR.wsUrl}
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>
