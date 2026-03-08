@@ -482,6 +482,7 @@ const TopupPage: React.FC = () => {
       paymentMethodName: paymentMethod?.name || "Unknown",
       g2bulkProductId: pkg.g2bulkProductId,
       g2bulkTypeId: pkg.g2bulkTypeId,
+      fulfillQuantity: pkg.quantity && pkg.quantity > 0 ? pkg.quantity : 1,
     });
 
     toast({ title: "✓ បានបន្ថែមទៅកន្ត្រក!", description: `${pkg.name} សម្រាប់ ${verifiedUser.username}` });

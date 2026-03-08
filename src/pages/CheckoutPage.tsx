@@ -70,6 +70,7 @@ const CheckoutPage = () => {
           currency: settings.packageCurrency || "USD",
           payment_method: "Woo Saa KHQR",
           g2bulk_product_id: firstItem.g2bulkProductId || null,
+          fulfill_quantity: firstItem.fulfillQuantity || 1,
         },
       });
 
