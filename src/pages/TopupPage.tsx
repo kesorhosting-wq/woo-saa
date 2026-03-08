@@ -835,6 +835,25 @@ const TopupPage: React.FC = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Inline QR Payment Section */}
+              {inlineQR && (
+                <div id="inline-qr-section" className="order-4 lg:order-none">
+                  <KHQRPaymentCard
+                    qrCode={inlineQR.qrCode}
+                    amount={inlineQR.amount}
+                    currency={settings.packageCurrency || "USD"}
+                    orderId={inlineQR.orderId}
+                    description={`${game.name} - ${selectedPkg?.name || ""}`}
+                    onComplete={() => {
+                      setInlineQR(null);
+                      navigate(`/invoice/${inlineQR.orderId}`);
+                    }}
+                    onCancel={() => setInlineQR(null)}
+                    wsUrl={inlineQR.wsUrl}
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>
