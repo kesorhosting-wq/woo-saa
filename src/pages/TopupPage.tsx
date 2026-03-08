@@ -473,29 +473,67 @@ const TopupPage: React.FC = () => {
       return;
     }
 
+    // Generate QR inline on topup page
     const paymentMethod = paymentMethods.find((p) => p.id === selectedPayment);
+    setGeneratingQR(true);
+    setIsSubmitting(true);
 
-    addToCart({
-      id: `${pkg.id}-${userId}-${Date.now()}`,
-      packageId: pkg.id,
-      gameId: game.id,
-      gameName: game.name,
-      gameIcon: game.image || "",
-      packageName: pkg.name,
-      amount: pkg.amount,
-      price: pkg.price,
-      playerId: userId.trim(),
-      serverId: serverId.trim() || undefined,
-      playerName: verifiedUser.username,
-      paymentMethodId: selectedPayment,
-      paymentMethodName: paymentMethod?.name || "Unknown",
-      g2bulkProductId: pkg.g2bulkProductId,
-      g2bulkTypeId: pkg.g2bulkTypeId,
-      fulfillQuantity: pkg.quantity && pkg.quantity > 0 ? pkg.quantity : 1,
-    });
+    try {
+      // Create order
+      const { data: orderData, error: orderError } = await supabase.functions.invoke("process-topup", {
+        body: {
+          game_name: game.name,
+          package_name: pkg.name,
+          player_id: userId.trim(),
+          server_id: serverId.trim() || null,
+          player_name: verifiedUser.username,
+          amount: pkg.price,
+          currency: settings.packageCurrency || "USD",
+          payment_method: paymentMethod?.name || "KHQR",
+          g2bulk_product_id: pkg.g2bulkProductId || null,
+          fulfill_quantity: pkg.quantity && pkg.quantity > 0 ? pkg.quantity : 1,
+        },
+      });
 
-    toast({ title: "✓ បានបន្ថែមទៅកន្ត្រក!", description: `${pkg.name} សម្រាប់ ${verifiedUser.username}` });
-    navigate("/checkout");
+      if (orderError) throw orderError;
+      const newOrderId = orderData?.order_id;
+      if (!newOrderId) throw new Error("Failed to create order");
+
+      // Generate KHQR
+      const { data: qrData, error: qrError } = await supabase.functions.invoke("ikhode-payment", {
+        body: {
+          action: "generate-khqr",
+          amount: pkg.price,
+          orderId: newOrderId,
+          playerName: verifiedUser.username,
+          gameName: game.name,
+        },
+      });
+
+      if (qrError) throw qrError;
+      if (!qrData?.qrCodeData) throw new Error(qrData?.error || "Failed to generate QR");
+
+      setInlineQR({
+        qrCode: qrData.qrCodeData,
+        orderId: newOrderId,
+        amount: qrData.amount || pkg.price,
+        wsUrl: qrData.wsUrl,
+      });
+
+      // Scroll to QR section
+      setTimeout(() => {
+        document.getElementById("inline-qr-section")?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    } catch (error: any) {
+      toast({
+        title: "QR កំហុស",
+        description: error.message || "Failed to generate payment QR",
+        variant: "destructive",
+      });
+    } finally {
+      setGeneratingQR(false);
+      setIsSubmitting(false);
+    }
   };
 
   const selectedPkg = selectedPackage
