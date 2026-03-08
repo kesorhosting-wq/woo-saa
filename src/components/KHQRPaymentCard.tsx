@@ -232,36 +232,19 @@ const KHQRPaymentCard = ({
         </div>
       </div>
 
-      <CardContent className="p-6 -mt-4 relative z-10">
-        {/* QR Code Container */}
+      <CardContent className="p-6">
+        {/* QR Code with dashed border */}
         <div className="relative mx-auto w-fit mb-6">
-          {/* Decorative Frame */}
-          <div className="absolute -inset-4 bg-gradient-to-br from-violet-500/20 via-purple-500/20 to-indigo-500/20 rounded-3xl blur-xl" />
-          
-          {/* Corner Accents */}
-          <div className="absolute -top-2 -left-2 w-6 h-6 border-t-[3px] border-l-[3px] border-violet-500 rounded-tl-xl" />
-          <div className="absolute -top-2 -right-2 w-6 h-6 border-t-[3px] border-r-[3px] border-purple-500 rounded-tr-xl" />
-          <div className="absolute -bottom-2 -left-2 w-6 h-6 border-b-[3px] border-l-[3px] border-indigo-500 rounded-bl-xl" />
-          <div className="absolute -bottom-2 -right-2 w-6 h-6 border-b-[3px] border-r-[3px] border-violet-500 rounded-br-xl" />
-
-          <div className={`relative p-3 bg-white rounded-2xl shadow-xl transition-all duration-500 ${isExpired ? "opacity-40 grayscale blur-sm" : ""}`}>
+          <div className={`relative p-4 border-2 border-dashed border-primary/50 rounded-xl bg-white transition-all duration-500 ${isExpired ? "opacity-40 grayscale blur-sm" : ""}`}>
             <img
               src={qrCode}
               alt="KHQR Payment Code"
               className="w-56 h-56 sm:w-64 sm:h-64 object-contain"
             />
-            
-            {/* Scan Animation */}
-            {!isExpired && (
-              <div className="absolute inset-3 overflow-hidden rounded-xl pointer-events-none">
-                <div className="absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-violet-500 to-transparent animate-pulse opacity-50" 
-                     style={{ animation: 'scanLine 2s ease-in-out infinite' }} />
-              </div>
-            )}
           </div>
 
           {isExpired && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm rounded-2xl">
+            <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm rounded-xl">
               <div className="text-center text-white p-4">
                 <Timer className="w-10 h-10 mx-auto mb-2 text-orange-400" />
                 <p className="font-bold text-lg">QR ផុតកំណត់</p>
