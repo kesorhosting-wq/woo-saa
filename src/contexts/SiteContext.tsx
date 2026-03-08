@@ -191,6 +191,9 @@ const defaultSettings: SiteSettings = {
   // Home Edit defaults
   backgroundImage: '',
   headerImage: '',
+  headerBgColor: '',
+  headerTextColor: '',
+  headerBorderColor: '',
   bannerImage: '',
   bannerImages: [],
   bannerHeight: 256,
