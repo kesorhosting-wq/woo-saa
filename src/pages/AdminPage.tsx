@@ -559,15 +559,34 @@ const AdminPage: React.FC = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Background Image</label>
-                      <ImageUpload
-                        value={settings.backgroundImage}
-                        onChange={(url) => handleUpdateSettings('backgroundImage', url)}
-                        folder="backgrounds"
-                        aspectRatio="wide"
-                        placeholder="Upload Background"
-                      />
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">Background Color</label>
+                        <div className="flex gap-2">
+                          <input 
+                            type="color" 
+                            value={settings.backgroundColor || '#0f1629'}
+                            onChange={(e) => handleUpdateSettings('backgroundColor', e.target.value)}
+                            className="w-12 h-10 rounded cursor-pointer"
+                          />
+                          <Input 
+                            value={settings.backgroundColor || ''}
+                            onChange={(e) => handleUpdateSettings('backgroundColor', e.target.value)}
+                            className="flex-1 border-gold/50"
+                            placeholder="Leave empty for default"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">Background Image</label>
+                        <ImageUpload
+                          value={settings.backgroundImage}
+                          onChange={(url) => handleUpdateSettings('backgroundImage', url)}
+                          folder="backgrounds"
+                          aspectRatio="wide"
+                          placeholder="Upload Background"
+                        />
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -581,15 +600,70 @@ const AdminPage: React.FC = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Header Background Image</label>
-                      <ImageUpload
-                        value={settings.headerImage}
-                        onChange={(url) => handleUpdateSettings('headerImage', url)}
-                        folder="headers"
-                        aspectRatio="wide"
-                        placeholder="Upload Header Image"
-                      />
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">Header Background Color</label>
+                        <div className="flex gap-2">
+                          <input 
+                            type="color" 
+                            value={settings.headerBgColor || '#0f1629'}
+                            onChange={(e) => handleUpdateSettings('headerBgColor', e.target.value)}
+                            className="w-12 h-10 rounded cursor-pointer"
+                          />
+                          <Input 
+                            value={settings.headerBgColor || ''}
+                            onChange={(e) => handleUpdateSettings('headerBgColor', e.target.value)}
+                            className="flex-1 border-gold/50"
+                            placeholder="Leave empty for default"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">Header Text Color</label>
+                        <div className="flex gap-2">
+                          <input 
+                            type="color" 
+                            value={settings.headerTextColor || '#ffffff'}
+                            onChange={(e) => handleUpdateSettings('headerTextColor', e.target.value)}
+                            className="w-12 h-10 rounded cursor-pointer"
+                          />
+                          <Input 
+                            value={settings.headerTextColor || ''}
+                            onChange={(e) => handleUpdateSettings('headerTextColor', e.target.value)}
+                            className="flex-1 border-gold/50"
+                            placeholder="Leave empty for default"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">Header Border Color</label>
+                        <div className="flex gap-2">
+                          <input 
+                            type="color" 
+                            value={settings.headerBorderColor || '#1e293b'}
+                            onChange={(e) => handleUpdateSettings('headerBorderColor', e.target.value)}
+                            className="w-12 h-10 rounded cursor-pointer"
+                          />
+                          <Input 
+                            value={settings.headerBorderColor || ''}
+                            onChange={(e) => handleUpdateSettings('headerBorderColor', e.target.value)}
+                            className="flex-1 border-gold/50"
+                            placeholder="Leave empty for default"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">Header Background Image</label>
+                        <ImageUpload
+                          value={settings.headerImage}
+                          onChange={(url) => handleUpdateSettings('headerImage', url)}
+                          folder="headers"
+                          aspectRatio="wide"
+                          placeholder="Upload Header Image"
+                        />
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
