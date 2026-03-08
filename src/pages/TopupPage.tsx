@@ -434,6 +434,7 @@ const TopupPage: React.FC = () => {
             currency: settings.packageCurrency || "USD",
             payment_method: "Wallet",
             g2bulk_product_id: pkg.g2bulkProductId || null,
+            fulfill_quantity: pkg.quantity && pkg.quantity > 0 ? pkg.quantity : 1,
           },
         });
 
