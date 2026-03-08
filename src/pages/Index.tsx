@@ -38,14 +38,12 @@ const Index: React.FC = () => {
         
         <Header />
         
-        {/* Modern Hero Banner - Contained */}
-        <div className="container mx-auto px-4 pt-4 sm:pt-6">
+        {/* Hero Banner */}
+        <div className="container mx-auto px-3 sm:px-4 pt-3 sm:pt-4">
           <ModernHeroBanner 
             bannerImage={settings.bannerImage} 
             bannerImages={settings.bannerImages}
             bannerHeight={settings.bannerHeight}
-            cornerBorderColor={settings.frameColor}
-            cornerBorderWidth={settings.frameBorderWidth}
             imageFit={settings.bannerImageFit}
           />
         </div>
