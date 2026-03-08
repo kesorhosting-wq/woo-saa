@@ -726,7 +726,6 @@ const TopupPage: React.FC = () => {
                           ? "bg-emerald-500 hover:bg-emerald-600"
                           : "bg-gradient-to-r from-primary to-accent text-primary-foreground hover:brightness-110",
                       )}
-                      )}
                     >
                       {isVerifying ? (
                         <span className="flex items-center gap-2">
