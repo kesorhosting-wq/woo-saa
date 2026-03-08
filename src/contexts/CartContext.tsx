@@ -19,6 +19,7 @@ export interface CartItem {
   // G2Bulk integration
   g2bulkProductId?: string;
   g2bulkTypeId?: string;
+  fulfillQuantity?: number;
 }
 
 interface CartContextType {

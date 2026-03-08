@@ -278,9 +278,14 @@ async function fulfillOrder(supabase: any, orderId: string, options: { isPreorde
   const apiKey = apiConfig.api_secret;
 
   try {
-    // Resolve quantity
-    const fulfillQuantity = await resolveQuantity(supabase, g2bulkProductId, order.package_name);
-    log('INFO', `Fulfilling x${fulfillQuantity}`, { orderId, g2bulkProductId });
+    // Use fulfill_quantity from order record if available, otherwise fall back to resolveQuantity
+    let fulfillQuantity = 1;
+    if (order.fulfill_quantity && order.fulfill_quantity > 0) {
+      fulfillQuantity = order.fulfill_quantity;
+    } else {
+      fulfillQuantity = await resolveQuantity(supabase, g2bulkProductId, order.package_name);
+    }
+    log('INFO', `Fulfilling x${fulfillQuantity}`, { orderId, g2bulkProductId, source: order.fulfill_quantity ? 'order_record' : 'resolved' });
 
     await supabase.from(tableName).update({
       status: 'processing',
@@ -469,18 +474,29 @@ serve(async (req) => {
     const {
       game_name, package_name, player_id, server_id, player_name,
       amount, currency, payment_method, g2bulk_product_id, user_id,
-      is_preorder, scheduled_fulfill_at
+      is_preorder, scheduled_fulfill_at, fulfill_quantity
     } = body;
 
-    log('INFO', 'Creating order', { game_name, package_name, is_preorder });
+    // Guard: required fields must be present
+    if (!game_name || !package_name || !player_id) {
+      log('ERROR', 'Missing required fields for order creation', { game_name, package_name, player_id });
+      return new Response(
+        JSON.stringify({ success: false, error: 'Missing required fields: game_name, package_name, player_id' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    log('INFO', 'Creating order', { game_name, package_name, is_preorder, fulfill_quantity });
 
     const tableName = is_preorder ? 'preorder_orders' : 'topup_orders';
+    const resolvedQty = (fulfill_quantity && fulfill_quantity > 0) ? fulfill_quantity : 1;
     const insertData: any = {
       game_name, package_name, player_id, server_id, player_name, amount,
       currency: currency || 'USD', payment_method,
       g2bulk_product_id: g2bulk_product_id || null,
       user_id: user_id || null,
-      status: 'pending'
+      status: 'pending',
+      fulfill_quantity: resolvedQty
     };
     if (is_preorder && scheduled_fulfill_at) {
       insertData.scheduled_fulfill_at = scheduled_fulfill_at;
