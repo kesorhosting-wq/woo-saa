@@ -190,8 +190,13 @@ const OrdersTab: React.FC = () => {
   };
 
   const checkG2BulkStatus = async (order: Order) => {
+    // If no g2bulk_order_id but has a product, auto-fulfill instead
     if (!order.g2bulk_order_id) {
-      toast({ title: 'No G2Bulk order ID', description: 'This order has not been sent to G2Bulk yet.', variant: 'destructive' });
+      if (order.g2bulk_product_id) {
+        toast({ title: 'Sending to G2Bulk...', description: 'This order hasn\'t been sent yet. Submitting now.' });
+        return retryG2BulkOrder(order);
+      }
+      toast({ title: 'No G2Bulk product linked', description: 'This order is not linked to any G2Bulk product.', variant: 'destructive' });
       return;
     }
 
