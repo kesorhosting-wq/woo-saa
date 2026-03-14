@@ -514,7 +514,7 @@ const OrdersTab: React.FC = () => {
                         </DropdownMenu>
 
                         {/* G2Bulk Status Check */}
-                        {order.g2bulk_order_id && (
+                        {(order.g2bulk_order_id || order.g2bulk_product_id) && (
                           <Button 
                             size="sm" 
                             variant="outline"
