@@ -171,6 +171,7 @@ async function fulfillRechargeOrder(supabase: any, orderId: string, order: any, 
     if (g2bulkProduct.product_name) catalogueName = g2bulkProduct.product_name;
   }
 
+  // Fallback: parse game_code from product ID "game_CODE_typeId"
   if (!gameCode && order.g2bulk_product_id?.startsWith('game_')) {
     const parts = order.g2bulk_product_id.split('_');
     if (parts.length >= 3) gameCode = parts.slice(1, -1).join('_');
@@ -187,7 +188,7 @@ async function fulfillRechargeOrder(supabase: any, orderId: string, order: any, 
   }
 
   if (!gameCode || !catalogueName) {
-    return { success: false, error: `Could not determine game_code/catalogue_name for: ${order.g2bulk_product_id}` };
+    return { success: false, error: `Could not resolve game_code (${gameCode || 'none'}) or catalogue_name (${catalogueName || 'none'}) for product: ${order.g2bulk_product_id}` };
   }
 
   const callbackUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/g2bulk-webhook`;
