@@ -8,22 +8,34 @@ const corsHeaders = {
 
 const G2BULK_API_URL = 'https://api.g2bulk.com/v1';
 
-// Structured logging helper
 function log(level: 'INFO' | 'WARN' | 'ERROR' | 'DEBUG', message: string, data?: Record<string, unknown>) {
-  const entry = {
-    timestamp: new Date().toISOString(),
-    level,
-    function: 'poll-g2bulk-orders',
-    message,
-    ...data,
-  };
-  if (level === 'ERROR') {
-    console.error(JSON.stringify(entry));
-  } else if (level === 'WARN') {
-    console.warn(JSON.stringify(entry));
-  } else {
-    console.log(JSON.stringify(entry));
+  const entry = { timestamp: new Date().toISOString(), level, function: 'poll-g2bulk-orders', message, ...data };
+  if (level === 'ERROR') console.error(JSON.stringify(entry));
+  else if (level === 'WARN') console.warn(JSON.stringify(entry));
+  else console.log(JSON.stringify(entry));
+}
+
+// Extract game_code from g2bulk_product_id OR from g2bulk_products table
+async function resolveGameCode(supabase: any, g2bulkProductId: string): Promise<string | null> {
+  // 1. Try g2bulk_products table first (most reliable)
+  const { data: product } = await supabase
+    .from('g2bulk_products')
+    .select('fields')
+    .eq('g2bulk_product_id', g2bulkProductId)
+    .maybeSingle();
+
+  if (product?.fields?.game_code) return product.fields.game_code;
+
+  // 2. Fallback: parse from product ID format "game_CODE_typeId"
+  if (g2bulkProductId.startsWith('game_')) {
+    const parts = g2bulkProductId.split('_');
+    if (parts.length >= 3) {
+      // e.g. game_mlbb_2800 -> mlbb, game_mlbb_exclusive_712 -> mlbb_exclusive
+      return parts.slice(1, -1).join('_');
+    }
   }
+
+  return null;
 }
 
 serve(async (req) => {
@@ -32,7 +44,7 @@ serve(async (req) => {
   }
 
   const startTime = Date.now();
-  console.log('[Poll-G2Bulk] Starting order status poll...');
+  log('INFO', 'Starting order status poll...');
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -47,7 +59,7 @@ serve(async (req) => {
       .single();
 
     if (configError || !apiConfig?.is_enabled || !apiConfig.api_secret) {
-      console.log('[Poll-G2Bulk] G2Bulk not configured or disabled');
+      log('INFO', 'G2Bulk not configured or disabled');
       return new Response(
         JSON.stringify({ success: true, message: 'G2Bulk not configured', checked: 0 }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -55,31 +67,30 @@ serve(async (req) => {
     }
 
     const apiKey = apiConfig.api_secret;
-    console.log('[Poll-G2Bulk] Using G2Bulk API');
 
     // Get orders that are processing and have a G2Bulk order ID
     const { data: pendingOrders, error: ordersError } = await supabase
       .from('topup_orders')
       .select('*')
-      .in('status', ['processing', 'pending'])
+      .in('status', ['processing'])
       .not('g2bulk_order_id', 'is', null)
       .order('created_at', { ascending: true })
       .limit(50);
 
     if (ordersError) {
-      console.error('[Poll-G2Bulk] Error fetching orders:', ordersError);
+      log('ERROR', 'Error fetching orders', { error: ordersError.message });
       throw ordersError;
     }
 
     if (!pendingOrders || pendingOrders.length === 0) {
-      console.log('[Poll-G2Bulk] No pending orders to check');
+      log('INFO', 'No pending orders to check');
       return new Response(
         JSON.stringify({ success: true, message: 'No pending orders', checked: 0 }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log(`[Poll-G2Bulk] Found ${pendingOrders.length} orders to check`);
+    log('INFO', `Found ${pendingOrders.length} orders to check`);
 
     let updated = 0;
     let completed = 0;
@@ -87,102 +98,97 @@ serve(async (req) => {
 
     for (const order of pendingOrders) {
       try {
-        // Extract game code from g2bulk_product_id (format: game_CODE_id)
-        const productId = order.g2bulk_product_id || '';
-        let gameCode = '';
-        
-        if (productId.startsWith('game_')) {
-          const parts = productId.split('_');
-          if (parts.length >= 2) {
-            gameCode = parts[1];
-          }
-        }
-
-        if (!gameCode) {
-          console.log(`[Poll-G2Bulk] Cannot determine game code for order ${order.id}`);
+        if (!order.g2bulk_product_id) {
+          log('WARN', `Order ${order.id} has no g2bulk_product_id, skipping`);
           continue;
         }
 
-        // Check order status with G2Bulk
-        const response = await fetch(`${G2BULK_API_URL}/games/order/status`, {
-          method: 'POST',
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'X-API-Key': apiKey,
-          },
-          body: JSON.stringify({
-            order_id: parseInt(order.g2bulk_order_id),
-            game: gameCode
-          })
-        });
-
-        const result = await response.json();
-
-        if (result.success && result.order) {
-          const g2bulkStatus = result.order.status;
-          let newStatus = order.status;
-          let statusMessage = '';
-
-          // Map G2Bulk status
-          switch (g2bulkStatus) {
-            case 'COMPLETED':
-              newStatus = 'completed';
-              statusMessage = 'G2Bulk order completed successfully';
-              completed++;
-              break;
-            case 'FAILED':
-              newStatus = 'failed';
-              statusMessage = result.order.message || 'G2Bulk order failed';
-              failed++;
-              break;
-            case 'PROCESSING':
-            case 'PENDING':
-              if (order.status !== 'processing') {
-                newStatus = 'processing';
-                statusMessage = 'G2Bulk is processing the order';
-              }
-              break;
-          }
-
-          if (newStatus !== order.status) {
-            await supabase
-              .from('topup_orders')
-              .update({ status: newStatus, status_message: statusMessage })
-              .eq('id', order.id);
-            
-            updated++;
-            console.log(`[Poll-G2Bulk] Order ${order.id} updated: ${order.status} -> ${newStatus}`);
-          }
-        } else {
-          console.log(`[Poll-G2Bulk] G2Bulk API error for order ${order.id}:`, result.message || result.detail);
+        const gameCode = await resolveGameCode(supabase, order.g2bulk_product_id);
+        if (!gameCode) {
+          log('WARN', `Cannot determine game code for order ${order.id}, product: ${order.g2bulk_product_id}`);
+          continue;
         }
 
-        // Small delay between requests
-        await new Promise(resolve => setTimeout(resolve, 200));
+        // Handle comma-separated order IDs (from multi-quantity fulfillments)
+        const orderIds = String(order.g2bulk_order_id).split(',').map((id: string) => id.trim()).filter(Boolean);
+        let worstStatus = 'COMPLETED'; // assume best, downgrade if any fail
+
+        for (const g2OrderId of orderIds) {
+          const parsedId = parseInt(g2OrderId);
+          if (isNaN(parsedId)) continue;
+
+          const response = await fetch(`${G2BULK_API_URL}/games/order/status`, {
+            method: 'POST',
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+              'X-API-Key': apiKey,
+            },
+            body: JSON.stringify({ order_id: parsedId, game: gameCode })
+          });
+
+          if (!response.ok) {
+            log('WARN', `G2Bulk API returned ${response.status} for order ${g2OrderId}`);
+            worstStatus = 'PROCESSING'; // don't mark failed just because API is down
+            continue;
+          }
+
+          const result = await response.json();
+          if (result.success && result.order) {
+            const s = result.order.status;
+            if (s === 'FAILED') { worstStatus = 'FAILED'; break; }
+            if (s === 'PROCESSING' || s === 'PENDING') worstStatus = 'PROCESSING';
+          } else {
+            log('WARN', `G2Bulk API error for sub-order ${g2OrderId}:`, { message: result.message || result.detail });
+          }
+
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
+
+        // Map aggregated status
+        let newStatus = order.status;
+        let statusMessage = '';
+        switch (worstStatus) {
+          case 'COMPLETED':
+            newStatus = 'completed';
+            statusMessage = 'G2Bulk order completed successfully';
+            completed++;
+            break;
+          case 'FAILED':
+            newStatus = 'failed';
+            statusMessage = 'G2Bulk order failed';
+            failed++;
+            break;
+          case 'PROCESSING':
+          case 'PENDING':
+            // Keep as processing
+            break;
+        }
+
+        if (newStatus !== order.status) {
+          await supabase
+            .from('topup_orders')
+            .update({ status: newStatus, status_message: statusMessage })
+            .eq('id', order.id);
+          updated++;
+          log('INFO', `Order ${order.id} updated: ${order.status} -> ${newStatus}`);
+        }
       } catch (err) {
-        console.error(`[Poll-G2Bulk] Error checking order ${order.id}:`, err);
+        log('ERROR', `Error checking order ${order.id}`, { error: String(err) });
       }
     }
 
     const duration = Date.now() - startTime;
-    console.log(`[Poll-G2Bulk] Completed in ${duration}ms. Checked: ${pendingOrders.length}, Updated: ${updated}, Completed: ${completed}, Failed: ${failed}`);
+    log('INFO', `Completed in ${duration}ms`, { checked: pendingOrders.length, updated, completed, failed });
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        checked: pendingOrders.length,
-        updated,
-        completed,
-        failed,
-        duration: `${duration}ms`
-      }),
+      JSON.stringify({ success: true, checked: pendingOrders.length, updated, completed, failed, duration: `${duration}ms` }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('[Poll-G2Bulk] Error:', error);
+    log('ERROR', 'Fatal error', { error: errorMessage });
     return new Response(
       JSON.stringify({ success: false, error: errorMessage }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

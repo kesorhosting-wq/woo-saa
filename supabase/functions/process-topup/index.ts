@@ -171,6 +171,7 @@ async function fulfillRechargeOrder(supabase: any, orderId: string, order: any, 
     if (g2bulkProduct.product_name) catalogueName = g2bulkProduct.product_name;
   }
 
+  // Fallback: parse game_code from product ID "game_CODE_typeId"
   if (!gameCode && order.g2bulk_product_id?.startsWith('game_')) {
     const parts = order.g2bulk_product_id.split('_');
     if (parts.length >= 3) gameCode = parts.slice(1, -1).join('_');
@@ -187,7 +188,7 @@ async function fulfillRechargeOrder(supabase: any, orderId: string, order: any, 
   }
 
   if (!gameCode || !catalogueName) {
-    return { success: false, error: `Could not determine game_code/catalogue_name for: ${order.g2bulk_product_id}` };
+    return { success: false, error: `Could not resolve game_code (${gameCode || 'none'}) or catalogue_name (${catalogueName || 'none'}) for product: ${order.g2bulk_product_id}` };
   }
 
   const callbackUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/g2bulk-webhook`;
@@ -386,7 +387,25 @@ async function fulfillOrder(supabase: any, orderId: string, options: { isPreorde
   }
 }
 
-// Check G2Bulk order status
+// Resolve game_code from g2bulk_product_id
+async function resolveGameCode(supabase: any, g2bulkProductId: string): Promise<string | null> {
+  // 1. Try g2bulk_products table first (most reliable)
+  const { data: product } = await supabase
+    .from('g2bulk_products')
+    .select('fields')
+    .eq('g2bulk_product_id', g2bulkProductId)
+    .maybeSingle();
+  if (product?.fields?.game_code) return product.fields.game_code;
+
+  // 2. Fallback: parse from product ID format "game_CODE_typeId"
+  if (g2bulkProductId.startsWith('game_')) {
+    const parts = g2bulkProductId.split('_');
+    if (parts.length >= 3) return parts.slice(1, -1).join('_');
+  }
+  return null;
+}
+
+// Check G2Bulk order status (handles comma-separated multi-quantity order IDs)
 async function checkG2BulkOrderStatus(supabase: any, orderId: string) {
   const { data: order } = await supabase.from('topup_orders').select('*').eq('id', orderId).single();
   if (!order?.g2bulk_order_id) return { success: false, error: 'No G2Bulk order ID found' };
@@ -394,31 +413,53 @@ async function checkG2BulkOrderStatus(supabase: any, orderId: string) {
   const { data: apiConfig } = await supabase.from('api_configurations').select('*').eq('api_name', 'g2bulk').single();
   if (!apiConfig?.is_enabled || !apiConfig.api_secret) return { success: false, error: 'G2Bulk not configured' };
 
-  let gameCode = '';
-  const { data: g2bulkProduct } = await supabase.from('g2bulk_products').select('fields').eq('g2bulk_product_id', order.g2bulk_product_id).maybeSingle();
-  if (g2bulkProduct?.fields?.game_code) gameCode = g2bulkProduct.fields.game_code;
-  else if (order.g2bulk_product_id?.startsWith('game_')) {
-    const parts = order.g2bulk_product_id.split('_');
-    if (parts.length >= 3) gameCode = parts.slice(1, -1).join('_');
-  }
+  const gameCode = order.g2bulk_product_id ? await resolveGameCode(supabase, order.g2bulk_product_id) : null;
   if (!gameCode) return { success: false, error: 'Could not determine game code' };
 
-  const response = await fetch(`${G2BULK_API_URL}/games/order/status`, {
-    method: 'POST',
-    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-API-Key': apiConfig.api_secret },
-    body: JSON.stringify({ order_id: parseInt(order.g2bulk_order_id), game: gameCode })
-  });
-  const result = await response.json();
+  // Handle comma-separated order IDs from multi-quantity fulfillments
+  const orderIds = String(order.g2bulk_order_id).split(',').map((id: string) => id.trim()).filter(Boolean);
+  let worstStatus = 'COMPLETED';
+  let lastMessage = '';
 
-  if (result.success && result.order) {
-    const g2bulkStatus = result.order.status;
-    let finalStatus = order.status;
-    if (g2bulkStatus === 'COMPLETED') finalStatus = 'completed';
-    else if (g2bulkStatus === 'FAILED') finalStatus = 'failed';
-    await supabase.from('topup_orders').update({ status: finalStatus, status_message: `G2Bulk Status: ${g2bulkStatus}` }).eq('id', orderId);
-    return { success: true, g2bulk_status: g2bulkStatus, our_status: finalStatus };
+  for (const g2OrderId of orderIds) {
+    const parsedId = parseInt(g2OrderId);
+    if (isNaN(parsedId)) continue;
+
+    try {
+      const response = await fetch(`${G2BULK_API_URL}/games/order/status`, {
+        method: 'POST',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-API-Key': apiConfig.api_secret },
+        body: JSON.stringify({ order_id: parsedId, game: gameCode })
+      });
+
+      if (!response.ok) {
+        log('WARN', `G2Bulk API returned ${response.status} for order ${g2OrderId}`);
+        worstStatus = 'PROCESSING';
+        continue;
+      }
+
+      const result = await response.json();
+      if (result.success && result.order) {
+        const s = result.order.status;
+        lastMessage = result.order.message || '';
+        if (s === 'FAILED') { worstStatus = 'FAILED'; break; }
+        if ((s === 'PROCESSING' || s === 'PENDING') && worstStatus !== 'FAILED') worstStatus = s;
+      } else {
+        lastMessage = result.message || 'Unknown error';
+      }
+    } catch (err) {
+      log('ERROR', `Error checking sub-order ${g2OrderId}`, { error: String(err) });
+      worstStatus = 'PROCESSING';
+    }
   }
-  return { success: false, error: result.message || 'Failed to check status' };
+
+  let finalStatus = order.status;
+  if (worstStatus === 'COMPLETED') finalStatus = 'completed';
+  else if (worstStatus === 'FAILED') finalStatus = 'failed';
+
+  const statusMsg = `G2Bulk Status: ${worstStatus}${lastMessage ? ` - ${lastMessage}` : ''}`;
+  await supabase.from('topup_orders').update({ status: finalStatus, status_message: statusMsg }).eq('id', orderId);
+  return { success: true, g2bulk_status: worstStatus, our_status: finalStatus };
 }
 
 serve(async (req) => {
