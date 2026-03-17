@@ -500,6 +500,7 @@ serve(async (req) => {
     }
     
     // Regular order processing
+    const transactionId = payload.transaction_id || payload.transactionId || orderIdFromPath;
     let order = null;
 
     if (orderIdFromPath && orderIdFromPath !== "ikhode-webhook") {
