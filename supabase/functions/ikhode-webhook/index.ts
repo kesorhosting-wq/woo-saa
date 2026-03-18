@@ -6,7 +6,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, Authorization",
 };
 
-// Structured logging helper
 function log(level: 'INFO' | 'WARN' | 'ERROR' | 'DEBUG', message: string, data?: Record<string, unknown>) {
   const entry = {
     timestamp: new Date().toISOString(),
@@ -15,31 +14,19 @@ function log(level: 'INFO' | 'WARN' | 'ERROR' | 'DEBUG', message: string, data?:
     message,
     ...data,
   };
-  if (level === 'ERROR') {
-    console.error(JSON.stringify(entry));
-  } else if (level === 'WARN') {
-    console.warn(JSON.stringify(entry));
-  } else {
-    console.log(JSON.stringify(entry));
-  }
+  if (level === 'ERROR') console.error(JSON.stringify(entry));
+  else if (level === 'WARN') console.warn(JSON.stringify(entry));
+  else console.log(JSON.stringify(entry));
 }
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const G2BULK_API_URL = 'https://api.g2bulk.com/v1';
 
-// Telegram notification function
+// Telegram notification
 async function sendTelegramNotification(message: string, isError: boolean = false) {
   const botToken = Deno.env.get('TELEGRAM_BOT_TOKEN');
   const chatId = Deno.env.get('TELEGRAM_CHAT_ID');
-  
-  if (!botToken || !chatId) {
-    log('DEBUG', 'Telegram not configured, skipping notification');
-    return;
-  }
-
-  const emoji = isError ? '❌' : '✅';
-  const formattedMessage = `${emoji} ${message}`;
+  if (!botToken || !chatId) return;
 
   try {
     await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
@@ -47,334 +34,16 @@ async function sendTelegramNotification(message: string, isError: boolean = fals
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         chat_id: chatId,
-        text: formattedMessage,
+        text: `${isError ? '❌' : '✅'} ${message}`,
         parse_mode: 'HTML'
       })
     });
-    log('INFO', 'Telegram notification sent');
   } catch (error) {
     log('ERROR', 'Failed to send Telegram notification', { error: String(error) });
   }
 }
 
-// Fulfill G2Bulk order directly (inline, not via function invoke)
-async function fulfillG2BulkOrder(supabase: any, orderId: string) {
-  log('INFO', '========== STARTING G2BULK FULFILLMENT ==========', { orderId });
-  
-  const { data: order, error: orderError } = await supabase
-    .from('topup_orders')
-    .select('*')
-    .eq('id', orderId)
-    .maybeSingle();
-  
-  if (orderError || !order) {
-    log('ERROR', 'Order not found', { error: orderError?.message });
-    return { success: false, error: 'Order not found' };
-  }
-
-  log('INFO', 'Order found', { 
-    id: order.id, 
-    g2bulk_product_id: order.g2bulk_product_id, 
-    status: order.status 
-  });
-
-  const g2bulkProductId = order.g2bulk_product_id;
-
-  if (!g2bulkProductId) {
-    log('WARN', 'No G2Bulk product linked, marking as manual fulfillment');
-    await supabase
-      .from('topup_orders')
-      .update({ 
-        status: 'pending_manual',
-        status_message: 'Payment confirmed. No G2Bulk product linked. Manual fulfillment required.'
-      })
-      .eq('id', orderId);
-    return { success: true, status: 'pending_manual' };
-  }
-
-  // Get G2Bulk API config
-  const { data: apiConfig } = await supabase
-    .from('api_configurations')
-    .select('*')
-    .eq('api_name', 'g2bulk')
-    .maybeSingle();
-
-  if (!apiConfig?.is_enabled || !apiConfig.api_secret) {
-    log('WARN', 'G2Bulk not configured');
-    await supabase
-      .from('topup_orders')
-      .update({ 
-        status: 'pending_manual',
-        status_message: 'Payment confirmed. G2Bulk API not configured. Manual fulfillment required.'
-      })
-      .eq('id', orderId);
-    return { success: true, status: 'pending_manual' };
-  }
-
-  const apiKey = apiConfig.api_secret;
-
-  try {
-    // Update order to processing
-    await supabase
-      .from('topup_orders')
-      .update({ 
-        status: 'processing',
-        status_message: 'Sending to G2Bulk for fulfillment...'
-      })
-      .eq('id', orderId);
-
-    // Get product details from g2bulk_products
-    const { data: g2bulkProduct } = await supabase
-      .from('g2bulk_products')
-      .select('fields, product_name, product_type')
-      .eq('g2bulk_product_id', g2bulkProductId)
-      .maybeSingle();
-
-    let gameCode = '';
-    let catalogueName = '';
-
-    if (g2bulkProduct) {
-      if (g2bulkProduct.fields?.game_code) {
-        gameCode = g2bulkProduct.fields.game_code;
-      }
-      if (g2bulkProduct.product_name) {
-        catalogueName = g2bulkProduct.product_name;
-      }
-    }
-
-    // Fallback: extract from product ID
-    if (!gameCode && g2bulkProductId?.startsWith('game_')) {
-      const parts = g2bulkProductId.split('_');
-      if (parts.length >= 3) {
-        gameCode = parts.slice(1, -1).join('_');
-      }
-    }
-
-    // If we have gameCode but no catalogueName, try to query for it
-    if (gameCode && !catalogueName && g2bulkProductId) {
-      log('INFO', 'Looking for product name from g2bulk_products by exact ID...');
-      
-      // Try exact match again (maybe fields wasn't populated but product_name exists)
-      const { data: exactProduct } = await supabase
-        .from('g2bulk_products')
-        .select('product_name')
-        .eq('g2bulk_product_id', g2bulkProductId)
-        .maybeSingle();
-      
-      if (exactProduct?.product_name) {
-        catalogueName = exactProduct.product_name;
-        log('INFO', 'Found product_name from exact match', { catalogueName });
-      } else {
-        // Product might have been removed from G2Bulk catalog - look up from package
-        log('WARN', 'Product not found in g2bulk_products, checking packages table...');
-        const { data: pkg } = await supabase
-          .from('packages')
-          .select('name')
-          .eq('g2bulk_product_id', g2bulkProductId)
-          .maybeSingle();
-        
-        if (pkg?.name) {
-          catalogueName = pkg.name;
-          log('INFO', 'Using package name as fallback catalogueName', { catalogueName });
-        }
-      }
-    }
-
-    log('INFO', 'Product info', { gameCode, catalogueName, productType: g2bulkProduct?.product_type });
-
-    // Check if it's a card/voucher type
-    const isCardType = g2bulkProduct?.product_type === 'card' || g2bulkProductId?.startsWith('card_');
-
-    if (isCardType) {
-      // Card purchase
-      const productId = g2bulkProductId.replace('card_', '');
-      
-      const response = await fetch(`${G2BULK_API_URL}/products/${productId}/purchase`, {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'X-API-Key': apiKey,
-        },
-        body: JSON.stringify({ quantity: 1 })
-      });
-
-      const result = await response.json();
-      log('INFO', 'G2Bulk card response', { result });
-
-      if (result.success) {
-        const g2bulkOrderId = result.order_id || result.transaction_id;
-        const deliveryItems = result.delivery_items || [];
-        
-        let cardCodesJson: any = null;
-        if (deliveryItems.length > 0) {
-          cardCodesJson = deliveryItems.map((item: string) => ({
-            code: item,
-            serial: '',
-            expire: ''
-          }));
-        }
-
-        await supabase
-          .from('topup_orders')
-          .update({ 
-            g2bulk_order_id: String(g2bulkOrderId),
-            status: 'completed',
-            status_message: `G2Bulk Card Order: ${g2bulkOrderId}. ${deliveryItems.length} code(s) delivered.`,
-            card_codes: cardCodesJson
-          })
-          .eq('id', orderId);
-
-        await sendTelegramNotification(
-          `<b>Card Order Completed</b>\n` +
-          `🎮 Game: ${order.game_name}\n` +
-          `📦 Package: ${order.package_name}\n` +
-          `👤 Player: ${order.player_id}\n` +
-          `💰 Amount: $${order.amount}\n` +
-          `🔢 Order ID: ${orderId}\n` +
-          `🎫 Codes: ${deliveryItems.length} delivered`
-        );
-
-        return { success: true, g2bulk_order_id: g2bulkOrderId, status: 'completed' };
-      } else {
-        const errorMsg = result.message || result.detail?.message || 'Card purchase failed';
-        await supabase
-          .from('topup_orders')
-          .update({ 
-            status: 'failed',
-            status_message: `G2Bulk Card Error: ${errorMsg}`
-          })
-          .eq('id', orderId);
-        
-        await sendTelegramNotification(
-          `<b>Card Order Failed</b>\n` +
-          `🎮 Game: ${order.game_name}\n` +
-          `💰 Amount: $${order.amount}\n` +
-          `⚠️ Error: ${errorMsg}`,
-          true
-        );
-
-        return { success: false, error: errorMsg };
-      }
-    } else {
-      // Game recharge
-      if (!gameCode || !catalogueName) {
-        const errorMsg = `Could not determine game_code or catalogue_name for product: ${g2bulkProductId}`;
-        log('ERROR', errorMsg);
-        await supabase
-          .from('topup_orders')
-          .update({ 
-            status: 'failed',
-            status_message: errorMsg
-          })
-          .eq('id', orderId);
-        return { success: false, error: errorMsg };
-      }
-
-      const callbackUrl = `${SUPABASE_URL}/functions/v1/g2bulk-webhook`;
-
-      const orderBody: Record<string, string> = {
-        catalogue_name: catalogueName,
-        player_id: order.player_id,
-        remark: `order_id:${orderId}`,
-        callback_url: callbackUrl,
-      };
-
-      if (order.server_id) {
-        orderBody.server_id = order.server_id;
-      }
-
-      log('INFO', 'Sending to G2Bulk', { 
-        url: `${G2BULK_API_URL}/games/${gameCode}/order`,
-        body: orderBody 
-      });
-
-      const response = await fetch(`${G2BULK_API_URL}/games/${gameCode}/order`, {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'X-API-Key': apiKey,
-        },
-        body: JSON.stringify(orderBody)
-      });
-
-      const result = await response.json();
-      log('INFO', 'G2Bulk recharge response', { result });
-
-      if (result.success && result.order) {
-        const g2bulkOrderId = result.order.order_id;
-        const status = result.order.status;
-        
-        let finalStatus = 'processing';
-        let statusMessage = `G2Bulk Order: ${g2bulkOrderId}. Status: ${status}`;
-        
-        if (status === 'COMPLETED') {
-          finalStatus = 'completed';
-          statusMessage = `Successfully delivered via G2Bulk. Order: ${g2bulkOrderId}`;
-        } else if (status === 'FAILED') {
-          finalStatus = 'failed';
-          statusMessage = `G2Bulk delivery failed. Order: ${g2bulkOrderId}`;
-        }
-
-        await supabase
-          .from('topup_orders')
-          .update({ 
-            g2bulk_order_id: String(g2bulkOrderId),
-            status: finalStatus,
-            status_message: statusMessage
-          })
-          .eq('id', orderId);
-
-        if (finalStatus === 'completed') {
-          await sendTelegramNotification(
-            `<b>Recharge Order Completed</b>\n` +
-            `🎮 Game: ${order.game_name}\n` +
-            `📦 Package: ${order.package_name}\n` +
-            `👤 Player: ${order.player_id}${order.server_id ? ` (Server: ${order.server_id})` : ''}\n` +
-            `💰 Amount: $${order.amount}\n` +
-            `📋 G2Bulk Order: ${g2bulkOrderId}`
-          );
-        }
-
-        return { success: true, g2bulk_order_id: g2bulkOrderId, status: finalStatus };
-      } else {
-        const errorMsg = result.message || result.detail?.message || JSON.stringify(result);
-        log('ERROR', 'G2Bulk Error', { errorMsg });
-        await supabase
-          .from('topup_orders')
-          .update({ 
-            status: 'failed',
-            status_message: `G2Bulk Error: ${errorMsg}`
-          })
-          .eq('id', orderId);
-
-        await sendTelegramNotification(
-          `<b>Recharge Order Failed</b>\n` +
-          `🎮 Game: ${order.game_name}\n` +
-          `💰 Amount: $${order.amount}\n` +
-          `⚠️ Error: ${errorMsg}`,
-          true
-        );
-
-        return { success: false, error: errorMsg };
-      }
-    }
-  } catch (g2bulkError: any) {
-    log('ERROR', 'G2Bulk processing error', { error: g2bulkError.message });
-    await supabase
-      .from('topup_orders')
-      .update({ 
-        status: 'failed',
-        status_message: `G2Bulk error: ${g2bulkError.message || 'Unknown error'}`
-      })
-      .eq('id', orderId);
-    return { success: false, error: g2bulkError.message };
-  }
-}
-
 serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -382,14 +51,13 @@ serve(async (req) => {
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
   try {
-    // Extract order_id from URL path
     const url = new URL(req.url);
     const pathParts = url.pathname.split("/");
     const orderIdFromPath = pathParts[pathParts.length - 1];
 
     log('INFO', 'Webhook received', { orderIdFromPath, method: req.method });
 
-    // 1. Get our stored secret from payment_gateways config
+    // Get webhook secret
     const { data: gateway } = await supabase
       .from("payment_gateways")
       .select("config")
@@ -398,15 +66,9 @@ serve(async (req) => {
 
     const expectedSecret = (gateway?.config as any)?.webhook_secret || "";
 
-    // 2. Authorization Check (using Bearer token)
+    // Auth check
     const authHeader = req.headers.get("Authorization");
     const token = authHeader?.replace("Bearer ", "") || "";
-
-    log('DEBUG', 'Auth check', { 
-      hasExpectedSecret: !!expectedSecret, 
-      hasToken: !!token,
-      match: token === expectedSecret
-    });
 
     if (expectedSecret && token !== expectedSecret) {
       log('ERROR', 'Unauthorized: Invalid secret key');
@@ -416,7 +78,7 @@ serve(async (req) => {
       );
     }
 
-    // Parse payload early (needed for wallet topup check)
+    // Parse payload
     let payload: any = {};
     try {
       payload = await req.json();
@@ -425,16 +87,12 @@ serve(async (req) => {
       log('WARN', 'No JSON payload in request body');
     }
 
-    // 3. Check if this is a wallet top-up or regular order
-    const isWalletTopup = orderIdFromPath?.startsWith("wallet-");
-    
-    if (isWalletTopup) {
-      // Handle wallet top-up
+    // ========== WALLET TOP-UP ==========
+    if (orderIdFromPath?.startsWith("wallet-")) {
       log('INFO', 'Processing wallet top-up', { orderIdFromPath });
       
       const parts = orderIdFromPath.split("-");
       if (parts.length < 3) {
-        log('ERROR', 'Invalid wallet order ID format', { orderIdFromPath });
         return new Response(
           JSON.stringify({ status: "error", message: "Invalid wallet order ID format" }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -442,12 +100,10 @@ serve(async (req) => {
       }
       
       const userIdPrefix = parts[1];
-      
       const amount = parseFloat(payload.amount) || 0;
       const transactionId = payload.transaction_id || payload.transactionId || orderIdFromPath;
       
       if (amount <= 0) {
-        log('ERROR', 'Invalid amount for wallet topup', { amount });
         return new Response(
           JSON.stringify({ status: "error", message: "Invalid amount" }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -460,7 +116,6 @@ serve(async (req) => {
         .like("user_id", `${userIdPrefix}%`);
       
       if (profileError || !profiles || profiles.length === 0) {
-        log('ERROR', 'User not found for wallet topup', { userIdPrefix });
         return new Response(
           JSON.stringify({ status: "error", message: "User not found" }),
           { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -492,14 +147,13 @@ serve(async (req) => {
       }
       
       log('INFO', 'Wallet topup successful', { userId: userProfile.user_id, amount, newBalance });
-      
       return new Response(
         JSON.stringify({ status: "success", message: "Wallet top-up completed", newBalance }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
     
-    // Regular order processing
+    // ========== REGULAR ORDER ==========
     const transactionId = payload.transaction_id || payload.transactionId || orderIdFromPath;
     let order = null;
 
@@ -515,21 +169,20 @@ serve(async (req) => {
     if (!order) {
       log('ERROR', 'Order not found', { orderIdFromPath });
       return new Response(
-        JSON.stringify({ status: "error", message: "Order not found or could not be resolved." }),
+        JSON.stringify({ status: "error", message: "Order not found." }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     log('INFO', 'Found Order', { orderId: order.id, status: order.status, g2bulk_product_id: order.g2bulk_product_id });
 
-    // 4. Use atomic lock to prevent race conditions
-    // Instead of checking status then updating, do a conditional UPDATE
+    // ATOMIC UPDATE to "paid" — the DB trigger will auto-fire process-topup
     const { data: lockResult } = await supabase
       .from("topup_orders")
       .update({
         status: "paid",
         payment_method: "Xavier KHQR",
-        status_message: `Payment confirmed. Transaction: ${transactionId}. Starting fulfillment...`,
+        status_message: `Payment confirmed. Transaction: ${transactionId}. Auto-fulfillment queued via trigger.`,
         updated_at: new Date().toISOString(),
       })
       .eq("id", order.id)
@@ -537,14 +190,14 @@ serve(async (req) => {
       .select("id");
 
     if (!lockResult || lockResult.length === 0) {
-      log('INFO', 'Order already being processed (atomic lock failed)', { orderId: order.id, status: order.status });
+      log('INFO', 'Order already processed', { orderId: order.id, status: order.status });
       return new Response(
-        JSON.stringify({ status: "success", message: `Order already being processed.` }),
+        JSON.stringify({ status: "success", message: "Order already being processed." }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    log('INFO', 'Atomic lock acquired, starting fulfillment', { orderId: order.id });
+    log('INFO', 'Order updated to paid — trigger will handle fulfillment', { orderId: order.id });
 
     // Send Telegram notification for payment received
     await sendTelegramNotification(
@@ -555,19 +208,14 @@ serve(async (req) => {
       `💵 Amount: $${order.amount}\n` +
       `🔢 Order ID: ${order.id}\n` +
       `💳 Transaction: ${transactionId}\n` +
-      `⏳ Auto-processing...`
+      `⏳ Auto-fulfillment via trigger...`
     );
-
-    // 5. Fulfill G2Bulk order directly
-    const fulfillResult = await fulfillG2BulkOrder(supabase, order.id);
-    
-    log('INFO', 'Fulfillment result', { fulfillResult });
 
     return new Response(
       JSON.stringify({ 
         status: "success", 
-        message: "Payment processed successfully.",
-        fulfillment: fulfillResult
+        message: "Payment confirmed. Fulfillment triggered automatically.",
+        orderId: order.id
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
