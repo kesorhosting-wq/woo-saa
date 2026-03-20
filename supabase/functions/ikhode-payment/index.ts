@@ -77,6 +77,7 @@ serve(async (req) => {
     const webhookSecret = config.webhook_secret || "";
     const customWebhookUrl = config.custom_webhook_url || "";
     const merchantName = config.merchant_name || "Kesor";
+    const merchantId = config.merchant_id || "";
 
     if (!apiUrl) {
       return new Response(
@@ -122,6 +123,7 @@ serve(async (req) => {
             email: params.email || "customer@kesor.com",
             username: playerName || "Customer",
             merchantName,
+            merchantId,
             gameName: gameName || "",
             callbackUrl,
             secret: webhookSecret,
