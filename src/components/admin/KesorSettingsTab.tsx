@@ -261,6 +261,23 @@ const KesorSettingsTab: React.FC = () => {
           </p>
         </div>
 
+        {/* Merchant ID */}
+        <div className="space-y-2">
+          <Label className="flex items-center gap-2">
+            <Key className="w-4 h-4" />
+            Merchant ID
+          </Label>
+          <Input
+            value={config.merchant_id || ''}
+            onChange={(e) => setConfig({ ...config, merchant_id: e.target.value })}
+            placeholder="e.g., xavier@bkrt"
+            className="border-gold/50"
+          />
+          <p className="text-xs text-muted-foreground">
+            The merchant/account ID for Bakong KHQR (sent as "merchantId" in API request)
+          </p>
+        </div>
+
         {/* Custom Webhook URL (Optional) */}
         <div className="space-y-2">
           <Label className="flex items-center gap-2">
