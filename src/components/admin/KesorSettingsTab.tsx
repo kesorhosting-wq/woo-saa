@@ -14,6 +14,7 @@ interface IkhodeConfig {
   webhook_secret: string;
   custom_webhook_url: string;
   merchant_name: string;
+  merchant_id: string;
 }
 
 interface GatewayData {
