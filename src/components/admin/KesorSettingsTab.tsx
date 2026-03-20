@@ -28,7 +28,8 @@ const defaultConfig: IkhodeConfig = {
   node_api_url: '',
   websocket_url: '',
   webhook_secret: '',
-  custom_webhook_url: ''
+  custom_webhook_url: '',
+  merchant_name: 'Kesor'
 };
 
 const KesorSettingsTab: React.FC = () => {
