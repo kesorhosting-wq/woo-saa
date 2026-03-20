@@ -69,6 +69,7 @@ serve(async (req) => {
       websocket_url: string;
       webhook_secret: string;
       custom_webhook_url?: string;
+      merchant_name?: string;
     };
 
     const apiUrl = config.node_api_url?.replace(/\/$/, "");
