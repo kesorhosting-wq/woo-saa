@@ -121,6 +121,7 @@ serve(async (req) => {
             transactionId: shortTransactionId,
             email: params.email || "customer@kesor.com",
             username: playerName || "Customer",
+            merchantName,
             gameName: gameName || "",
             callbackUrl,
             secret: webhookSecret,
