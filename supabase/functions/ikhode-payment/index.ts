@@ -123,6 +123,7 @@ serve(async (req) => {
             email: params.email || "customer@kesor.com",
             username: playerName || "Customer",
             merchantName,
+            merchantId,
             gameName: gameName || "",
             callbackUrl,
             secret: webhookSecret,
