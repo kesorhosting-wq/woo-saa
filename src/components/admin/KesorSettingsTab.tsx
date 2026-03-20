@@ -13,6 +13,7 @@ interface IkhodeConfig {
   websocket_url: string;
   webhook_secret: string;
   custom_webhook_url: string;
+  merchant_name: string;
 }
 
 interface GatewayData {
@@ -27,7 +28,8 @@ const defaultConfig: IkhodeConfig = {
   node_api_url: '',
   websocket_url: '',
   webhook_secret: '',
-  custom_webhook_url: ''
+  custom_webhook_url: '',
+  merchant_name: 'Kesor'
 };
 
 const KesorSettingsTab: React.FC = () => {
@@ -240,6 +242,23 @@ const KesorSettingsTab: React.FC = () => {
           </p>
         </div>
 
+        {/* Merchant Name */}
+        <div className="space-y-2">
+          <Label className="flex items-center gap-2">
+            <Server className="w-4 h-4" />
+            Merchant Name
+          </Label>
+          <Input
+            value={config.merchant_name || ''}
+            onChange={(e) => setConfig({ ...config, merchant_name: e.target.value })}
+            placeholder="Kesor"
+            className="border-gold/50"
+          />
+          <p className="text-xs text-muted-foreground">
+            The merchant name shown on KHQR payment (sent as "merchantName" in API request)
+          </p>
+        </div>
+
         {/* Custom Webhook URL (Optional) */}
         <div className="space-y-2">
           <Label className="flex items-center gap-2">
@@ -330,6 +349,7 @@ const KesorSettingsTab: React.FC = () => {
   "transactionId": "ORD-abc12345-123456",
   "email": "user@example.com",
   "username": "Customer Name",
+  "merchantName": "${config.merchant_name || 'Kesor'}",
   "callbackUrl": "${webhookUrl}/{order_id}",
   "secret": "your_webhook_secret"
 }`}

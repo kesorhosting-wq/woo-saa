@@ -69,12 +69,14 @@ serve(async (req) => {
       websocket_url: string;
       webhook_secret: string;
       custom_webhook_url?: string;
+      merchant_name?: string;
     };
 
     const apiUrl = config.node_api_url?.replace(/\/$/, "");
     const wsUrl = config.websocket_url;
     const webhookSecret = config.webhook_secret || "";
     const customWebhookUrl = config.custom_webhook_url || "";
+    const merchantName = config.merchant_name || "Kesor";
 
     if (!apiUrl) {
       return new Response(
@@ -119,6 +121,7 @@ serve(async (req) => {
             transactionId: shortTransactionId,
             email: params.email || "customer@kesor.com",
             username: playerName || "Customer",
+            merchantName,
             gameName: gameName || "",
             callbackUrl,
             secret: webhookSecret,
