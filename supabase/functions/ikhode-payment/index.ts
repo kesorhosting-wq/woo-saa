@@ -76,6 +76,7 @@ serve(async (req) => {
     const wsUrl = config.websocket_url;
     const webhookSecret = config.webhook_secret || "";
     const customWebhookUrl = config.custom_webhook_url || "";
+    const merchantName = config.merchant_name || "Kesor";
 
     if (!apiUrl) {
       return new Response(
