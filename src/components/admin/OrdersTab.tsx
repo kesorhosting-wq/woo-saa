@@ -418,11 +418,136 @@ const OrdersTab: React.FC = () => {
                   >
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
                       <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
                           <Badge className={`${statusInfo.color} text-white`}>
                             {statusInfo.icon}
                             <span className="ml-1">{statusInfo.label}</span>
                           </Badge>
+                          {/* QR Payment Status Badge */}
+                          {order.payment_method?.includes('KHQR') ? (
+                            <Badge className={`${
+                              order.status === 'completed' || order.status === 'processing' 
+                                ? 'bg-emerald-600' 
+                                : order.status === 'paid' 
+                                  ? 'bg-blue-600' 
+                                  : 'bg-orange-500'
+                            } text-white gap-1`}>
+                              {order.status === 'completed' || order.status === 'processing' || order.status === 'paid' ? (
+                                <><ScanLine className="w-3 h-3" /> QR Scanned</>
+                              ) : (
+                                <><QrCode className="w-3 h-3" /> QR Not Scanned</>
+                              )}
+                            </Badge>
+                          ) : order.payment_method?.includes('Wallet') ? (
+                            <Badge className="bg-purple-600 text-white gap-1">
+                              <CreditCard className="w-3 h-3" /> Wallet
+                            </Badge>
+                          ) : order.payment_method ? (
+                            <Badge variant="outline" className="gap-1">
+                              <CreditCard className="w-3 h-3" /> {order.payment_method}
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-muted-foreground gap-1">
+                              <Ban className="w-3 h-3" /> No Payment
+                            </Badge>
+                          )}
+                          {/* Invoice View Button */}
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button size="sm" variant="ghost" className="h-6 px-2 text-xs gap-1">
+                                <Eye className="w-3 h-3" /> Invoice
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-md">
+                              <DialogHeader>
+                                <DialogTitle className="flex items-center gap-2">
+                                  <QrCode className="w-5 h-5" /> QR Invoice - {order.id.slice(0, 8)}
+                                </DialogTitle>
+                              </DialogHeader>
+                              <div className="space-y-4">
+                                {/* Payment Status */}
+                                <div className={`p-4 rounded-xl text-center ${
+                                  order.status === 'completed' || order.status === 'processing' || order.status === 'paid'
+                                    ? 'bg-emerald-500/10 border border-emerald-500/30'
+                                    : order.status === 'failed'
+                                      ? 'bg-red-500/10 border border-red-500/30'
+                                      : 'bg-orange-500/10 border border-orange-500/30'
+                                }`}>
+                                  <div className="text-3xl mb-2">
+                                    {order.status === 'completed' ? '✅' : order.status === 'paid' || order.status === 'processing' ? '💰' : order.status === 'failed' ? '❌' : '⏳'}
+                                  </div>
+                                  <p className="font-bold text-lg">
+                                    {order.status === 'completed' ? 'Payment Successful' 
+                                      : order.status === 'paid' || order.status === 'processing' ? 'Payment Received'
+                                      : order.status === 'failed' ? 'Payment Failed'
+                                      : 'Awaiting Payment'}
+                                  </p>
+                                  <p className="text-sm text-muted-foreground mt-1">
+                                    {order.payment_method || 'No payment method'}
+                                  </p>
+                                </div>
+
+                                {/* Order Details */}
+                                <div className="space-y-2 text-sm">
+                                  <div className="flex justify-between py-2 border-b border-border">
+                                    <span className="text-muted-foreground">Order ID</span>
+                                    <span className="font-mono text-xs">{order.id.slice(0, 12)}...</span>
+                                  </div>
+                                  <div className="flex justify-between py-2 border-b border-border">
+                                    <span className="text-muted-foreground">Game</span>
+                                    <span className="font-medium">{order.game_name}</span>
+                                  </div>
+                                  <div className="flex justify-between py-2 border-b border-border">
+                                    <span className="text-muted-foreground">Package</span>
+                                    <span className="font-medium">{order.package_name}</span>
+                                  </div>
+                                  <div className="flex justify-between py-2 border-b border-border">
+                                    <span className="text-muted-foreground">Player</span>
+                                    <span>{order.player_name || order.player_id}</span>
+                                  </div>
+                                  <div className="flex justify-between py-2 border-b border-border">
+                                    <span className="text-muted-foreground">Amount</span>
+                                    <span className="font-bold text-lg">${order.amount}</span>
+                                  </div>
+                                  <div className="flex justify-between py-2 border-b border-border">
+                                    <span className="text-muted-foreground">Date</span>
+                                    <span>{new Date(order.created_at).toLocaleString()}</span>
+                                  </div>
+                                  {order.g2bulk_order_id && (
+                                    <div className="flex justify-between py-2 border-b border-border">
+                                      <span className="text-muted-foreground">G2Bulk ID</span>
+                                      <span className="font-mono text-xs">{order.g2bulk_order_id}</span>
+                                    </div>
+                                  )}
+                                  {order.status_message && (
+                                    <div className="pt-2">
+                                      <span className="text-muted-foreground text-xs">Status Message:</span>
+                                      <p className="text-xs mt-1 p-2 bg-muted rounded">{order.status_message}</p>
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Manual Status Actions */}
+                                <div className="pt-2 border-t border-border">
+                                  <p className="text-xs text-muted-foreground mb-2">Manual Actions:</p>
+                                  <div className="flex flex-wrap gap-2">
+                                    <Button size="sm" variant="outline" className="text-emerald-500 border-emerald-500/50 text-xs"
+                                      onClick={() => updateOrderStatus(order.id, 'paid')}>
+                                      Mark Paid
+                                    </Button>
+                                    <Button size="sm" variant="outline" className="text-green-500 border-green-500/50 text-xs"
+                                      onClick={() => updateOrderStatus(order.id, 'completed')}>
+                                      Mark Complete
+                                    </Button>
+                                    <Button size="sm" variant="outline" className="text-red-500 border-red-500/50 text-xs"
+                                      onClick={() => updateOrderStatus(order.id, 'failed')}>
+                                      Mark Failed
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
                           <span className="text-xs text-muted-foreground">
                             {new Date(order.created_at).toLocaleString()}
                           </span>
