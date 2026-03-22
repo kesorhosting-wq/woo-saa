@@ -5,7 +5,14 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { RefreshCw, Package, CheckCircle, XCircle, Clock, AlertTriangle, Search, BarChart3, Bell, BellOff, CreditCard, Copy, ChevronDown, Play } from 'lucide-react';
+import { RefreshCw, Package, CheckCircle, XCircle, Clock, AlertTriangle, Search, BarChart3, Bell, BellOff, CreditCard, Copy, ChevronDown, Play, QrCode, ScanLine, Ban, Eye } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
