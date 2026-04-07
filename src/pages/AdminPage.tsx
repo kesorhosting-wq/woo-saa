@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Settings, Package, CreditCard, Palette, Plus, Trash2, Edit2, LogOut, User, Save, X, ChevronDown, ChevronUp, DollarSign, Home, ArrowUp, ArrowDown, Key, ShoppingCart, QrCode, Link2, Link2Off, Shield, RefreshCw, Copy, Star, Wallet, Search, Database, Gamepad2, Calendar } from 'lucide-react';
+import { ArrowLeft, Settings, Package, CreditCard, Palette, Plus, Trash2, Edit2, LogOut, User, Save, X, ChevronDown, ChevronUp, DollarSign, Home, ArrowUp, ArrowDown, Key, ShoppingCart, QrCode, Link2, Link2Off, Shield, RefreshCw, Copy, Star, Wallet, Search, Database, Gamepad2, Calendar, Cloud } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
