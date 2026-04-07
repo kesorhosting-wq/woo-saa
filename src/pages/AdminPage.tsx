@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Settings, Package, CreditCard, Palette, Plus, Trash2, Edit2, LogOut, User, Save, X, ChevronDown, ChevronUp, DollarSign, Home, ArrowUp, ArrowDown, Key, ShoppingCart, QrCode, Link2, Link2Off, Shield, RefreshCw, Copy, Star, Wallet, Search, Database, Gamepad2, Calendar } from 'lucide-react';
+import { ArrowLeft, Settings, Package, CreditCard, Palette, Plus, Trash2, Edit2, LogOut, User, Save, X, ChevronDown, ChevronUp, DollarSign, Home, ArrowUp, ArrowDown, Key, ShoppingCart, QrCode, Link2, Link2Off, Shield, RefreshCw, Copy, Star, Wallet, Search, Database, Gamepad2, Calendar, Cloud } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,6 +36,7 @@ import DataExportTab from '@/components/admin/DataExportTab';
 import FontUploadSettings from '@/components/admin/FontUploadSettings';
 import ThemeTab from '@/components/admin/ThemeTab';
 import PreorderAdminTab from '@/components/admin/PreorderAdminTab';
+import CDNMigrationTab from '@/components/admin/CDNMigrationTab';
 
 const AdminPage: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -309,7 +310,7 @@ const AdminPage: React.FC = () => {
         
         <div className="container mx-auto px-4 py-6">
           <Tabs defaultValue="settings" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-12 bg-card border border-border">
+            <TabsList className="grid w-full grid-cols-13 bg-card border border-border" style={{ gridTemplateColumns: 'repeat(13, minmax(0, 1fr))' }}>
               <TabsTrigger value="settings" className="data-[state=active]:bg-gold data-[state=active]:text-primary-foreground text-xs sm:text-sm">
                 <Settings className="w-4 h-4 sm:mr-2" />
                 <span className="hidden sm:inline">Site</span>
@@ -357,6 +358,10 @@ const AdminPage: React.FC = () => {
               <TabsTrigger value="preorders" className="data-[state=active]:bg-gold data-[state=active]:text-primary-foreground text-xs sm:text-sm">
                 <Calendar className="w-4 h-4 sm:mr-2" />
                 <span className="hidden sm:inline">Pre-Order</span>
+              </TabsTrigger>
+              <TabsTrigger value="cdn" className="data-[state=active]:bg-gold data-[state=active]:text-primary-foreground text-xs sm:text-sm">
+                <Cloud className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">CDN</span>
               </TabsTrigger>
             </TabsList>
             
@@ -2919,6 +2924,11 @@ const AdminPage: React.FC = () => {
                   <PreorderAdminTab />
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            {/* CDN Migration */}
+            <TabsContent value="cdn">
+              <CDNMigrationTab />
             </TabsContent>
           </Tabs>
         </div>
