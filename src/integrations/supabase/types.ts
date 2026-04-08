@@ -182,33 +182,42 @@ export type Database = {
       kesorapi_products: {
         Row: {
           created_at: string
+          currency: string | null
+          denomination: string | null
           fields: Json | null
           game_name: string
           id: string
           is_active: boolean | null
           kesorapi_product_id: string
+          kesorapi_type_id: string | null
           price: number
           product_name: string
           updated_at: string
         }
         Insert: {
           created_at?: string
+          currency?: string | null
+          denomination?: string | null
           fields?: Json | null
           game_name: string
           id?: string
           is_active?: boolean | null
           kesorapi_product_id: string
+          kesorapi_type_id?: string | null
           price?: number
           product_name: string
           updated_at?: string
         }
         Update: {
           created_at?: string
+          currency?: string | null
+          denomination?: string | null
           fields?: Json | null
           game_name?: string
           id?: string
           is_active?: boolean | null
           kesorapi_product_id?: string
+          kesorapi_type_id?: string | null
           price?: number
           product_name?: string
           updated_at?: string
@@ -224,6 +233,7 @@ export type Database = {
           game_id: string
           icon: string | null
           id: string
+          kesorapi_product_id: string | null
           label: string | null
           label_bg_color: string | null
           label_icon: string | null
@@ -242,6 +252,7 @@ export type Database = {
           game_id: string
           icon?: string | null
           id?: string
+          kesorapi_product_id?: string | null
           label?: string | null
           label_bg_color?: string | null
           label_icon?: string | null
@@ -260,6 +271,7 @@ export type Database = {
           game_id?: string
           icon?: string | null
           id?: string
+          kesorapi_product_id?: string | null
           label?: string | null
           label_bg_color?: string | null
           label_icon?: string | null
@@ -447,6 +459,7 @@ export type Database = {
           game_id: string
           icon: string | null
           id: string
+          kesorapi_product_id: string | null
           label: string | null
           label_bg_color: string | null
           label_icon: string | null
@@ -465,6 +478,7 @@ export type Database = {
           game_id: string
           icon?: string | null
           id?: string
+          kesorapi_product_id?: string | null
           label?: string | null
           label_bg_color?: string | null
           label_icon?: string | null
@@ -483,6 +497,7 @@ export type Database = {
           game_id?: string
           icon?: string | null
           id?: string
+          kesorapi_product_id?: string | null
           label?: string | null
           label_bg_color?: string | null
           label_icon?: string | null
@@ -513,6 +528,8 @@ export type Database = {
           g2bulk_product_id: string | null
           game_name: string
           id: string
+          kesorapi_order_id: string | null
+          kesorapi_product_id: string | null
           package_name: string
           payment_method: string | null
           player_id: string
@@ -532,6 +549,8 @@ export type Database = {
           g2bulk_product_id?: string | null
           game_name: string
           id?: string
+          kesorapi_order_id?: string | null
+          kesorapi_product_id?: string | null
           package_name: string
           payment_method?: string | null
           player_id: string
@@ -551,6 +570,8 @@ export type Database = {
           g2bulk_product_id?: string | null
           game_name?: string
           id?: string
+          kesorapi_order_id?: string | null
+          kesorapi_product_id?: string | null
           package_name?: string
           payment_method?: string | null
           player_id?: string
