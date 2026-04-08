@@ -10,7 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Download, RefreshCw, Check, AlertTriangle, Percent, Filter, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
-interface G2BulkFullImportProps {
+interface KesorAPIFullImportProps {
   onImportComplete: () => void;
 }
 
@@ -23,19 +23,19 @@ interface ImportResult {
   price_markup_percent: number;
 }
 
-interface G2BulkGame {
+interface KesorAPIGame {
   code: string;
   name: string;
   image: string;
 }
 
-const G2BulkFullImport: React.FC<G2BulkFullImportProps> = ({ onImportComplete }) => {
+const KesorAPIFullImport: React.FC<KesorAPIFullImportProps> = ({ onImportComplete }) => {
   const [isImporting, setIsImporting] = useState(false);
   const [isLoadingGames, setIsLoadingGames] = useState(false);
   const [markup, setMarkup] = useState(10);
   const [updateExistingPrices, setUpdateExistingPrices] = useState(false);
   const [result, setResult] = useState<ImportResult | null>(null);
-  const [availableGames, setAvailableGames] = useState<G2BulkGame[]>([]);
+  const [availableGames, setAvailableGames] = useState<KesorAPIGame[]>([]);
   const [selectedGames, setSelectedGames] = useState<Set<string>>(new Set());
   const [showGameFilter, setShowGameFilter] = useState(false);
   const [searchFilter, setSearchFilter] = useState('');
@@ -43,8 +43,8 @@ const G2BulkFullImport: React.FC<G2BulkFullImportProps> = ({ onImportComplete })
   const loadAvailableGames = async () => {
     setIsLoadingGames(true);
     try {
-      const { data, error } = await supabase.functions.invoke('g2bulk-api', {
-        body: { action: 'get_g2bulk_games_list' },
+      const { data, error } = await supabase.functions.invoke('kesorapi-api', {
+        body: { action: 'get_kesorapi_games_list' },
       });
 
       if (error) throw error;
@@ -56,7 +56,7 @@ const G2BulkFullImport: React.FC<G2BulkFullImportProps> = ({ onImportComplete })
       console.error('Error loading games:', error);
       toast({
         title: 'Error Loading Games',
-        description: 'Could not fetch available games from G2Bulk',
+        description: 'Could not fetch available games from KesorAPI',
         variant: 'destructive',
       });
     } finally {
@@ -75,7 +75,7 @@ const G2BulkFullImport: React.FC<G2BulkFullImportProps> = ({ onImportComplete })
     setResult(null);
 
     try {
-      const { data, error } = await supabase.functions.invoke('g2bulk-api', {
+      const { data, error } = await supabase.functions.invoke('kesorapi-api', {
         body: { 
           action: 'bulk_import_all',
           price_markup_percent: markup,
@@ -138,13 +138,13 @@ const G2BulkFullImport: React.FC<G2BulkFullImportProps> = ({ onImportComplete })
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
           <Download className="w-5 h-5 text-gold" />
-          <span>Full G2Bulk Import</span>
+          <span>Full KesorAPI Import</span>
           <Badge variant="outline" className="ml-2 bg-gold/10 text-gold border-gold/30">
             One-Click
           </Badge>
         </CardTitle>
         <p className="text-xs text-muted-foreground">
-          Import all games and packages from G2Bulk with automatic price markup
+          Import all games and packages from KesorAPI with automatic price markup
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -213,7 +213,7 @@ const G2BulkFullImport: React.FC<G2BulkFullImportProps> = ({ onImportComplete })
                   <Download className="w-4 h-4 mr-2" />
                   {selectedGames.size > 0 
                     ? `Import ${selectedGames.size} Selected Games` 
-                    : 'Import All from G2Bulk'}
+                    : 'Import All from KesorAPI'}
                 </>
               )}
             </Button>
@@ -347,7 +347,7 @@ const G2BulkFullImport: React.FC<G2BulkFullImportProps> = ({ onImportComplete })
         <div className="flex items-start gap-2 p-2 rounded bg-yellow-500/10 border border-yellow-500/20">
           <AlertTriangle className="w-4 h-4 text-yellow-500 mt-0.5 flex-shrink-0" />
           <p className="text-xs text-muted-foreground">
-            This will create games and packages in your store. Existing items with the same G2Bulk link will be skipped 
+            This will create games and packages in your store. Existing items with the same KesorAPI link will be skipped 
             {updateExistingPrices ? ' but their prices will be updated.' : '.'}
             {' '}You can delete unwanted items afterward.
           </p>
@@ -357,4 +357,4 @@ const G2BulkFullImport: React.FC<G2BulkFullImportProps> = ({ onImportComplete })
   );
 };
 
-export default G2BulkFullImport;
+export default KesorAPIFullImport;

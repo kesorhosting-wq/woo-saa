@@ -6,15 +6,15 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// G2Bulk API Base URL
-const G2BULK_API_URL = 'https://api.g2bulk.com/v1';
+// KesorAPI API Base URL
+const G2BULK_API_URL = 'https://api.kesorapi.com/v1';
 
 // Structured logging helper
 function log(level: 'INFO' | 'WARN' | 'ERROR' | 'DEBUG', message: string, data?: Record<string, unknown>) {
   const entry = {
     timestamp: new Date().toISOString(),
     level,
-    function: 'g2bulk-api',
+    function: 'kesorapi-api',
     message,
     ...data,
   };
@@ -27,8 +27,8 @@ function log(level: 'INFO' | 'WARN' | 'ERROR' | 'DEBUG', message: string, data?:
   }
 }
 
-// Build authenticated request for G2Bulk API
-function buildG2BulkRequest(
+// Build authenticated request for KesorAPI API
+function buildKesorAPIRequest(
   endpoint: string, 
   apiKey: string,
   method: string = 'GET',
@@ -123,26 +123,26 @@ serve(async (req) => {
     log('INFO', 'Admin authenticated', { userId });
 
     const { action, ...params } = await req.json();
-    console.log(`[G2Bulk-API] Action: ${action}`, JSON.stringify(params));
+    console.log(`[KesorAPI-API] Action: ${action}`, JSON.stringify(params));
 
-    // Get G2Bulk credentials from database
+    // Get KesorAPI credentials from database
     const { data: apiConfig, error: configError } = await supabase
       .from('api_configurations')
       .select('*')
-      .eq('api_name', 'g2bulk')
+      .eq('api_name', 'kesorapi')
       .single();
 
     if (configError || !apiConfig) {
-      console.log('[G2Bulk-API] Config not found:', configError);
+      console.log('[KesorAPI-API] Config not found:', configError);
       return new Response(
-        JSON.stringify({ success: false, error: 'G2Bulk API not configured. Please set up in Admin → API tab.' }),
+        JSON.stringify({ success: false, error: 'KesorAPI API not configured. Please set up in Admin → API tab.' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     if (!apiConfig.is_enabled) {
       return new Response(
-        JSON.stringify({ success: false, error: 'G2Bulk API is disabled.' }),
+        JSON.stringify({ success: false, error: 'KesorAPI API is disabled.' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -151,7 +151,7 @@ serve(async (req) => {
 
     if (!apiKey) {
       return new Response(
-        JSON.stringify({ success: false, error: 'G2Bulk API key not configured.' }),
+        JSON.stringify({ success: false, error: 'KesorAPI API key not configured.' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -162,8 +162,8 @@ serve(async (req) => {
     switch (action) {
       // ============ GET USER INFO / BALANCE ============
       case 'get_account_balance': {
-        const request = buildG2BulkRequest('/getMe', apiKey);
-        console.log('[G2Bulk-API] Fetching account:', request.url);
+        const request = buildKesorAPIRequest('/getMe', apiKey);
+        console.log('[KesorAPI-API] Fetching account:', request.url);
         response = await fetch(request.url, request.options);
         data = await response.json();
         break;
@@ -171,8 +171,8 @@ serve(async (req) => {
 
       // ============ GET CATEGORIES ============
       case 'get_categories': {
-        const request = buildG2BulkRequest('/category', apiKey);
-        console.log('[G2Bulk-API] Fetching categories:', request.url);
+        const request = buildKesorAPIRequest('/category', apiKey);
+        console.log('[KesorAPI-API] Fetching categories:', request.url);
         response = await fetch(request.url, request.options);
         data = await response.json();
         break;
@@ -180,8 +180,8 @@ serve(async (req) => {
 
       // ============ GET PRODUCTS ============
       case 'get_products': {
-        const request = buildG2BulkRequest('/products', apiKey);
-        console.log('[G2Bulk-API] Fetching products:', request.url);
+        const request = buildKesorAPIRequest('/products', apiKey);
+        console.log('[KesorAPI-API] Fetching products:', request.url);
         response = await fetch(request.url, request.options);
         data = await response.json();
         break;
@@ -196,8 +196,8 @@ serve(async (req) => {
             { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
-        const request = buildG2BulkRequest(`/category/${category_id}`, apiKey);
-        console.log('[G2Bulk-API] Fetching category products:', request.url);
+        const request = buildKesorAPIRequest(`/category/${category_id}`, apiKey);
+        console.log('[KesorAPI-API] Fetching category products:', request.url);
         response = await fetch(request.url, request.options);
         data = await response.json();
         break;
@@ -205,8 +205,8 @@ serve(async (req) => {
 
       // ============ GET GAMES ============
       case 'get_games': {
-        const request = buildG2BulkRequest('/games', apiKey);
-        console.log('[G2Bulk-API] Fetching games:', request.url);
+        const request = buildKesorAPIRequest('/games', apiKey);
+        console.log('[KesorAPI-API] Fetching games:', request.url);
         response = await fetch(request.url, request.options);
         data = await response.json();
         break;
@@ -221,8 +221,8 @@ serve(async (req) => {
             { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
-        const request = buildG2BulkRequest(`/games/${game_code}/catalogue`, apiKey);
-        console.log('[G2Bulk-API] Fetching game catalogue:', request.url);
+        const request = buildKesorAPIRequest(`/games/${game_code}/catalogue`, apiKey);
+        console.log('[KesorAPI-API] Fetching game catalogue:', request.url);
         response = await fetch(request.url, request.options);
         data = await response.json();
         break;
@@ -237,8 +237,8 @@ serve(async (req) => {
             { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
-        const request = buildG2BulkRequest('/games/fields', apiKey, 'POST', { game: game_code });
-        console.log('[G2Bulk-API] Fetching game fields:', request.url);
+        const request = buildKesorAPIRequest('/games/fields', apiKey, 'POST', { game: game_code });
+        console.log('[KesorAPI-API] Fetching game fields:', request.url);
         response = await fetch(request.url, request.options);
         data = await response.json();
         break;
@@ -253,8 +253,8 @@ serve(async (req) => {
             { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
-        const request = buildG2BulkRequest('/games/servers', apiKey, 'POST', { game: game_code });
-        console.log('[G2Bulk-API] Fetching game servers:', request.url);
+        const request = buildKesorAPIRequest('/games/servers', apiKey, 'POST', { game: game_code });
+        console.log('[KesorAPI-API] Fetching game servers:', request.url);
         response = await fetch(request.url, request.options);
         data = await response.json();
         break;
@@ -272,8 +272,8 @@ serve(async (req) => {
         const body: Record<string, string> = { game: game_code, user_id };
         if (server_id) body.server_id = server_id;
         
-        const request = buildG2BulkRequest('/games/checkPlayerId', apiKey, 'POST', body);
-        console.log('[G2Bulk-API] Checking player ID:', request.url);
+        const request = buildKesorAPIRequest('/games/checkPlayerId', apiKey, 'POST', body);
+        console.log('[KesorAPI-API] Checking player ID:', request.url);
         response = await fetch(request.url, request.options);
         data = await response.json();
         break;
@@ -298,8 +298,8 @@ serve(async (req) => {
         if (callback_url) orderBody.callback_url = callback_url;
         if (mch_order_id) orderBody.remark = `order_id:${mch_order_id}`;
 
-        const request = buildG2BulkRequest(`/games/${game_code}/order`, apiKey, 'POST', orderBody);
-        console.log('[G2Bulk-API] Creating game order:', request.url, JSON.stringify(orderBody));
+        const request = buildKesorAPIRequest(`/games/${game_code}/order`, apiKey, 'POST', orderBody);
+        console.log('[KesorAPI-API] Creating game order:', request.url, JSON.stringify(orderBody));
         response = await fetch(request.url, request.options);
         data = await response.json();
         break;
@@ -314,8 +314,8 @@ serve(async (req) => {
             { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
-        const request = buildG2BulkRequest('/games/order/status', apiKey, 'POST', { order_id, game: game_code });
-        console.log('[G2Bulk-API] Checking order status:', request.url);
+        const request = buildKesorAPIRequest('/games/order/status', apiKey, 'POST', { order_id, game: game_code });
+        console.log('[KesorAPI-API] Checking order status:', request.url);
         response = await fetch(request.url, request.options);
         data = await response.json();
         break;
@@ -323,8 +323,8 @@ serve(async (req) => {
 
       // ============ GET GAME ORDERS ============
       case 'get_game_orders': {
-        const request = buildG2BulkRequest('/games/orders', apiKey);
-        console.log('[G2Bulk-API] Fetching game orders:', request.url);
+        const request = buildKesorAPIRequest('/games/orders', apiKey);
+        console.log('[KesorAPI-API] Fetching game orders:', request.url);
         response = await fetch(request.url, request.options);
         data = await response.json();
         break;
@@ -332,8 +332,8 @@ serve(async (req) => {
 
       // ============ GET ALL ORDERS ============
       case 'get_orders': {
-        const request = buildG2BulkRequest('/orders', apiKey);
-        console.log('[G2Bulk-API] Fetching orders:', request.url);
+        const request = buildKesorAPIRequest('/orders', apiKey);
+        console.log('[KesorAPI-API] Fetching orders:', request.url);
         response = await fetch(request.url, request.options);
         data = await response.json();
         break;
@@ -348,8 +348,8 @@ serve(async (req) => {
             { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
-        const request = buildG2BulkRequest(`/products/${product_id}/purchase`, apiKey, 'POST', { quantity });
-        console.log('[G2Bulk-API] Purchasing product:', request.url);
+        const request = buildKesorAPIRequest(`/products/${product_id}/purchase`, apiKey, 'POST', { quantity });
+        console.log('[KesorAPI-API] Purchasing product:', request.url);
         response = await fetch(request.url, request.options);
         data = await response.json();
         break;
@@ -357,8 +357,8 @@ serve(async (req) => {
 
       // ============ GET TRANSACTIONS ============
       case 'get_transactions': {
-        const request = buildG2BulkRequest('/transactions', apiKey);
-        console.log('[G2Bulk-API] Fetching transactions:', request.url);
+        const request = buildKesorAPIRequest('/transactions', apiKey);
+        console.log('[KesorAPI-API] Fetching transactions:', request.url);
         response = await fetch(request.url, request.options);
         data = await response.json();
         break;
@@ -366,11 +366,11 @@ serve(async (req) => {
 
       // ============ SYNC PRODUCTS ============
       case 'sync_products': {
-        console.log('[G2Bulk-API] Starting product sync...');
+        console.log('[KesorAPI-API] Starting product sync...');
         
         const allProducts: Array<{
-          g2bulk_type_id: string;
-          g2bulk_product_id: string;
+          kesorapi_type_id: string;
+          kesorapi_product_id: string;
           game_name: string;
           product_name: string;
           denomination: string;
@@ -381,25 +381,25 @@ serve(async (req) => {
         }> = [];
 
         // ========== SYNC GAMES (Direct Top-up) ==========
-        const gamesRequest = buildG2BulkRequest('/games', apiKey);
+        const gamesRequest = buildKesorAPIRequest('/games', apiKey);
         const gamesResponse = await fetch(gamesRequest.url, gamesRequest.options);
         const gamesResult = await gamesResponse.json();
 
         if (gamesResult.success && gamesResult.games) {
-          console.log(`[G2Bulk-API] Found ${gamesResult.games.length} games`);
+          console.log(`[KesorAPI-API] Found ${gamesResult.games.length} games`);
           
           for (const game of gamesResult.games) {
             try {
               // Get catalogue for each game
-              const catRequest = buildG2BulkRequest(`/games/${game.code}/catalogue`, apiKey);
+              const catRequest = buildKesorAPIRequest(`/games/${game.code}/catalogue`, apiKey);
               const catResponse = await fetch(catRequest.url, catRequest.options);
               const catResult = await catResponse.json();
 
               if (catResult.success && catResult.catalogues) {
                 for (const catalogue of catResult.catalogues) {
                   allProducts.push({
-                    g2bulk_type_id: String(catalogue.id),
-                    g2bulk_product_id: `game_${game.code}_${catalogue.id}`,
+                    kesorapi_type_id: String(catalogue.id),
+                    kesorapi_product_id: `game_${game.code}_${catalogue.id}`,
                     game_name: game.name,
                     product_name: catalogue.name,
                     denomination: catalogue.name,
@@ -409,26 +409,26 @@ serve(async (req) => {
                     product_type: 'recharge',
                   });
                 }
-                console.log(`[G2Bulk-API] Found ${catResult.catalogues.length} catalogues for ${game.name}`);
+                console.log(`[KesorAPI-API] Found ${catResult.catalogues.length} catalogues for ${game.name}`);
               }
             } catch (e) {
-              console.error(`[G2Bulk-API] Error fetching catalogue for game ${game.code}:`, e);
+              console.error(`[KesorAPI-API] Error fetching catalogue for game ${game.code}:`, e);
             }
           }
         }
 
         // ========== SYNC PRODUCTS (Vouchers/Cards/Keys) ==========
-        const productsRequest = buildG2BulkRequest('/products', apiKey);
+        const productsRequest = buildKesorAPIRequest('/products', apiKey);
         const productsResponse = await fetch(productsRequest.url, productsRequest.options);
         const productsResult = await productsResponse.json();
 
         if (productsResult.success && productsResult.products) {
-          console.log(`[G2Bulk-API] Found ${productsResult.products.length} products`);
+          console.log(`[KesorAPI-API] Found ${productsResult.products.length} products`);
           
           for (const product of productsResult.products) {
             allProducts.push({
-              g2bulk_type_id: String(product.id),
-              g2bulk_product_id: `card_${product.id}`,
+              kesorapi_type_id: String(product.id),
+              kesorapi_product_id: `card_${product.id}`,
               game_name: product.category_title || 'Vouchers',
               product_name: product.title,
               denomination: product.title,
@@ -443,19 +443,19 @@ serve(async (req) => {
         // Upsert all products to database
         if (allProducts.length > 0) {
           const { error: upsertError } = await supabase
-            .from('g2bulk_products')
+            .from('kesorapi_products')
             .upsert(allProducts, { 
-              onConflict: 'g2bulk_product_id',
+              onConflict: 'kesorapi_product_id',
               ignoreDuplicates: false 
             });
 
           if (upsertError) {
-            console.error('[G2Bulk-API] Upsert error:', upsertError);
+            console.error('[KesorAPI-API] Upsert error:', upsertError);
             throw upsertError;
           }
         }
 
-        console.log(`[G2Bulk-API] Synced ${allProducts.length} products total`);
+        console.log(`[KesorAPI-API] Synced ${allProducts.length} products total`);
         
         data = {
           success: true,
@@ -480,7 +480,7 @@ serve(async (req) => {
         } = params;
         const markup = 1 + (price_markup_percent / 100);
         
-        console.log(`[G2Bulk-API] Starting bulk import with ${price_markup_percent}% markup, update_prices=${update_existing_prices}, selected_games=${selected_game_codes?.length || 'all'}...`);
+        console.log(`[KesorAPI-API] Starting bulk import with ${price_markup_percent}% markup, update_prices=${update_existing_prices}, selected_games=${selected_game_codes?.length || 'all'}...`);
 
         let gamesCreated = 0;
         let packagesCreated = 0;
@@ -491,39 +491,39 @@ serve(async (req) => {
         // Get existing games to avoid duplicates
         const { data: existingGames } = await supabase
           .from('games')
-          .select('id, name, g2bulk_category_id');
+          .select('id, name, kesorapi_category_id');
         
         const existingGameNames = new Set((existingGames || []).map(g => g.name.toLowerCase()));
-        const existingCategoryIds = new Set((existingGames || []).filter(g => g.g2bulk_category_id).map(g => g.g2bulk_category_id));
-        const gameIdByCode = new Map((existingGames || []).filter(g => g.g2bulk_category_id).map(g => [g.g2bulk_category_id, g.id]));
+        const existingCategoryIds = new Set((existingGames || []).filter(g => g.kesorapi_category_id).map(g => g.kesorapi_category_id));
+        const gameIdByCode = new Map((existingGames || []).filter(g => g.kesorapi_category_id).map(g => [g.kesorapi_category_id, g.id]));
         const gameIdByName = new Map((existingGames || []).map(g => [g.name.toLowerCase(), g.id]));
 
         // Get existing packages to avoid duplicates or update prices
         const { data: existingPackages } = await supabase
           .from('packages')
-          .select('id, g2bulk_product_id, price')
-          .not('g2bulk_product_id', 'is', null);
+          .select('id, kesorapi_product_id, price')
+          .not('kesorapi_product_id', 'is', null);
         
-        const existingProductIds = new Set((existingPackages || []).map(p => p.g2bulk_product_id));
-        const packageByProductId = new Map((existingPackages || []).map(p => [p.g2bulk_product_id, { id: p.id, price: p.price }]));
+        const existingProductIds = new Set((existingPackages || []).map(p => p.kesorapi_product_id));
+        const packageByProductId = new Map((existingPackages || []).map(p => [p.kesorapi_product_id, { id: p.id, price: p.price }]));
 
         // ========== FETCH ALL GAMES FROM G2BULK ==========
-        const gamesRequest = buildG2BulkRequest('/games', apiKey);
+        const gamesRequest = buildKesorAPIRequest('/games', apiKey);
         const gamesResponse = await fetch(gamesRequest.url, gamesRequest.options);
         const gamesResult = await gamesResponse.json();
 
         if (!gamesResult.success || !gamesResult.games) {
-          throw new Error('Failed to fetch games from G2Bulk');
+          throw new Error('Failed to fetch games from KesorAPI');
         }
 
-        console.log(`[G2Bulk-API] Found ${gamesResult.games.length} games from G2Bulk`);
+        console.log(`[KesorAPI-API] Found ${gamesResult.games.length} games from KesorAPI`);
 
         // Filter games if specific ones are selected
         const gamesToProcess = selected_game_codes && selected_game_codes.length > 0
           ? gamesResult.games.filter((g: { code: string }) => selected_game_codes.includes(g.code))
           : gamesResult.games;
         
-        console.log(`[G2Bulk-API] Processing ${gamesToProcess.length} games`);
+        console.log(`[KesorAPI-API] Processing ${gamesToProcess.length} games`);
 
         // Process each game
         for (const game of gamesToProcess) {
@@ -536,7 +536,7 @@ serve(async (req) => {
             let gameId: string | null = null;
 
             if (gameExists) {
-              console.log(`[G2Bulk-API] Game exists: ${gameName}`);
+              console.log(`[KesorAPI-API] Game exists: ${gameName}`);
               gamesSkipped++;
               gameId = gameIdByCode.get(gameCode) || gameIdByName.get(gameName.toLowerCase()) || null;
             } else {
@@ -546,13 +546,13 @@ serve(async (req) => {
                 .insert({
                   name: gameName,
                   image: game.image || '',
-                  g2bulk_category_id: gameCode,
+                  kesorapi_category_id: gameCode,
                 })
                 .select('id')
                 .single();
 
               if (gameError) {
-                console.error(`[G2Bulk-API] Error creating game ${gameName}: ${gameError.message}`);
+                console.error(`[KesorAPI-API] Error creating game ${gameName}: ${gameError.message}`);
                 continue;
               }
 
@@ -560,18 +560,18 @@ serve(async (req) => {
               gameId = newGame.id;
               existingGameNames.add(gameName.toLowerCase());
               gameIdByCode.set(gameCode, newGame.id);
-              console.log(`[G2Bulk-API] Created game: ${gameName}`);
+              console.log(`[KesorAPI-API] Created game: ${gameName}`);
             }
 
             if (!gameId) continue;
 
             // Fetch catalogue for this game
-            const catRequest = buildG2BulkRequest(`/games/${gameCode}/catalogue`, apiKey);
+            const catRequest = buildKesorAPIRequest(`/games/${gameCode}/catalogue`, apiKey);
             const catResponse = await fetch(catRequest.url, catRequest.options);
             const catResult = await catResponse.json();
 
             if (catResult.success && catResult.catalogues) {
-              console.log(`[G2Bulk-API] Found ${catResult.catalogues.length} catalogues for ${gameName}`);
+              console.log(`[KesorAPI-API] Found ${catResult.catalogues.length} catalogues for ${gameName}`);
               
               for (const catalogue of catResult.catalogues) {
                 const productId = `game_${gameCode}_${catalogue.id}`;
@@ -590,7 +590,7 @@ serve(async (req) => {
                       
                       if (!updateError) {
                         packagesUpdated++;
-                        console.log(`[G2Bulk-API] Updated price for ${catalogue.name}: ${existingPkg.price} -> ${finalPrice}`);
+                        console.log(`[KesorAPI-API] Updated price for ${catalogue.name}: ${existingPkg.price} -> ${finalPrice}`);
                       }
                     }
                   }
@@ -605,12 +605,12 @@ serve(async (req) => {
                     name: catalogue.name,
                     amount: catalogue.name,
                     price: finalPrice,
-                    g2bulk_product_id: productId,
-                    g2bulk_type_id: String(catalogue.id),
+                    kesorapi_product_id: productId,
+                    kesorapi_type_id: String(catalogue.id),
                   });
 
                 if (pkgError) {
-                  console.error(`[G2Bulk-API] Error creating package: ${pkgError.message}`);
+                  console.error(`[KesorAPI-API] Error creating package: ${pkgError.message}`);
                 } else {
                   packagesCreated++;
                   existingProductIds.add(productId);
@@ -618,11 +618,11 @@ serve(async (req) => {
               }
             }
           } catch (e) {
-            console.error(`[G2Bulk-API] Error processing game ${game.name}:`, e);
+            console.error(`[KesorAPI-API] Error processing game ${game.name}:`, e);
           }
         }
 
-        console.log(`[G2Bulk-API] Bulk import complete: ${gamesCreated} games, ${packagesCreated} packages created, ${packagesUpdated} prices updated`);
+        console.log(`[KesorAPI-API] Bulk import complete: ${gamesCreated} games, ${packagesCreated} packages created, ${packagesUpdated} prices updated`);
         
         data = {
           success: true,
@@ -643,13 +643,13 @@ serve(async (req) => {
       }
 
       // ============ GET G2BULK GAMES LIST (for selection) ============
-      case 'get_g2bulk_games_list': {
-        const gamesRequest = buildG2BulkRequest('/games', apiKey);
+      case 'get_kesorapi_games_list': {
+        const gamesRequest = buildKesorAPIRequest('/games', apiKey);
         const gamesResponse = await fetch(gamesRequest.url, gamesRequest.options);
         const gamesResult = await gamesResponse.json();
 
         if (!gamesResult.success || !gamesResult.games) {
-          throw new Error('Failed to fetch games from G2Bulk');
+          throw new Error('Failed to fetch games from KesorAPI');
         }
 
         data = {
@@ -669,21 +669,21 @@ serve(async (req) => {
 
       // ============ SYNC VERIFICATION CODES FROM G2BULK ============
       case 'sync_verification_codes': {
-        console.log('[G2Bulk-API] Syncing verification codes from G2Bulk...');
+        console.log('[KesorAPI-API] Syncing verification codes from KesorAPI...');
 
-        // Fetch all games from G2Bulk
-        const gamesRequest = buildG2BulkRequest('/games', apiKey);
+        // Fetch all games from KesorAPI
+        const gamesRequest = buildKesorAPIRequest('/games', apiKey);
         const gamesResponse = await fetch(gamesRequest.url, gamesRequest.options);
         const gamesResult = await gamesResponse.json();
 
         if (!gamesResult.success || !gamesResult.games) {
-          throw new Error('Failed to fetch games from G2Bulk');
+          throw new Error('Failed to fetch games from KesorAPI');
         }
 
         const g2Games: Array<{ code: string; name: string }> = gamesResult.games;
-        console.log(`[G2Bulk-API] Found ${g2Games.length} games from G2Bulk`);
+        console.log(`[KesorAPI-API] Found ${g2Games.length} games from KesorAPI`);
 
-        // Build a map of normalized names to G2Bulk codes
+        // Build a map of normalized names to KesorAPI codes
         const codeMap = new Map<string, { code: string; name: string }>();
         for (const g of g2Games) {
           // Map by exact lowercase name
@@ -712,7 +712,7 @@ serve(async (req) => {
         for (const config of configs || []) {
           const nameLower = config.game_name.toLowerCase();
           
-          // Try to find matching G2Bulk game
+          // Try to find matching KesorAPI game
           let match = codeMap.get(nameLower);
           
           // Try fuzzy matching - remove region/special suffixes
@@ -749,7 +749,7 @@ serve(async (req) => {
               .eq('id', config.id);
 
             if (!updateError) {
-              console.log(`[G2Bulk-API] Updated ${config.game_name}: ${config.api_code} -> ${match.code}`);
+              console.log(`[KesorAPI-API] Updated ${config.game_name}: ${config.api_code} -> ${match.code}`);
               updated++;
             }
           } else if (match) {
@@ -757,7 +757,7 @@ serve(async (req) => {
           }
         }
 
-        console.log(`[G2Bulk-API] Sync complete: ${updated} updated, ${matched} already correct`);
+        console.log(`[KesorAPI-API] Sync complete: ${updated} updated, ${matched} already correct`);
 
         return new Response(
           JSON.stringify({
@@ -784,7 +784,7 @@ serve(async (req) => {
     // Check for API errors
     const responseData = data as Record<string, unknown>;
     if (responseData.success === false) {
-      console.error('[G2Bulk-API] API Error:', JSON.stringify(data));
+      console.error('[KesorAPI-API] API Error:', JSON.stringify(data));
       return new Response(
         JSON.stringify({ success: false, error: responseData.message || responseData.detail || 'API request failed', data }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -797,7 +797,7 @@ serve(async (req) => {
     );
 
   } catch (error: unknown) {
-    console.error('[G2Bulk-API] Error:', error);
+    console.error('[KesorAPI-API] Error:', error);
     return new Response(
       JSON.stringify({ success: false, error: 'An unexpected error occurred. Please try again.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

@@ -6,8 +6,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// G2Bulk API base
-const G2BULK_API_URL = 'https://api.g2bulk.com/v1';
+// KesorAPI API base
+const G2BULK_API_URL = 'https://api.kesorapi.com/v1';
 
 // Structured logging helper
 function log(level: 'INFO' | 'WARN' | 'ERROR' | 'DEBUG', message: string, data?: Record<string, unknown>) {
@@ -143,8 +143,8 @@ async function findGameConfig(gameName: string): Promise<GameVerificationConfig 
   return null;
 }
 
-// Get G2Bulk API key from api_configurations table
-async function getG2BulkApiKey(): Promise<string | null> {
+// Get KesorAPI API key from api_configurations table
+async function getKesorAPIApiKey(): Promise<string | null> {
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   const supabase = createClient(supabaseUrl, supabaseKey);
@@ -152,19 +152,19 @@ async function getG2BulkApiKey(): Promise<string | null> {
   const { data, error } = await supabase
     .from('api_configurations')
     .select('api_secret, is_enabled')
-    .eq('api_name', 'g2bulk')
+    .eq('api_name', 'kesorapi')
     .single();
 
   if (error || !data || !data.is_enabled) {
-    log('WARN', 'G2Bulk API not configured or disabled');
+    log('WARN', 'KesorAPI API not configured or disabled');
     return null;
   }
 
   return data.api_secret || null;
 }
 
-// Try to verify player via G2Bulk checkPlayerId endpoint
-async function verifyWithG2Bulk(
+// Try to verify player via KesorAPI checkPlayerId endpoint
+async function verifyWithKesorAPI(
   apiKey: string,
   gameCode: string,
   userId: string,
@@ -178,7 +178,7 @@ async function verifyWithG2Bulk(
     body.server_id = serverId;
   }
 
-  log('DEBUG', 'Calling G2Bulk checkPlayerId', { gameCode, userId, hasServerId: !!serverId });
+  log('DEBUG', 'Calling KesorAPI checkPlayerId', { gameCode, userId, hasServerId: !!serverId });
 
   const response = await fetch(`${G2BULK_API_URL}/games/checkPlayerId`, {
     method: 'POST',
@@ -190,17 +190,17 @@ async function verifyWithG2Bulk(
   });
 
   const text = await response.text();
-  log('DEBUG', 'G2Bulk checkPlayerId response', { status: response.status, body: text.substring(0, 500) });
+  log('DEBUG', 'KesorAPI checkPlayerId response', { status: response.status, body: text.substring(0, 500) });
 
   if (!response.ok) {
-    return { success: false, error: `G2Bulk API returned ${response.status}` };
+    return { success: false, error: `KesorAPI API returned ${response.status}` };
   }
 
   let data: Record<string, unknown>;
   try {
     data = JSON.parse(text);
   } catch {
-    return { success: false, error: 'Invalid JSON from G2Bulk' };
+    return { success: false, error: 'Invalid JSON from KesorAPI' };
   }
 
   // Expected response: { valid: "valid", name: "...", openid: "..." } or { valid: "invalid", ... }
@@ -243,8 +243,8 @@ serve(async (req) => {
       );
     }
 
-    // Get G2Bulk API key
-    const apiKey = await getG2BulkApiKey();
+    // Get KesorAPI API key
+    const apiKey = await getKesorAPIApiKey();
     if (!apiKey) {
       return new Response(
         JSON.stringify({ success: false, error: 'Game verification service is not configured. Please contact the admin.' }),
@@ -285,7 +285,7 @@ serve(async (req) => {
 
     for (const code of codesToTry) {
       triedCodes.push(code);
-      const result = await verifyWithG2Bulk(apiKey, code, userId, effectiveServerId);
+      const result = await verifyWithKesorAPI(apiKey, code, userId, effectiveServerId);
 
       if (result.success && result.name) {
         log('INFO', 'Verification successful', { requestId, gameName, code, name: result.name });
@@ -296,7 +296,7 @@ serve(async (req) => {
             userId: userId,
             serverId: effectiveServerId || undefined,
             accountName: result.name,
-            verifiedBy: 'G2Bulk',
+            verifiedBy: 'KesorAPI',
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );

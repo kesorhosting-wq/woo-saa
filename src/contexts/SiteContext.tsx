@@ -11,7 +11,7 @@ export interface Game {
   coverImage?: string;
   packages: Package[];
   specialPackages: Package[];
-  g2bulkCategoryId?: string;
+  kesorapiCategoryId?: string;
   featured?: boolean;
   defaultPackageIcon?: string;
 }
@@ -27,8 +27,8 @@ export interface Package {
   labelBgColor?: string;
   labelTextColor?: string;
   labelIcon?: string;
-  g2bulkProductId?: string;
-  g2bulkTypeId?: string;
+  kesorapiProductId?: string;
+  kesorapiTypeId?: string;
   quantity?: number | null;
 }
 
@@ -477,7 +477,7 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           slug: (game as any).slug || game.id,
           image: game.image || '',
           coverImage: (game as any).cover_image || undefined,
-          g2bulkCategoryId: (game as any).g2bulk_category_id || undefined,
+          kesorapiCategoryId: (game as any).kesorapi_category_id || undefined,
           featured: (game as any).featured || false,
           defaultPackageIcon: (game as any).default_package_icon || undefined,
           packages: (packagesData || [])
@@ -493,8 +493,8 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               labelBgColor: (pkg as any).label_bg_color || undefined,
               labelTextColor: (pkg as any).label_text_color || undefined,
               labelIcon: (pkg as any).label_icon || undefined,
-              g2bulkProductId: (pkg as any).g2bulk_product_id || undefined,
-              g2bulkTypeId: (pkg as any).g2bulk_type_id || undefined,
+              kesorapiProductId: (pkg as any).kesorapi_product_id || undefined,
+              kesorapiTypeId: (pkg as any).kesorapi_type_id || undefined,
               quantity: (pkg as any).quantity ?? undefined
             })),
           specialPackages: (specialPackagesData || [])
@@ -510,8 +510,8 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               labelBgColor: (pkg as any).label_bg_color || undefined,
               labelTextColor: (pkg as any).label_text_color || undefined,
               labelIcon: (pkg as any).label_icon || undefined,
-              g2bulkProductId: (pkg as any).g2bulk_product_id || undefined,
-              g2bulkTypeId: (pkg as any).g2bulk_type_id || undefined,
+              kesorapiProductId: (pkg as any).kesorapi_product_id || undefined,
+              kesorapiTypeId: (pkg as any).kesorapi_type_id || undefined,
               quantity: (pkg as any).quantity ?? undefined
             }))
         }));
@@ -544,7 +544,7 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           slug: (game as any).slug || undefined,
           image: game.image || '',
           coverImage: (game as any).cover_image || undefined,
-          g2bulkCategoryId: (game as any).g2bulk_category_id || undefined,
+          kesorapiCategoryId: (game as any).kesorapi_category_id || undefined,
           featured: (game as any).featured || false,
           defaultPackageIcon: (game as any).default_package_icon || undefined,
           packages: (packagesData || [])
@@ -560,8 +560,8 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               labelBgColor: (pkg as any).label_bg_color || undefined,
               labelTextColor: (pkg as any).label_text_color || undefined,
               labelIcon: (pkg as any).label_icon || undefined,
-              g2bulkProductId: (pkg as any).g2bulk_product_id || undefined,
-              g2bulkTypeId: (pkg as any).g2bulk_type_id || undefined,
+              kesorapiProductId: (pkg as any).kesorapi_product_id || undefined,
+              kesorapiTypeId: (pkg as any).kesorapi_type_id || undefined,
               quantity: (pkg as any).quantity ?? undefined
             })),
           specialPackages: (specialPackagesData || [])
@@ -577,8 +577,8 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               labelBgColor: (pkg as any).label_bg_color || undefined,
               labelTextColor: (pkg as any).label_text_color || undefined,
               labelIcon: (pkg as any).label_icon || undefined,
-              g2bulkProductId: (pkg as any).g2bulk_product_id || undefined,
-              g2bulkTypeId: (pkg as any).g2bulk_type_id || undefined,
+              kesorapiProductId: (pkg as any).kesorapi_product_id || undefined,
+              kesorapiTypeId: (pkg as any).kesorapi_type_id || undefined,
               quantity: (pkg as any).quantity ?? undefined
             }))
         }));
@@ -618,7 +618,7 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         .insert({ 
           name: game.name, 
           image: game.image,
-          g2bulk_category_id: game.g2bulkCategoryId || null
+          kesorapi_category_id: game.kesorapiCategoryId || null
         })
         .select()
         .single();
@@ -629,7 +629,7 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           ...data, 
           id: data.id, 
           slug: (data as any).slug || undefined,
-          g2bulkCategoryId: (data as any).g2bulk_category_id || undefined,
+          kesorapiCategoryId: (data as any).kesorapi_category_id || undefined,
           packages: [], 
           specialPackages: [] 
         }]);
@@ -645,7 +645,7 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (updatedGame.name !== undefined) updateData.name = updatedGame.name;
       if (updatedGame.image !== undefined) updateData.image = updatedGame.image;
       if (updatedGame.coverImage !== undefined) updateData.cover_image = updatedGame.coverImage || null;
-      if (updatedGame.g2bulkCategoryId !== undefined) updateData.g2bulk_category_id = updatedGame.g2bulkCategoryId || null;
+      if (updatedGame.kesorapiCategoryId !== undefined) updateData.kesorapi_category_id = updatedGame.kesorapiCategoryId || null;
       if (updatedGame.featured !== undefined) updateData.featured = updatedGame.featured;
       if (updatedGame.defaultPackageIcon !== undefined) updateData.default_package_icon = updatedGame.defaultPackageIcon || null;
 
@@ -807,8 +807,8 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           label_bg_color: pkg.labelBgColor || null,
           label_text_color: pkg.labelTextColor || null,
           label_icon: pkg.labelIcon || null,
-          g2bulk_product_id: pkg.g2bulkProductId || null,
-          g2bulk_type_id: pkg.g2bulkTypeId || null,
+          kesorapi_product_id: pkg.kesorapiProductId || null,
+          kesorapi_type_id: pkg.kesorapiTypeId || null,
           quantity: pkg.quantity ?? null
         })
         .select()
@@ -829,8 +829,8 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 labelBgColor: (data as any).label_bg_color || undefined,
                 labelTextColor: (data as any).label_text_color || undefined,
                 labelIcon: (data as any).label_icon || undefined,
-                g2bulkProductId: (data as any).g2bulk_product_id || undefined,
-                g2bulkTypeId: (data as any).g2bulk_type_id || undefined,
+                kesorapiProductId: (data as any).kesorapi_product_id || undefined,
+                kesorapiTypeId: (data as any).kesorapi_type_id || undefined,
                 quantity: (data as any).quantity ?? undefined
               }] }
             : g
@@ -852,8 +852,8 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (updatedPkg.labelBgColor !== undefined) updateData.label_bg_color = updatedPkg.labelBgColor || null;
       if (updatedPkg.labelTextColor !== undefined) updateData.label_text_color = updatedPkg.labelTextColor || null;
       if (updatedPkg.labelIcon !== undefined) updateData.label_icon = updatedPkg.labelIcon || null;
-      if (updatedPkg.g2bulkProductId !== undefined) updateData.g2bulk_product_id = updatedPkg.g2bulkProductId || null;
-      if (updatedPkg.g2bulkTypeId !== undefined) updateData.g2bulk_type_id = updatedPkg.g2bulkTypeId || null;
+      if (updatedPkg.kesorapiProductId !== undefined) updateData.kesorapi_product_id = updatedPkg.kesorapiProductId || null;
+      if (updatedPkg.kesorapiTypeId !== undefined) updateData.kesorapi_type_id = updatedPkg.kesorapiTypeId || null;
       if (updatedPkg.quantity !== undefined) updateData.quantity = updatedPkg.quantity ?? null;
 
       const { error } = await supabase
@@ -932,8 +932,8 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           label_bg_color: pkg.labelBgColor || null,
           label_text_color: pkg.labelTextColor || null,
           label_icon: pkg.labelIcon || null,
-          g2bulk_product_id: pkg.g2bulkProductId || null,
-          g2bulk_type_id: pkg.g2bulkTypeId || null,
+          kesorapi_product_id: pkg.kesorapiProductId || null,
+          kesorapi_type_id: pkg.kesorapiTypeId || null,
           quantity: pkg.quantity ?? null
         })
         .select()
@@ -954,8 +954,8 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 labelBgColor: (data as any).label_bg_color || undefined,
                 labelTextColor: (data as any).label_text_color || undefined,
                 labelIcon: (data as any).label_icon || undefined,
-                g2bulkProductId: (data as any).g2bulk_product_id || undefined,
-                g2bulkTypeId: (data as any).g2bulk_type_id || undefined,
+                kesorapiProductId: (data as any).kesorapi_product_id || undefined,
+                kesorapiTypeId: (data as any).kesorapi_type_id || undefined,
                 quantity: (data as any).quantity ?? undefined
               }] }
             : g
@@ -977,8 +977,8 @@ export const SiteProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (updatedPkg.labelBgColor !== undefined) updateData.label_bg_color = updatedPkg.labelBgColor || null;
       if (updatedPkg.labelTextColor !== undefined) updateData.label_text_color = updatedPkg.labelTextColor || null;
       if (updatedPkg.labelIcon !== undefined) updateData.label_icon = updatedPkg.labelIcon || null;
-      if (updatedPkg.g2bulkProductId !== undefined) updateData.g2bulk_product_id = updatedPkg.g2bulkProductId || null;
-      if (updatedPkg.g2bulkTypeId !== undefined) updateData.g2bulk_type_id = updatedPkg.g2bulkTypeId || null;
+      if (updatedPkg.kesorapiProductId !== undefined) updateData.kesorapi_product_id = updatedPkg.kesorapiProductId || null;
+      if (updatedPkg.kesorapiTypeId !== undefined) updateData.kesorapi_type_id = updatedPkg.kesorapiTypeId || null;
       if (updatedPkg.quantity !== undefined) updateData.quantity = updatedPkg.quantity ?? null;
 
       const { error } = await supabase

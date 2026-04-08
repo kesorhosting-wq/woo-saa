@@ -19,7 +19,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import G2BulkStatsDashboard from './G2BulkStatsDashboard';
+import KesorAPIStatsDashboard from './KesorAPIStatsDashboard';
 import RealtimeOrderStatusWidget from './RealtimeOrderStatusWidget';
 import { useNotificationSound } from '@/hooks/useNotificationSound';
 
@@ -41,8 +41,8 @@ interface Order {
   payment_method: string | null;
   status: string;
   status_message: string | null;
-  g2bulk_order_id: string | null;
-  g2bulk_product_id: string | null;
+  kesorapi_order_id: string | null;
+  kesorapi_product_id: string | null;
   card_codes: CardCode[] | null;
   created_at: string;
 }
@@ -60,7 +60,7 @@ const OrdersTab: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<string>('all');
-  const [checkingG2Bulk, setCheckingG2Bulk] = useState<Record<string, boolean>>({});
+  const [checkingKesorAPI, setCheckingKesorAPI] = useState<Record<string, boolean>>({});
   const [showStats, setShowStats] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [isRealtimeConnected, setIsRealtimeConnected] = useState(false);
@@ -196,18 +196,18 @@ const OrdersTab: React.FC = () => {
     }
   };
 
-  const checkG2BulkStatus = async (order: Order) => {
-    // If no g2bulk_order_id but has a product, auto-fulfill instead
-    if (!order.g2bulk_order_id) {
-      if (order.g2bulk_product_id) {
-        toast({ title: 'Sending to G2Bulk...', description: 'This order hasn\'t been sent yet. Submitting now.' });
-        return retryG2BulkOrder(order);
+  const checkKesorAPIStatus = async (order: Order) => {
+    // If no kesorapi_order_id but has a product, auto-fulfill instead
+    if (!order.kesorapi_order_id) {
+      if (order.kesorapi_product_id) {
+        toast({ title: 'Sending to KesorAPI...', description: 'This order hasn\'t been sent yet. Submitting now.' });
+        return retryKesorAPIOrder(order);
       }
-      toast({ title: 'No G2Bulk product linked', description: 'This order is not linked to any G2Bulk product.', variant: 'destructive' });
+      toast({ title: 'No KesorAPI product linked', description: 'This order is not linked to any KesorAPI product.', variant: 'destructive' });
       return;
     }
 
-    setCheckingG2Bulk(prev => ({ ...prev, [order.id]: true }));
+    setCheckingKesorAPI(prev => ({ ...prev, [order.id]: true }));
     try {
       const { data, error } = await supabase.functions.invoke('process-topup', {
         body: { 
@@ -220,32 +220,32 @@ const OrdersTab: React.FC = () => {
 
       if (data?.success) {
         toast({ 
-          title: 'G2Bulk Status', 
-          description: `Order status: ${data.our_status || data.g2bulk_status || 'Unknown'}` 
+          title: 'KesorAPI Status', 
+          description: `Order status: ${data.our_status || data.kesorapi_status || 'Unknown'}` 
         });
         loadOrders();
       } else {
         toast({ 
-          title: 'G2Bulk check failed', 
-          description: data?.error || 'Unable to fetch order status from G2Bulk', 
+          title: 'KesorAPI check failed', 
+          description: data?.error || 'Unable to fetch order status from KesorAPI', 
           variant: 'destructive' 
         });
       }
     } catch (error) {
-      console.error('Error checking G2Bulk status:', error);
-      toast({ title: 'Failed to check G2Bulk status', variant: 'destructive' });
+      console.error('Error checking KesorAPI status:', error);
+      toast({ title: 'Failed to check KesorAPI status', variant: 'destructive' });
     } finally {
-      setCheckingG2Bulk(prev => ({ ...prev, [order.id]: false }));
+      setCheckingKesorAPI(prev => ({ ...prev, [order.id]: false }));
     }
   };
 
-  const retryG2BulkOrder = async (order: Order) => {
-    if (!order.g2bulk_product_id) {
-      toast({ title: 'No G2Bulk product linked', description: 'This order package is not linked to a G2Bulk product.', variant: 'destructive' });
+  const retryKesorAPIOrder = async (order: Order) => {
+    if (!order.kesorapi_product_id) {
+      toast({ title: 'No KesorAPI product linked', description: 'This order package is not linked to a KesorAPI product.', variant: 'destructive' });
       return;
     }
 
-    setCheckingG2Bulk(prev => ({ ...prev, [order.id]: true }));
+    setCheckingKesorAPI(prev => ({ ...prev, [order.id]: true }));
     try {
       const { data, error } = await supabase.functions.invoke('process-topup', {
         body: { action: 'fulfill', orderId: order.id },
@@ -254,17 +254,17 @@ const OrdersTab: React.FC = () => {
       if (error) throw error;
 
       if (data?.success) {
-        toast({ title: 'Order sent to G2Bulk!', description: 'The order has been resubmitted for processing.' });
+        toast({ title: 'Order sent to KesorAPI!', description: 'The order has been resubmitted for processing.' });
       } else {
         toast({ title: 'Retry failed', description: data?.error || 'Failed to process order', variant: 'destructive' });
       }
       
       loadOrders();
     } catch (error) {
-      console.error('Error retrying G2Bulk order:', error);
+      console.error('Error retrying KesorAPI order:', error);
       toast({ title: 'Failed to retry order', variant: 'destructive' });
     } finally {
-      setCheckingG2Bulk(prev => ({ ...prev, [order.id]: false }));
+      setCheckingKesorAPI(prev => ({ ...prev, [order.id]: false }));
     }
   };
 
@@ -332,8 +332,8 @@ const OrdersTab: React.FC = () => {
         </Button>
       </div>
 
-      {/* G2Bulk Stats Dashboard */}
-      {showStats && <G2BulkStatsDashboard />}
+      {/* KesorAPI Stats Dashboard */}
+      {showStats && <KesorAPIStatsDashboard />}
 
       {/* Real-time Order Status Widget */}
       <RealtimeOrderStatusWidget />
@@ -513,10 +513,10 @@ const OrdersTab: React.FC = () => {
                                     <span className="text-muted-foreground">Date</span>
                                     <span>{new Date(order.created_at).toLocaleString()}</span>
                                   </div>
-                                  {order.g2bulk_order_id && (
+                                  {order.kesorapi_order_id && (
                                     <div className="flex justify-between py-2 border-b border-border">
-                                      <span className="text-muted-foreground">G2Bulk ID</span>
-                                      <span className="font-mono text-xs">{order.g2bulk_order_id}</span>
+                                      <span className="text-muted-foreground">KesorAPI ID</span>
+                                      <span className="font-mono text-xs">{order.kesorapi_order_id}</span>
                                     </div>
                                   )}
                                   {order.status_message && (
@@ -573,8 +573,8 @@ const OrdersTab: React.FC = () => {
                         {order.status_message && (
                           <p className="text-xs text-muted-foreground mt-2">{order.status_message}</p>
                         )}
-                        {order.g2bulk_order_id && (
-                          <p className="text-xs text-muted-foreground mt-1">G2Bulk: {order.g2bulk_order_id}</p>
+                        {order.kesorapi_order_id && (
+                          <p className="text-xs text-muted-foreground mt-1">KesorAPI: {order.kesorapi_order_id}</p>
                         )}
                         
                         {/* Card Codes Display */}
@@ -650,32 +650,32 @@ const OrdersTab: React.FC = () => {
                           </DropdownMenuContent>
                         </DropdownMenu>
 
-                        {/* G2Bulk Status Check */}
-                        {(order.g2bulk_order_id || order.g2bulk_product_id) && (
+                        {/* KesorAPI Status Check */}
+                        {(order.kesorapi_order_id || order.kesorapi_product_id) && (
                           <Button 
                             size="sm" 
                             variant="outline"
-                            disabled={checkingG2Bulk[order.id]}
-                            onClick={() => checkG2BulkStatus(order)}
+                            disabled={checkingKesorAPI[order.id]}
+                            onClick={() => checkKesorAPIStatus(order)}
                           >
-                            {checkingG2Bulk[order.id] ? (
+                            {checkingKesorAPI[order.id] ? (
                               <RefreshCw className="w-4 h-4 mr-1 animate-spin" />
                             ) : (
                               <Search className="w-4 h-4 mr-1" />
                             )}
-                            Check G2Bulk
+                            Check KesorAPI
                           </Button>
                         )}
                         
                         {/* Process Now - Primary action for paid orders */}
-                        {order.status === 'paid' && order.g2bulk_product_id && (
+                        {order.status === 'paid' && order.kesorapi_product_id && (
                           <Button 
                             size="sm" 
                             className="bg-emerald-500 hover:bg-emerald-600 text-white"
-                            disabled={checkingG2Bulk[order.id]}
-                            onClick={() => retryG2BulkOrder(order)}
+                            disabled={checkingKesorAPI[order.id]}
+                            onClick={() => retryKesorAPIOrder(order)}
                           >
-                            {checkingG2Bulk[order.id] ? (
+                            {checkingKesorAPI[order.id] ? (
                               <RefreshCw className="w-4 h-4 mr-1 animate-spin" />
                             ) : (
                               <Play className="w-4 h-4 mr-1" />
@@ -684,21 +684,21 @@ const OrdersTab: React.FC = () => {
                           </Button>
                         )}
 
-                        {/* Retry G2Bulk (for failed or pending_manual orders) */}
-                        {(order.status === 'pending_manual' || order.status === 'failed') && order.g2bulk_product_id && (
+                        {/* Retry KesorAPI (for failed or pending_manual orders) */}
+                        {(order.status === 'pending_manual' || order.status === 'failed') && order.kesorapi_product_id && (
                           <Button 
                             size="sm" 
                             variant="outline"
                             className="text-blue-500 border-blue-500 hover:bg-blue-500 hover:text-white"
-                            disabled={checkingG2Bulk[order.id]}
-                            onClick={() => retryG2BulkOrder(order)}
+                            disabled={checkingKesorAPI[order.id]}
+                            onClick={() => retryKesorAPIOrder(order)}
                           >
-                            {checkingG2Bulk[order.id] ? (
+                            {checkingKesorAPI[order.id] ? (
                               <RefreshCw className="w-4 h-4 mr-1 animate-spin" />
                             ) : (
                               <RefreshCw className="w-4 h-4 mr-1" />
                             )}
-                            Retry G2Bulk
+                            Retry KesorAPI
                           </Button>
                         )}
                       </div>

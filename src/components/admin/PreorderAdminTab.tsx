@@ -11,7 +11,7 @@ import {
   Plus, Trash2, Edit2, Save, X, ChevronDown, ChevronUp,
   Package, Calendar, Clock, Loader2, RefreshCw, Play, AlertCircle
 } from 'lucide-react';
-import G2BulkProductSelector from './G2BulkProductSelector';
+import KesorAPIProductSelector from './KesorAPIProductSelector';
 
 interface PreorderGame {
   id: string;
@@ -29,8 +29,8 @@ interface PreorderPackage {
   amount: string;
   price: number;
   icon?: string;
-  g2bulk_product_id?: string;
-  g2bulk_type_id?: string;
+  kesorapi_product_id?: string;
+  kesorapi_type_id?: string;
   quantity?: number;
   scheduled_fulfill_at?: string;
   sort_order: number;
@@ -50,7 +50,7 @@ interface PreorderOrder {
   status: string;
   status_message?: string;
   scheduled_fulfill_at?: string;
-  g2bulk_order_id?: string;
+  kesorapi_order_id?: string;
   created_at: string;
   payment_method?: string;
 }
@@ -67,7 +67,7 @@ const PreorderAdminTab: React.FC = () => {
   const [tab, setTab] = useState<'games' | 'orders'>('games');
 
   // New package form
-  const [newPkg, setNewPkg] = useState({ name: '', amount: '', price: 0, g2bulkProductId: '', g2bulkTypeId: '', quantity: '', scheduledAt: '', icon: '' });
+  const [newPkg, setNewPkg] = useState({ name: '', amount: '', price: 0, kesorapiProductId: '', kesorapiTypeId: '', quantity: '', scheduledAt: '', icon: '' });
   const [editingPkg, setEditingPkg] = useState<string | null>(null);
   const [editPkgData, setEditPkgData] = useState<any>({});
 
@@ -146,14 +146,14 @@ const PreorderAdminTab: React.FC = () => {
       amount: newPkg.amount || newPkg.name,
       price: newPkg.price,
       icon: newPkg.icon || null,
-      g2bulk_product_id: newPkg.g2bulkProductId || null,
-      g2bulk_type_id: newPkg.g2bulkTypeId || null,
+      kesorapi_product_id: newPkg.kesorapiProductId || null,
+      kesorapi_type_id: newPkg.kesorapiTypeId || null,
       quantity: newPkg.quantity ? parseInt(newPkg.quantity) : null,
       scheduled_fulfill_at: newPkg.scheduledAt ? new Date(newPkg.scheduledAt).toISOString() : null,
     };
     const { error } = await supabase.from('preorder_packages').insert(insertData);
     if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); return; }
-    setNewPkg({ name: '', amount: '', price: 0, g2bulkProductId: '', g2bulkTypeId: '', quantity: '', scheduledAt: '', icon: '' });
+    setNewPkg({ name: '', amount: '', price: 0, kesorapiProductId: '', kesorapiTypeId: '', quantity: '', scheduledAt: '', icon: '' });
     loadData();
     toast({ title: 'Package added!' });
   };
@@ -164,8 +164,8 @@ const PreorderAdminTab: React.FC = () => {
       amount: editPkgData.amount,
       price: editPkgData.price,
       icon: editPkgData.icon || null,
-      g2bulk_product_id: editPkgData.g2bulkProductId || null,
-      g2bulk_type_id: editPkgData.g2bulkTypeId || null,
+      kesorapi_product_id: editPkgData.kesorapiProductId || null,
+      kesorapi_type_id: editPkgData.kesorapiTypeId || null,
       quantity: editPkgData.quantity ? parseInt(editPkgData.quantity) : null,
       scheduled_fulfill_at: editPkgData.scheduledAt ? new Date(editPkgData.scheduledAt).toISOString() : null,
     };
@@ -272,9 +272,9 @@ const PreorderAdminTab: React.FC = () => {
                             <Input placeholder="Quantity" value={editPkgData.quantity} onChange={e => setEditPkgData({ ...editPkgData, quantity: e.target.value })} />
                             <Input type="datetime-local" value={editPkgData.scheduledAt} onChange={e => setEditPkgData({ ...editPkgData, scheduledAt: e.target.value })} />
                           </div>
-                          <G2BulkProductSelector
-                            value={editPkgData.g2bulkProductId}
-                            onChange={(productId, typeId) => setEditPkgData({ ...editPkgData, g2bulkProductId: productId, g2bulkTypeId: typeId })}
+                          <KesorAPIProductSelector
+                            value={editPkgData.kesorapiProductId}
+                            onChange={(productId, typeId) => setEditPkgData({ ...editPkgData, kesorapiProductId: productId, kesorapiTypeId: typeId })}
                           />
                           <div className="flex gap-2">
                             <Button size="sm" onClick={() => handleSavePackage(pkg.id)}><Save className="w-3 h-3 mr-1" />Save</Button>
@@ -295,14 +295,14 @@ const PreorderAdminTab: React.FC = () => {
                                 Process on: {new Date(pkg.scheduled_fulfill_at).toLocaleString()}
                               </div>
                             )}
-                            {pkg.g2bulk_product_id && <span className="text-xs text-muted-foreground">G2Bulk: {pkg.g2bulk_product_id}</span>}
+                            {pkg.kesorapi_product_id && <span className="text-xs text-muted-foreground">KesorAPI: {pkg.kesorapi_product_id}</span>}
                           </div>
                           <div className="flex gap-1">
                             <Button variant="ghost" size="sm" onClick={() => {
                               setEditingPkg(pkg.id);
                               setEditPkgData({
                                 name: pkg.name, amount: pkg.amount, price: pkg.price,
-                                g2bulkProductId: pkg.g2bulk_product_id || '', g2bulkTypeId: pkg.g2bulk_type_id || '',
+                                kesorapiProductId: pkg.kesorapi_product_id || '', kesorapiTypeId: pkg.kesorapi_type_id || '',
                                 quantity: pkg.quantity ? String(pkg.quantity) : '',
                                 scheduledAt: pkg.scheduled_fulfill_at ? new Date(pkg.scheduled_fulfill_at).toISOString().slice(0, 16) : '',
                                 icon: pkg.icon || ''
@@ -331,9 +331,9 @@ const PreorderAdminTab: React.FC = () => {
                       <Input placeholder="Qty" value={newPkg.quantity} onChange={e => setNewPkg({ ...newPkg, quantity: e.target.value })} />
                       <Input type="datetime-local" value={newPkg.scheduledAt} onChange={e => setNewPkg({ ...newPkg, scheduledAt: e.target.value })} />
                     </div>
-                    <G2BulkProductSelector
-                      value={newPkg.g2bulkProductId}
-                      onChange={(productId, typeId) => setNewPkg({ ...newPkg, g2bulkProductId: productId || '', g2bulkTypeId: typeId || '' })}
+                    <KesorAPIProductSelector
+                      value={newPkg.kesorapiProductId}
+                      onChange={(productId, typeId) => setNewPkg({ ...newPkg, kesorapiProductId: productId || '', kesorapiTypeId: typeId || '' })}
                     />
                     <Button size="sm" onClick={() => handleAddPackage(pg.id)}>
                       <Plus className="w-3 h-3 mr-1" /> Add Package

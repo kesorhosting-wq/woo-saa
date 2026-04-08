@@ -27,10 +27,10 @@ interface ProcessingStats {
   avgProcessingTimeMinutes: number;
   fastestOrderMinutes: number;
   slowestOrderMinutes: number;
-  ordersWithG2Bulk: number;
+  ordersWithKesorAPI: number;
 }
 
-const G2BulkStatsDashboard: React.FC = () => {
+const KesorAPIStatsDashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [dailyStats, setDailyStats] = useState<DailyStats[]>([]);
   const [todayStats, setTodayStats] = useState<DailyStats | null>(null);
@@ -46,7 +46,7 @@ const G2BulkStatsDashboard: React.FC = () => {
       // Fetch orders from last 7 days
       const { data: orders, error } = await supabase
         .from('topup_orders')
-        .select('id, status, created_at, updated_at, g2bulk_order_id')
+        .select('id, status, created_at, updated_at, kesorapi_order_id')
         .gte('created_at', sevenDaysAgo.toISOString())
         .order('created_at', { ascending: false });
 
@@ -115,13 +115,13 @@ const G2BulkStatsDashboard: React.FC = () => {
       });
       setWeekStats(weekTotals);
 
-      // Calculate processing times for completed orders with G2Bulk
-      const completedWithG2Bulk = orders?.filter(
-        o => o.status === 'completed' && o.g2bulk_order_id
+      // Calculate processing times for completed orders with KesorAPI
+      const completedWithKesorAPI = orders?.filter(
+        o => o.status === 'completed' && o.kesorapi_order_id
       ) || [];
 
-      if (completedWithG2Bulk.length > 0) {
-        const processingTimes = completedWithG2Bulk.map(o => {
+      if (completedWithKesorAPI.length > 0) {
+        const processingTimes = completedWithKesorAPI.map(o => {
           const created = new Date(o.created_at).getTime();
           const updated = new Date(o.updated_at).getTime();
           return (updated - created) / 1000 / 60; // minutes
@@ -135,7 +135,7 @@ const G2BulkStatsDashboard: React.FC = () => {
           avgProcessingTimeMinutes: Math.round(avgTime * 10) / 10,
           fastestOrderMinutes: Math.round(minTime * 10) / 10,
           slowestOrderMinutes: Math.round(maxTime * 10) / 10,
-          ordersWithG2Bulk: completedWithG2Bulk.length
+          ordersWithKesorAPI: completedWithKesorAPI.length
         });
       } else {
         setProcessingStats(null);
@@ -179,7 +179,7 @@ const G2BulkStatsDashboard: React.FC = () => {
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold flex items-center gap-2">
           <Activity className="w-5 h-5 text-gold" />
-          G2Bulk Order Statistics
+          KesorAPI Order Statistics
         </h3>
         <Button variant="outline" size="sm" onClick={loadStats} disabled={isLoading}>
           <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
@@ -279,7 +279,7 @@ const G2BulkStatsDashboard: React.FC = () => {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
               <Zap className="w-4 h-4 text-gold" />
-              G2Bulk Processing Time
+              KesorAPI Processing Time
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -298,13 +298,13 @@ const G2BulkStatsDashboard: React.FC = () => {
                   <span className="font-bold text-yellow-500">{formatTime(processingStats.slowestOrderMinutes)}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">G2Bulk Orders</span>
-                  <span className="font-bold">{processingStats.ordersWithG2Bulk}</span>
+                  <span className="text-muted-foreground">KesorAPI Orders</span>
+                  <span className="font-bold">{processingStats.ordersWithKesorAPI}</span>
                 </div>
               </div>
             ) : (
               <p className="text-muted-foreground text-sm py-4 text-center">
-                No completed G2Bulk orders in the last 7 days
+                No completed KesorAPI orders in the last 7 days
               </p>
             )}
           </CardContent>
@@ -362,4 +362,4 @@ const G2BulkStatsDashboard: React.FC = () => {
   );
 };
 
-export default G2BulkStatsDashboard;
+export default KesorAPIStatsDashboard;

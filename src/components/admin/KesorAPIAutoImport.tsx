@@ -8,10 +8,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { Download, RefreshCw, Check, Package, Link2, Percent } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
-interface G2BulkProduct {
+interface KesorAPIProduct {
   id: string;
-  g2bulk_product_id: string;
-  g2bulk_type_id: string;
+  kesorapi_product_id: string;
+  kesorapi_type_id: string;
   game_name: string;
   product_name: string;
   denomination: string;
@@ -19,28 +19,28 @@ interface G2BulkProduct {
   currency: string;
 }
 
-interface G2BulkAutoImportProps {
+interface KesorAPIAutoImportProps {
   gameId: string;
   gameName: string;
-  g2bulkCategoryId?: string;
+  kesorapiCategoryId?: string;
   existingProductIds: string[];
   onImport: (products: Array<{
     name: string;
     amount: string;
     price: number;
-    g2bulkProductId: string;
-    g2bulkTypeId: string;
+    kesorapiProductId: string;
+    kesorapiTypeId: string;
   }>) => Promise<void>;
 }
 
-const G2BulkAutoImport: React.FC<G2BulkAutoImportProps> = ({
+const KesorAPIAutoImport: React.FC<KesorAPIAutoImportProps> = ({
   gameId,
   gameName,
-  g2bulkCategoryId,
+  kesorapiCategoryId,
   existingProductIds,
   onImport
 }) => {
-  const [products, setProducts] = useState<G2BulkProduct[]>([]);
+  const [products, setProducts] = useState<KesorAPIProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [importing, setImporting] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
@@ -54,20 +54,20 @@ const G2BulkAutoImport: React.FC<G2BulkAutoImportProps> = ({
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('g2bulk_products')
+        .from('kesorapi_products')
         .select('*')
         .eq('is_active', true)
         .order('price', { ascending: true });
 
       if (error) throw error;
 
-      let filtered = data as G2BulkProduct[] || [];
+      let filtered = data as KesorAPIProduct[] || [];
 
-      // Filter by g2bulkCategoryId (which is game_name) if provided
-      if (g2bulkCategoryId) {
+      // Filter by kesorapiCategoryId (which is game_name) if provided
+      if (kesorapiCategoryId) {
         filtered = filtered.filter(p => 
-          p.game_name === g2bulkCategoryId || 
-          p.game_name.toLowerCase() === g2bulkCategoryId.toLowerCase()
+          p.game_name === kesorapiCategoryId || 
+          p.game_name.toLowerCase() === kesorapiCategoryId.toLowerCase()
         );
       } 
       // Fallback to gameName matching
@@ -82,15 +82,15 @@ const G2BulkAutoImport: React.FC<G2BulkAutoImportProps> = ({
       }
 
       // Filter out already imported products
-      filtered = filtered.filter(p => !existingProductIds.includes(p.g2bulk_product_id));
+      filtered = filtered.filter(p => !existingProductIds.includes(p.kesorapi_product_id));
 
       setProducts(filtered);
     } catch (error) {
-      console.error('Error loading G2Bulk products:', error);
+      console.error('Error loading KesorAPI products:', error);
     } finally {
       setLoading(false);
     }
-  }, [gameName, g2bulkCategoryId, existingProductIds]);
+  }, [gameName, kesorapiCategoryId, existingProductIds]);
 
   useEffect(() => {
     loadProducts();
@@ -109,7 +109,7 @@ const G2BulkAutoImport: React.FC<G2BulkAutoImportProps> = ({
   };
 
   const selectAll = () => {
-    setSelectedProducts(new Set(products.map(p => p.g2bulk_product_id)));
+    setSelectedProducts(new Set(products.map(p => p.kesorapi_product_id)));
   };
 
   const deselectAll = () => {
@@ -125,24 +125,24 @@ const G2BulkAutoImport: React.FC<G2BulkAutoImportProps> = ({
     setImporting(true);
     try {
       const productsToImport = products
-        .filter(p => selectedProducts.has(p.g2bulk_product_id))
+        .filter(p => selectedProducts.has(p.kesorapi_product_id))
         .map(p => ({
           name: p.product_name,
           amount: p.denomination || p.product_name,
           price: Math.round(applyMarkup(p.price) * 100) / 100,
-          g2bulkProductId: p.g2bulk_product_id,
-          g2bulkTypeId: p.g2bulk_type_id
+          kesorapiProductId: p.kesorapi_product_id,
+          kesorapiTypeId: p.kesorapi_type_id
         }));
 
       await onImport(productsToImport);
       
       toast({ 
         title: `Imported ${productsToImport.length} packages!`,
-        description: 'Packages are now linked to G2Bulk for auto-fulfillment'
+        description: 'Packages are now linked to KesorAPI for auto-fulfillment'
       });
 
       // Remove imported products from the list
-      setProducts(prev => prev.filter(p => !selectedProducts.has(p.g2bulk_product_id)));
+      setProducts(prev => prev.filter(p => !selectedProducts.has(p.kesorapi_product_id)));
       setSelectedProducts(new Set());
     } catch (error) {
       console.error('Import error:', error);
@@ -156,7 +156,7 @@ const G2BulkAutoImport: React.FC<G2BulkAutoImportProps> = ({
     return (
       <div className="text-xs text-muted-foreground flex items-center gap-1 p-2">
         <RefreshCw className="w-3 h-3 animate-spin" />
-        Loading G2Bulk products...
+        Loading KesorAPI products...
       </div>
     );
   }
@@ -165,7 +165,7 @@ const G2BulkAutoImport: React.FC<G2BulkAutoImportProps> = ({
     return (
       <div className="text-xs text-muted-foreground flex items-center gap-1 p-2 bg-secondary/50 rounded-lg">
         <Check className="w-3 h-3 text-green-500" />
-        All G2Bulk products already imported or no products available for this game.
+        All KesorAPI products already imported or no products available for this game.
       </div>
     );
   }
@@ -175,7 +175,7 @@ const G2BulkAutoImport: React.FC<G2BulkAutoImportProps> = ({
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <Download className="w-4 h-4 text-gold" />
-          <span className="text-sm font-medium">Auto-Import from G2Bulk</span>
+          <span className="text-sm font-medium">Auto-Import from KesorAPI</span>
           <Badge variant="outline" className="text-[10px]">
             {products.length} available
           </Badge>
@@ -212,17 +212,17 @@ const G2BulkAutoImport: React.FC<G2BulkAutoImportProps> = ({
         <div className="space-y-1">
           {products.map((product) => (
             <div
-              key={product.g2bulk_product_id}
+              key={product.kesorapi_product_id}
               className={`flex items-center gap-2 p-2 rounded-md cursor-pointer transition-colors ${
-                selectedProducts.has(product.g2bulk_product_id) 
+                selectedProducts.has(product.kesorapi_product_id) 
                   ? 'bg-gold/20 border border-gold/50' 
                   : 'bg-card border border-border hover:border-gold/30'
               }`}
-              onClick={() => toggleProduct(product.g2bulk_product_id)}
+              onClick={() => toggleProduct(product.kesorapi_product_id)}
             >
               <Checkbox
-                checked={selectedProducts.has(product.g2bulk_product_id)}
-                onCheckedChange={() => toggleProduct(product.g2bulk_product_id)}
+                checked={selectedProducts.has(product.kesorapi_product_id)}
+                onCheckedChange={() => toggleProduct(product.kesorapi_product_id)}
                 className="pointer-events-none"
               />
               <Package className="w-4 h-4 text-muted-foreground shrink-0" />
@@ -270,4 +270,4 @@ const G2BulkAutoImport: React.FC<G2BulkAutoImportProps> = ({
   );
 };
 
-export default G2BulkAutoImport;
+export default KesorAPIAutoImport;

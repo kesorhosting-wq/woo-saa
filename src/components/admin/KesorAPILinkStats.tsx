@@ -3,13 +3,13 @@ import { AlertTriangle, Link, Unlink } from 'lucide-react';
 import { Game } from '@/contexts/SiteContext';
 import { cn } from '@/lib/utils';
 
-interface G2BulkLinkStatsProps {
+interface KesorAPILinkStatsProps {
   game: Game;
   productStatuses?: Map<string, { isActive: boolean; productName: string }>;
   compact?: boolean;
 }
 
-const G2BulkLinkStats: React.FC<G2BulkLinkStatsProps> = ({ 
+const KesorAPILinkStats: React.FC<KesorAPILinkStatsProps> = ({ 
   game, 
   productStatuses,
   compact = false 
@@ -17,14 +17,14 @@ const G2BulkLinkStats: React.FC<G2BulkLinkStatsProps> = ({
   const stats = useMemo(() => {
     const allPackages = [...game.packages, ...game.specialPackages];
     const total = allPackages.length;
-    const linked = allPackages.filter(p => p.g2bulkProductId).length;
+    const linked = allPackages.filter(p => p.kesorapiProductId).length;
     const unlinked = total - linked;
     const percentage = total > 0 ? Math.round((linked / total) * 100) : 0;
     
     // Check for inactive/unavailable products
     const unavailable = allPackages.filter(p => {
-      if (!p.g2bulkProductId || !productStatuses) return false;
-      const status = productStatuses.get(p.g2bulkProductId);
+      if (!p.kesorapiProductId || !productStatuses) return false;
+      const status = productStatuses.get(p.kesorapiProductId);
       return status && !status.isActive;
     }).length;
 
@@ -119,4 +119,4 @@ const G2BulkLinkStats: React.FC<G2BulkLinkStatsProps> = ({
   );
 };
 
-export default G2BulkLinkStats;
+export default KesorAPILinkStats;

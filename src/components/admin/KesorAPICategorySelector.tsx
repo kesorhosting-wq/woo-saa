@@ -9,36 +9,36 @@ import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-interface G2BulkCategory {
+interface KesorAPICategory {
   id: string;
   name: string;
   productCount?: number;
 }
 
-interface G2BulkCategorySelectorProps {
+interface KesorAPICategorySelectorProps {
   value?: string;
   onChange: (categoryId: string | undefined, categoryName: string | undefined) => void;
   placeholder?: string;
 }
 
-const G2BulkCategorySelector: React.FC<G2BulkCategorySelectorProps> = ({ 
+const KesorAPICategorySelector: React.FC<KesorAPICategorySelectorProps> = ({ 
   value, 
   onChange, 
-  placeholder = "Select G2Bulk Category" 
+  placeholder = "Select KesorAPI Category" 
 }) => {
   const [open, setOpen] = useState(false);
-  const [categories, setCategories] = useState<G2BulkCategory[]>([]);
+  const [categories, setCategories] = useState<KesorAPICategory[]>([]);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<G2BulkCategory | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<KesorAPICategory | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Load categories from local g2bulk_products table (unique game names)
+  // Load categories from local kesorapi_products table (unique game names)
   const loadCategoriesFromProducts = useCallback(async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('g2bulk_products')
+        .from('kesorapi_products')
         .select('game_name')
         .eq('is_active', true)
         // Supabase defaults to 1000 rows; categories need the full dataset
@@ -51,7 +51,7 @@ const G2BulkCategorySelector: React.FC<G2BulkCategorySelectorProps> = ({
           gameMap.set(p.game_name, (gameMap.get(p.game_name) || 0) + 1);
         });
         
-        const uniqueCategories: G2BulkCategory[] = Array.from(gameMap.entries()).map(([name, count]) => ({
+        const uniqueCategories: KesorAPICategory[] = Array.from(gameMap.entries()).map(([name, count]) => ({
           id: name,
           name: name,
           productCount: count
@@ -66,23 +66,23 @@ const G2BulkCategorySelector: React.FC<G2BulkCategorySelectorProps> = ({
     }
   }, []);
 
-  // Fetch games directly from G2Bulk API and sync to database
-  const fetchFromG2Bulk = useCallback(async () => {
+  // Fetch games directly from KesorAPI API and sync to database
+  const fetchFromKesorAPI = useCallback(async () => {
     setFetching(true);
     try {
-      const { data: syncData, error: syncError } = await supabase.functions.invoke('g2bulk-api', {
+      const { data: syncData, error: syncError } = await supabase.functions.invoke('kesorapi-api', {
         body: { action: 'sync_products' }
       });
 
       if (syncError) {
-        console.error('Error syncing from G2Bulk:', syncError);
+        console.error('Error syncing from KesorAPI:', syncError);
       } else {
-        console.log('G2Bulk sync result:', syncData);
+        console.log('KesorAPI sync result:', syncData);
       }
 
       await loadCategoriesFromProducts();
     } catch (error) {
-      console.error('Error fetching from G2Bulk:', error);
+      console.error('Error fetching from KesorAPI:', error);
     } finally {
       setFetching(false);
     }
@@ -112,7 +112,7 @@ const G2BulkCategorySelector: React.FC<G2BulkCategorySelectorProps> = ({
 
   // Group categories by first letter for better navigation
   const groupedCategories = useMemo(() => {
-    const groups: Record<string, G2BulkCategory[]> = {};
+    const groups: Record<string, KesorAPICategory[]> = {};
     
     filteredCategories.forEach(cat => {
       const firstChar = cat.name.charAt(0).toUpperCase();
@@ -216,12 +216,12 @@ const G2BulkCategorySelector: React.FC<G2BulkCategorySelectorProps> = ({
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  onClick={fetchFromG2Bulk}
+                  onClick={fetchFromKesorAPI}
                   disabled={fetching}
                   className="text-xs h-7"
                 >
                   {fetching ? <RefreshCw className="w-3 h-3 mr-1 animate-spin" /> : <RefreshCw className="w-3 h-3 mr-1" />}
-                  Sync from G2Bulk
+                  Sync from KesorAPI
                 </Button>
               </div>
             </div>
@@ -236,7 +236,7 @@ const G2BulkCategorySelector: React.FC<G2BulkCategorySelectorProps> = ({
                     className="flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer hover:bg-destructive/10 text-destructive transition-colors mb-2 border-b pb-3"
                   >
                     <Link2Off className="w-4 h-4" />
-                    <span className="text-sm font-medium">Unlink from G2Bulk</span>
+                    <span className="text-sm font-medium">Unlink from KesorAPI</span>
                   </div>
                 )}
 
@@ -255,16 +255,16 @@ const G2BulkCategorySelector: React.FC<G2BulkCategorySelectorProps> = ({
                 {categories.length === 0 && !loading && (
                   <div className="py-8 text-center text-muted-foreground">
                     <Gamepad2 className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">No G2Bulk products synced yet</p>
+                    <p className="text-sm">No KesorAPI products synced yet</p>
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      onClick={fetchFromG2Bulk}
+                      onClick={fetchFromKesorAPI}
                       disabled={fetching}
                       className="mt-2"
                     >
                       {fetching ? <RefreshCw className="w-3 h-3 mr-1 animate-spin" /> : <RefreshCw className="w-3 h-3 mr-1" />}
-                      Sync Products from G2Bulk
+                      Sync Products from KesorAPI
                     </Button>
                   </div>
                 )}
@@ -303,11 +303,11 @@ const G2BulkCategorySelector: React.FC<G2BulkCategorySelectorProps> = ({
       {selectedCategory && (
         <p className="text-xs text-green-600 flex items-center gap-1">
           <Link2 className="w-3 h-3" />
-          Linked to G2Bulk: {selectedCategory.name}
+          Linked to KesorAPI: {selectedCategory.name}
         </p>
       )}
     </div>
   );
 };
 
-export default G2BulkCategorySelector;
+export default KesorAPICategorySelector;

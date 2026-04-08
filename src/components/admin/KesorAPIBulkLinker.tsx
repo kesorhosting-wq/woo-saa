@@ -12,10 +12,10 @@ import {
 import { toast } from '@/hooks/use-toast';
 import { Game, Package } from '@/contexts/SiteContext';
 
-interface G2BulkProduct {
+interface KesorAPIProduct {
   id: string;
-  g2bulk_product_id: string;
-  g2bulk_type_id: string;
+  kesorapi_product_id: string;
+  kesorapi_type_id: string;
   game_name: string;
   product_name: string;
   denomination: string;
@@ -27,20 +27,20 @@ interface MatchSuggestion {
   package: Package;
   gameId: string;
   gameName: string;
-  suggestedProduct: G2BulkProduct | null;
+  suggestedProduct: KesorAPIProduct | null;
   matchType: 'exact' | 'amount' | 'name' | 'price' | 'none';
   confidence: number;
   isSpecialPackage?: boolean;
 }
 
-interface G2BulkBulkLinkerProps {
+interface KesorAPIBulkLinkerProps {
   games: Game[];
   onLinkComplete: () => void;
 }
 
-const G2BulkBulkLinker: React.FC<G2BulkBulkLinkerProps> = ({ games, onLinkComplete }) => {
+const KesorAPIBulkLinker: React.FC<KesorAPIBulkLinkerProps> = ({ games, onLinkComplete }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [products, setProducts] = useState<G2BulkProduct[]>([]);
+  const [products, setProducts] = useState<KesorAPIProduct[]>([]);
   const [loading, setLoading] = useState(false);
   const [suggestions, setSuggestions] = useState<MatchSuggestion[]>([]);
   const [selectedSuggestions, setSelectedSuggestions] = useState<Set<string>>(new Set());
@@ -57,7 +57,7 @@ const G2BulkBulkLinker: React.FC<G2BulkBulkLinkerProps> = ({ games, onLinkComple
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('g2bulk_products')
+        .from('kesorapi_products')
         .select('*')
         .eq('is_active', true)
         .order('game_name')
@@ -65,16 +65,16 @@ const G2BulkBulkLinker: React.FC<G2BulkBulkLinkerProps> = ({ games, onLinkComple
         .range(0, 4999);
 
       if (error) throw error;
-      setProducts(data as G2BulkProduct[] || []);
+      setProducts(data as KesorAPIProduct[] || []);
       
       // Generate suggestions
       const allSuggestions: MatchSuggestion[] = [];
       
       for (const game of games) {
         // Get products that might match this game
-        const gameProducts = (data as G2BulkProduct[])?.filter(p => {
+        const gameProducts = (data as KesorAPIProduct[])?.filter(p => {
           const gameName = game.name.toLowerCase();
-          const categoryId = game.g2bulkCategoryId?.toLowerCase() || '';
+          const categoryId = game.kesorapiCategoryId?.toLowerCase() || '';
           const productGameName = p.game_name.toLowerCase();
           
           return productGameName.includes(gameName) || 
@@ -85,7 +85,7 @@ const G2BulkBulkLinker: React.FC<G2BulkBulkLinkerProps> = ({ games, onLinkComple
 
         // Process regular packages
         for (const pkg of game.packages) {
-          if (pkg.g2bulkProductId) continue; // Already linked
+          if (pkg.kesorapiProductId) continue; // Already linked
           
           const match = findBestMatch(pkg, gameProducts);
           allSuggestions.push({
@@ -99,7 +99,7 @@ const G2BulkBulkLinker: React.FC<G2BulkBulkLinkerProps> = ({ games, onLinkComple
 
         // Process special packages
         for (const pkg of game.specialPackages || []) {
-          if (pkg.g2bulkProductId) continue; // Already linked
+          if (pkg.kesorapiProductId) continue; // Already linked
           
           const match = findBestMatch(pkg, gameProducts);
           allSuggestions.push({
@@ -132,7 +132,7 @@ const G2BulkBulkLinker: React.FC<G2BulkBulkLinkerProps> = ({ games, onLinkComple
     }
   };
 
-  const findBestMatch = (pkg: Package, products: G2BulkProduct[]): { suggestedProduct: G2BulkProduct | null; matchType: 'exact' | 'amount' | 'name' | 'price' | 'none'; confidence: number } => {
+  const findBestMatch = (pkg: Package, products: KesorAPIProduct[]): { suggestedProduct: KesorAPIProduct | null; matchType: 'exact' | 'amount' | 'name' | 'price' | 'none'; confidence: number } => {
     if (products.length === 0) {
       return { suggestedProduct: null, matchType: 'none', confidence: 0 };
     }
@@ -221,8 +221,8 @@ const G2BulkBulkLinker: React.FC<G2BulkBulkLinkerProps> = ({ games, onLinkComple
         const { error } = await supabase
           .from(tableName)
           .update({
-            g2bulk_product_id: match.suggestedProduct!.g2bulk_product_id,
-            g2bulk_type_id: match.suggestedProduct!.g2bulk_type_id,
+            kesorapi_product_id: match.suggestedProduct!.kesorapi_product_id,
+            kesorapi_type_id: match.suggestedProduct!.kesorapi_type_id,
           })
           .eq('id', match.package.id);
 
@@ -257,7 +257,7 @@ const G2BulkBulkLinker: React.FC<G2BulkBulkLinkerProps> = ({ games, onLinkComple
       let productData = products;
       if (productData.length === 0) {
         const { data, error } = await supabase
-          .from('g2bulk_products')
+          .from('kesorapi_products')
           .select('*')
           .eq('is_active', true)
           .order('game_name')
@@ -265,7 +265,7 @@ const G2BulkBulkLinker: React.FC<G2BulkBulkLinkerProps> = ({ games, onLinkComple
           .range(0, 4999);
 
         if (error) throw error;
-        productData = data as G2BulkProduct[] || [];
+        productData = data as KesorAPIProduct[] || [];
       }
 
       // Generate suggestions on the fly
@@ -275,7 +275,7 @@ const G2BulkBulkLinker: React.FC<G2BulkBulkLinkerProps> = ({ games, onLinkComple
         // Get products that might match this game
         const gameProducts = productData.filter(p => {
           const gameName = game.name.toLowerCase();
-          const categoryId = game.g2bulkCategoryId?.toLowerCase() || '';
+          const categoryId = game.kesorapiCategoryId?.toLowerCase() || '';
           const productGameName = p.game_name.toLowerCase();
           
           return productGameName.includes(gameName) || 
@@ -286,14 +286,14 @@ const G2BulkBulkLinker: React.FC<G2BulkBulkLinkerProps> = ({ games, onLinkComple
 
         // Process regular packages
         for (const pkg of game.packages) {
-          if (pkg.g2bulkProductId) continue; // Already linked
+          if (pkg.kesorapiProductId) continue; // Already linked
           
           const match = findBestMatch(pkg, gameProducts);
           if (match.suggestedProduct && match.confidence >= 80) {
             allMatches.push({
               packageId: pkg.id,
-              productId: match.suggestedProduct.g2bulk_product_id,
-              typeId: match.suggestedProduct.g2bulk_type_id,
+              productId: match.suggestedProduct.kesorapi_product_id,
+              typeId: match.suggestedProduct.kesorapi_type_id,
               tableName: 'packages',
               confidence: match.confidence,
             });
@@ -302,14 +302,14 @@ const G2BulkBulkLinker: React.FC<G2BulkBulkLinkerProps> = ({ games, onLinkComple
 
         // Process special packages
         for (const pkg of game.specialPackages || []) {
-          if (pkg.g2bulkProductId) continue; // Already linked
+          if (pkg.kesorapiProductId) continue; // Already linked
           
           const match = findBestMatch(pkg, gameProducts);
           if (match.suggestedProduct && match.confidence >= 80) {
             allMatches.push({
               packageId: pkg.id,
-              productId: match.suggestedProduct.g2bulk_product_id,
-              typeId: match.suggestedProduct.g2bulk_type_id,
+              productId: match.suggestedProduct.kesorapi_product_id,
+              typeId: match.suggestedProduct.kesorapi_type_id,
               tableName: 'special_packages',
               confidence: match.confidence,
             });
@@ -333,8 +333,8 @@ const G2BulkBulkLinker: React.FC<G2BulkBulkLinkerProps> = ({ games, onLinkComple
         const { error } = await supabase
           .from(match.tableName as 'packages' | 'special_packages')
           .update({
-            g2bulk_product_id: match.productId,
-            g2bulk_type_id: match.typeId,
+            kesorapi_product_id: match.productId,
+            kesorapi_type_id: match.typeId,
           })
           .eq('id', match.packageId);
 
@@ -377,14 +377,14 @@ const G2BulkBulkLinker: React.FC<G2BulkBulkLinkerProps> = ({ games, onLinkComple
   const unlinkedFromGames = useMemo(() => {
     let count = 0;
     for (const game of games) {
-      count += game.packages.filter(p => !p.g2bulkProductId).length;
-      count += (game.specialPackages || []).filter(p => !p.g2bulkProductId).length;
+      count += game.packages.filter(p => !p.kesorapiProductId).length;
+      count += (game.specialPackages || []).filter(p => !p.kesorapiProductId).length;
     }
     return count;
   }, [games]);
 
   const unlinkedCount = suggestions.length > 0 
-    ? suggestions.filter(s => !s.package.g2bulkProductId).length 
+    ? suggestions.filter(s => !s.package.kesorapiProductId).length 
     : unlinkedFromGames;
   const matchedCount = suggestions.filter(s => s.suggestedProduct && s.confidence >= 50).length;
 
@@ -427,7 +427,7 @@ const G2BulkBulkLinker: React.FC<G2BulkBulkLinkerProps> = ({ games, onLinkComple
           )}
         </CardTitle>
         <p className="text-xs text-muted-foreground mt-1">
-          Auto-link matches packages to G2Bulk products by amount, name, and price similarity
+          Auto-link matches packages to KesorAPI products by amount, name, and price similarity
         </p>
       </CardHeader>
 
@@ -527,7 +527,7 @@ const G2BulkBulkLinker: React.FC<G2BulkBulkLinkerProps> = ({ games, onLinkComple
                             <div className="mt-2 flex items-center gap-2">
                               <AlertTriangle className="w-4 h-4 text-yellow-500" />
                               <span className="text-xs text-muted-foreground">
-                                No matching G2Bulk product found
+                                No matching KesorAPI product found
                               </span>
                             </div>
                           )}
@@ -545,4 +545,4 @@ const G2BulkBulkLinker: React.FC<G2BulkBulkLinkerProps> = ({ games, onLinkComple
   );
 };
 
-export default G2BulkBulkLinker;
+export default KesorAPIBulkLinker;

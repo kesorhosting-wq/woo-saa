@@ -9,18 +9,18 @@ import {
 } from '@/components/ui/tooltip';
 
 interface PackageStockBadgeProps {
-  g2bulkProductId?: string;
+  kesorapiProductId?: string;
   productStatus?: { isActive: boolean; productName: string };
   className?: string;
 }
 
 const PackageStockBadge: React.FC<PackageStockBadgeProps> = ({
-  g2bulkProductId,
+  kesorapiProductId,
   productStatus,
   className,
 }) => {
-  // Not linked to G2Bulk
-  if (!g2bulkProductId) {
+  // Not linked to KesorAPI
+  if (!kesorapiProductId) {
     return (
       <TooltipProvider>
         <Tooltip>
@@ -35,7 +35,7 @@ const PackageStockBadge: React.FC<PackageStockBadgeProps> = ({
             </span>
           </TooltipTrigger>
           <TooltipContent>
-            <p>Not linked to G2Bulk product</p>
+            <p>Not linked to KesorAPI product</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -58,7 +58,7 @@ const PackageStockBadge: React.FC<PackageStockBadgeProps> = ({
             </span>
           </TooltipTrigger>
           <TooltipContent>
-            <p>Product not found in G2Bulk sync. Please sync products.</p>
+            <p>Product not found in KesorAPI sync. Please sync products.</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -83,7 +83,7 @@ const PackageStockBadge: React.FC<PackageStockBadgeProps> = ({
           <TooltipContent>
             <p className="font-medium">Product Unavailable</p>
             <p className="text-xs text-muted-foreground">{productStatus.productName}</p>
-            <p className="text-xs mt-1">This G2Bulk product is currently unavailable or out of stock.</p>
+            <p className="text-xs mt-1">This KesorAPI product is currently unavailable or out of stock.</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -105,7 +105,7 @@ const PackageStockBadge: React.FC<PackageStockBadgeProps> = ({
           </span>
         </TooltipTrigger>
         <TooltipContent>
-          <p className="font-medium">G2Bulk Linked</p>
+          <p className="font-medium">KesorAPI Linked</p>
           <p className="text-xs text-muted-foreground">{productStatus.productName}</p>
         </TooltipContent>
       </Tooltip>

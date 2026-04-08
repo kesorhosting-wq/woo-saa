@@ -57,7 +57,7 @@ const CheckoutPage = () => {
     setError(null);
 
     try {
-      // First create the order with G2Bulk product ID
+      // First create the order with KesorAPI product ID
       const firstItem = items[0];
       const { data: orderData, error: orderError } = await supabase.functions.invoke("process-topup", {
         body: {
@@ -69,7 +69,7 @@ const CheckoutPage = () => {
           amount: getTotal(),
           currency: settings.packageCurrency || "USD",
           payment_method: "Woo Saa KHQR",
-          g2bulk_product_id: firstItem.g2bulkProductId || null,
+          kesorapi_product_id: firstItem.kesorapiProductId || null,
           fulfill_quantity: firstItem.fulfillQuantity || 1,
         },
       });

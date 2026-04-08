@@ -47,14 +47,14 @@ export type Database = {
         }
         Relationships: []
       }
-      g2bulk_products: {
+      kesorapi_products: {
         Row: {
           created_at: string
           currency: string | null
           denomination: string | null
           fields: Json | null
-          g2bulk_product_id: string
-          g2bulk_type_id: string
+          kesorapi_product_id: string
+          kesorapi_type_id: string
           game_name: string
           id: string
           is_active: boolean | null
@@ -68,8 +68,8 @@ export type Database = {
           currency?: string | null
           denomination?: string | null
           fields?: Json | null
-          g2bulk_product_id: string
-          g2bulk_type_id: string
+          kesorapi_product_id: string
+          kesorapi_type_id: string
           game_name: string
           id?: string
           is_active?: boolean | null
@@ -83,8 +83,8 @@ export type Database = {
           currency?: string | null
           denomination?: string | null
           fields?: Json | null
-          g2bulk_product_id?: string
-          g2bulk_type_id?: string
+          kesorapi_product_id?: string
+          kesorapi_type_id?: string
           game_name?: string
           id?: string
           is_active?: boolean | null
@@ -141,7 +141,7 @@ export type Database = {
           default_package_icon: string | null
           description: string | null
           featured: boolean | null
-          g2bulk_category_id: string | null
+          kesorapi_category_id: string | null
           id: string
           image: string | null
           name: string
@@ -155,7 +155,7 @@ export type Database = {
           default_package_icon?: string | null
           description?: string | null
           featured?: boolean | null
-          g2bulk_category_id?: string | null
+          kesorapi_category_id?: string | null
           id?: string
           image?: string | null
           name: string
@@ -169,7 +169,7 @@ export type Database = {
           default_package_icon?: string | null
           description?: string | null
           featured?: boolean | null
-          g2bulk_category_id?: string | null
+          kesorapi_category_id?: string | null
           id?: string
           image?: string | null
           name?: string
@@ -183,8 +183,8 @@ export type Database = {
         Row: {
           amount: string
           created_at: string
-          g2bulk_product_id: string | null
-          g2bulk_type_id: string | null
+          kesorapi_product_id: string | null
+          kesorapi_type_id: string | null
           game_id: string
           icon: string | null
           id: string
@@ -201,8 +201,8 @@ export type Database = {
         Insert: {
           amount: string
           created_at?: string
-          g2bulk_product_id?: string | null
-          g2bulk_type_id?: string | null
+          kesorapi_product_id?: string | null
+          kesorapi_type_id?: string | null
           game_id: string
           icon?: string | null
           id?: string
@@ -219,8 +219,8 @@ export type Database = {
         Update: {
           amount?: string
           created_at?: string
-          g2bulk_product_id?: string | null
-          g2bulk_type_id?: string | null
+          kesorapi_product_id?: string | null
+          kesorapi_type_id?: string | null
           game_id?: string
           icon?: string | null
           id?: string
@@ -358,8 +358,8 @@ export type Database = {
           created_at: string
           currency: string | null
           fulfill_quantity: number | null
-          g2bulk_order_id: string | null
-          g2bulk_product_id: string | null
+          kesorapi_order_id: string | null
+          kesorapi_product_id: string | null
           game_name: string
           id: string
           package_name: string
@@ -379,8 +379,8 @@ export type Database = {
           created_at?: string
           currency?: string | null
           fulfill_quantity?: number | null
-          g2bulk_order_id?: string | null
-          g2bulk_product_id?: string | null
+          kesorapi_order_id?: string | null
+          kesorapi_product_id?: string | null
           game_name: string
           id?: string
           package_name: string
@@ -400,8 +400,8 @@ export type Database = {
           created_at?: string
           currency?: string | null
           fulfill_quantity?: number | null
-          g2bulk_order_id?: string | null
-          g2bulk_product_id?: string | null
+          kesorapi_order_id?: string | null
+          kesorapi_product_id?: string | null
           game_name?: string
           id?: string
           package_name?: string
@@ -421,8 +421,8 @@ export type Database = {
         Row: {
           amount: string
           created_at: string
-          g2bulk_product_id: string | null
-          g2bulk_type_id: string | null
+          kesorapi_product_id: string | null
+          kesorapi_type_id: string | null
           game_id: string
           icon: string | null
           id: string
@@ -440,8 +440,8 @@ export type Database = {
         Insert: {
           amount: string
           created_at?: string
-          g2bulk_product_id?: string | null
-          g2bulk_type_id?: string | null
+          kesorapi_product_id?: string | null
+          kesorapi_type_id?: string | null
           game_id: string
           icon?: string | null
           id?: string
@@ -459,8 +459,8 @@ export type Database = {
         Update: {
           amount?: string
           created_at?: string
-          g2bulk_product_id?: string | null
-          g2bulk_type_id?: string | null
+          kesorapi_product_id?: string | null
+          kesorapi_type_id?: string | null
           game_id?: string
           icon?: string | null
           id?: string
@@ -543,8 +543,8 @@ export type Database = {
         Row: {
           amount: string
           created_at: string
-          g2bulk_product_id: string | null
-          g2bulk_type_id: string | null
+          kesorapi_product_id: string | null
+          kesorapi_type_id: string | null
           game_id: string
           icon: string | null
           id: string
@@ -561,8 +561,8 @@ export type Database = {
         Insert: {
           amount: string
           created_at?: string
-          g2bulk_product_id?: string | null
-          g2bulk_type_id?: string | null
+          kesorapi_product_id?: string | null
+          kesorapi_type_id?: string | null
           game_id: string
           icon?: string | null
           id?: string
@@ -579,8 +579,8 @@ export type Database = {
         Update: {
           amount?: string
           created_at?: string
-          g2bulk_product_id?: string | null
-          g2bulk_type_id?: string | null
+          kesorapi_product_id?: string | null
+          kesorapi_type_id?: string | null
           game_id?: string
           icon?: string | null
           id?: string
@@ -611,8 +611,8 @@ export type Database = {
           created_at: string
           currency: string | null
           fulfill_quantity: number | null
-          g2bulk_order_id: string | null
-          g2bulk_product_id: string | null
+          kesorapi_order_id: string | null
+          kesorapi_product_id: string | null
           game_name: string
           id: string
           package_name: string
@@ -631,8 +631,8 @@ export type Database = {
           created_at?: string
           currency?: string | null
           fulfill_quantity?: number | null
-          g2bulk_order_id?: string | null
-          g2bulk_product_id?: string | null
+          kesorapi_order_id?: string | null
+          kesorapi_product_id?: string | null
           game_name: string
           id?: string
           package_name: string
@@ -651,8 +651,8 @@ export type Database = {
           created_at?: string
           currency?: string | null
           fulfill_quantity?: number | null
-          g2bulk_order_id?: string | null
-          g2bulk_product_id?: string | null
+          kesorapi_order_id?: string | null
+          kesorapi_product_id?: string | null
           game_name?: string
           id?: string
           package_name?: string

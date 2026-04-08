@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Key, Eye, EyeOff, Save, RefreshCw, Check, X, Wallet, Download, Package } from 'lucide-react';
+import { Key, Eye, EyeOff, Save, RefreshCw, Check, X, Wallet, Download, Package, Cpu } from 'lucide-react';
 
 interface ApiConfig {
   id?: string;
@@ -22,8 +22,8 @@ interface SyncStats {
 }
 
 const ApiSettingsTab: React.FC = () => {
-  const [g2bulkConfig, setG2bulkConfig] = useState<ApiConfig>({
-    api_name: 'g2bulk',
+  const [kesorConfig, setKesorConfig] = useState<ApiConfig>({
+    api_name: 'kesorapi',
     api_uid: '',
     api_secret: '',
     is_enabled: false,
@@ -48,13 +48,13 @@ const ApiSettingsTab: React.FC = () => {
       const { data, error } = await supabase
         .from('api_configurations')
         .select('*')
-        .eq('api_name', 'g2bulk')
+        .eq('api_name', 'kesorapi')
         .maybeSingle();
 
       if (error) throw error;
 
       if (data) {
-        setG2bulkConfig({
+        setKesorConfig({
           id: data.id,
           api_name: data.api_name,
           api_uid: data.api_uid || '',
@@ -73,7 +73,7 @@ const ApiSettingsTab: React.FC = () => {
   const loadProductCount = async () => {
     try {
       const { count } = await supabase
-        .from('g2bulk_products')
+        .from('kesorapi_products')
         .select('*', { count: 'exact', head: true });
       setProductCount(count || 0);
     } catch (error) {
@@ -85,10 +85,10 @@ const ApiSettingsTab: React.FC = () => {
     setIsSaving(true);
     try {
       const payload = {
-        api_name: 'g2bulk',
-        api_uid: g2bulkConfig.api_uid,
-        api_secret: g2bulkConfig.api_secret,
-        is_enabled: g2bulkConfig.is_enabled,
+        api_name: 'kesorapi',
+        api_uid: kesorConfig.api_uid,
+        api_secret: kesorConfig.api_secret,
+        is_enabled: kesorConfig.is_enabled,
         use_sandbox: false,
       };
 
@@ -98,7 +98,7 @@ const ApiSettingsTab: React.FC = () => {
 
       if (error) throw error;
 
-      toast({ title: 'G2Bulk API configuration saved!' });
+      toast({ title: 'KesorAPI configuration saved!' });
       setTestResult(null);
     } catch (error) {
       console.error('Error saving API config:', error);
@@ -112,19 +112,18 @@ const ApiSettingsTab: React.FC = () => {
     setIsTesting(true);
     setTestResult(null);
     try {
-      const { data, error } = await supabase.functions.invoke('g2bulk-api', {
-        body: { action: 'get_account_balance' },
+      // Calling kesorapi function
+      const { data, error } = await supabase.functions.invoke('kesorapi', {
+        body: { action: 'balance' },
       });
 
       if (error) throw error;
 
-      if (data?.success && data?.data) {
-        const apiData = data.data;
-        const balance = apiData.balance || 'Connected';
+      if (data?.balance !== undefined) {
         setTestResult({ 
           success: true, 
-          balance: String(balance),
-          message: `Connected as ${apiData.username || 'user'}!` 
+          balance: String(data.balance),
+          message: `Connected to KesorAPI Node!` 
         });
         toast({ title: 'API connection successful!' });
       } else {
@@ -144,23 +143,41 @@ const ApiSettingsTab: React.FC = () => {
     setIsSyncing(true);
     setSyncStats(null);
     try {
-      toast({ title: 'Syncing products...', description: 'This may take a few minutes.' });
+      toast({ title: 'Syncing products from KesorAPI...', description: 'Establishing catalog link.' });
       
-      const { data, error } = await supabase.functions.invoke('g2bulk-api', {
-        body: { action: 'sync_products' },
+      const { data, error } = await supabase.functions.invoke('kesorapi', {
+        body: { action: 'services' },
       });
 
       if (error) throw error;
 
-      if (data?.success && data?.data) {
-        setSyncStats(data.data);
-        setProductCount(data.data.synced);
+      if (Array.isArray(data)) {
+        // Logic to sync into local kesorapi_products (we keep table name for compatibility)
+        const products = data.map((p: any) => ({
+          kesorapi_product_id: String(p.service),
+          kesorapi_type_id: 'Package',
+          product_name: p.name,
+          game_name: p.category,
+          price: parseFloat(p.rate),
+          is_active: true
+        }));
+
+        // Batch upsert into kesorapi_products
+        const { error: upsertError } = await supabase
+          .from('kesorapi_products')
+          .upsert(products, { onConflict: 'kesorapi_product_id' });
+
+        if (upsertError) throw upsertError;
+
+        setProductCount(products.length);
+        setSyncStats({ synced: products.length, categories: new Set(products.map(p => p.game_name)).size });
+        
         toast({ 
-          title: 'Products synced successfully!', 
-          description: `${data.data.synced} products from ${data.data.categories} categories` 
+          title: 'KesorAPI Sync Success!', 
+          description: `${products.length} items imported.` 
         });
       } else {
-        toast({ title: 'Sync failed', description: data?.error, variant: 'destructive' });
+        toast({ title: 'Sync failed', description: 'Invalid data format from API', variant: 'destructive' });
       }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Sync failed';
@@ -172,10 +189,10 @@ const ApiSettingsTab: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Card className="border-gold/30">
+      <Card className="border-pink-500/30">
         <CardContent className="p-8 text-center">
-          <RefreshCw className="w-8 h-8 animate-spin mx-auto text-gold" />
-          <p className="mt-4 text-muted-foreground">Loading API settings...</p>
+          <RefreshCw className="w-8 h-8 animate-spin mx-auto text-[#FF2D85]" />
+          <p className="mt-4 text-muted-foreground">Loading KesorAPI parameters...</p>
         </CardContent>
       </Card>
     );
@@ -183,45 +200,42 @@ const ApiSettingsTab: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* G2Bulk API Configuration */}
-      <Card className="border-gold/30">
+      {/* KesorAPI Configuration */}
+      <Card className="border-pink-500/30">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Key className="w-5 h-5 text-gold" />
-            G2Bulk API Configuration
+            <Cpu className="w-5 h-5 text-[#FF2D85]" />
+            KesorAPI Protocol Configuration
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="bg-secondary/50 p-4 rounded-lg border border-border">
-            <h4 className="font-semibold mb-2">About G2Bulk API</h4>
-            <p className="text-sm text-muted-foreground">
-              G2Bulk API enables real game top-up functionality. Get your API key from{' '}
-              <a href="https://t.me/G2BULKBOT" target="_blank" rel="noopener noreferrer" className="text-gold hover:underline">
-                @G2BULKBOT on Telegram
-              </a>
+            <h4 className="font-semibold mb-2">About KesorAPI Integrated Node</h4>
+            <p className="text-sm text-muted-foreground font-bold uppercase tracking-widest text-[10px]">
+              Direct transmission protocol for automated game loads and voucher delivery.
             </p>
           </div>
 
           <div className="flex items-center justify-between p-4 bg-card rounded-lg border border-border">
             <div>
-              <h4 className="font-semibold">Enable G2Bulk API</h4>
-              <p className="text-sm text-muted-foreground">Turn on for real top-up functionality</p>
+              <h4 className="font-semibold uppercase text-xs">Enable KesorAPI Gateway</h4>
+              <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-tight">Active direct injection protocol</p>
             </div>
             <Switch
-              checked={g2bulkConfig.is_enabled}
-              onCheckedChange={(checked) => setG2bulkConfig({ ...g2bulkConfig, is_enabled: checked })}
+              checked={kesorConfig.is_enabled}
+              onCheckedChange={(checked) => setKesorConfig({ ...kesorConfig, is_enabled: checked })}
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">API Key</label>
+            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">X-API-KEY</label>
             <div className="relative">
               <Input
                 type={showSecret ? 'text' : 'password'}
-                placeholder="Enter your G2Bulk API Key"
-                value={g2bulkConfig.api_secret}
-                onChange={(e) => setG2bulkConfig({ ...g2bulkConfig, api_secret: e.target.value })}
-                className="border-gold/50 pr-10"
+                placeholder="sk_live_..."
+                value={kesorConfig.api_secret}
+                onChange={(e) => setKesorConfig({ ...kesorConfig, api_secret: e.target.value })}
+                className="border-pink-500/20 pr-10 font-bold"
               />
               <button
                 type="button"
@@ -234,85 +248,62 @@ const ApiSettingsTab: React.FC = () => {
           </div>
 
           {testResult && (
-            <div className={`p-4 rounded-lg border ${testResult.success ? 'bg-green-500/10 border-green-500/30' : 'bg-red-500/10 border-red-500/30'}`}>
+            <div className={`p-4 rounded-xl border ${testResult.success ? 'bg-green-500/10 border-green-500/30' : 'bg-red-500/10 border-red-500/30'}`}>
               <div className="flex items-center gap-2">
-                {testResult.success ? <Check className="w-5 h-5 text-green-500" /> : <X className="w-5 h-5 text-red-500" />}
-                <span className={testResult.success ? 'text-green-500' : 'text-red-500'}>{testResult.message}</span>
+                {testResult.success ? <CheckCircle2 className="w-5 h-5 text-green-500" /> : <ShieldAlert className="w-5 h-5 text-red-500" />}
+                <span className={cn("font-black uppercase text-[10px] tracking-widest", testResult.success ? 'text-green-500' : 'text-red-500')}>{testResult.message}</span>
               </div>
               {testResult.success && testResult.balance && (
-                <div className="mt-2 flex items-center gap-2 text-sm">
+                <div className="mt-2 flex items-center gap-2 text-xs font-bold uppercase text-slate-500">
                   <Wallet className="w-4 h-4" />
-                  <span>Account Balance: ${testResult.balance}</span>
+                  <span>Available Credit: ${testResult.balance}</span>
                 </div>
               )}
             </div>
           )}
 
           <div className="flex flex-wrap gap-3">
-            <Button onClick={handleSave} disabled={isSaving} className="bg-gold hover:bg-gold/90 text-primary-foreground">
-              {isSaving ? <><RefreshCw className="w-4 h-4 mr-2 animate-spin" />Saving...</> : <><Save className="w-4 h-4 mr-2" />Save Configuration</>}
+            <Button onClick={handleSave} disabled={isSaving} className="bg-black hover:bg-slate-800 text-white font-black uppercase tracking-widest text-[10px] px-8">
+              {isSaving ? <><RefreshCw className="w-4 h-4 mr-2 animate-spin" />Syncing...</> : <><Save className="w-4 h-4 mr-2" />Save Config</>}
             </Button>
 
-            <Button variant="outline" onClick={handleTestConnection} disabled={isTesting || !g2bulkConfig.api_secret}>
-              {isTesting ? <><RefreshCw className="w-4 h-4 mr-2 animate-spin" />Testing...</> : <><RefreshCw className="w-4 h-4 mr-2" />Test Connection</>}
+            <Button variant="outline" onClick={handleTestConnection} disabled={isTesting || !kesorConfig.api_secret} className="font-black uppercase tracking-widest text-[10px] px-8">
+              {isTesting ? <><RefreshCw className="w-4 h-4 mr-2 animate-spin" />Verifying...</> : <><RefreshCw className="w-4 h-4 mr-2" />Test Node</>}
             </Button>
           </div>
         </CardContent>
       </Card>
 
       {/* Product Sync */}
-      <Card className="border-gold/30">
+      <Card className="border-pink-500/30">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Package className="w-5 h-5 text-gold" />
-            Product Catalog
+          <CardTitle className="flex items-center gap-2 uppercase tracking-tight text-lg font-black">
+            <Package className="w-5 h-5 text-[#FF2D85]" />
+            Node Catalog
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between p-4 bg-secondary/50 rounded-lg">
+          <div className="flex items-center justify-between p-6 bg-secondary/50 rounded-2xl border border-border">
             <div>
-              <h4 className="font-semibold">Synced Products</h4>
-              <p className="text-sm text-muted-foreground">{productCount} products in database</p>
+              <h4 className="font-black uppercase text-sm">Indexed Products</h4>
+              <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">{productCount} nodes currently mapped</p>
             </div>
             <Button 
               onClick={handleSyncProducts} 
-              disabled={isSyncing || !g2bulkConfig.is_enabled}
-              variant="outline"
+              disabled={isSyncing || !kesorConfig.is_enabled}
+              className="bg-[#FF2D85] text-white hover:bg-[#D81B60] font-black uppercase tracking-widest text-[10px] h-12 px-8"
             >
               {isSyncing ? (
-                <><RefreshCw className="w-4 h-4 mr-2 animate-spin" />Syncing...</>
+                <><RefreshCw className="w-4 h-4 mr-2 animate-spin" />Scanning...</>
               ) : (
-                <><Download className="w-4 h-4 mr-2" />Sync Products</>
+                <><Download className="w-4 h-4 mr-2" />Fetch Catalog</>
               )}
             </Button>
           </div>
 
-          {syncStats && (
-            <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
-              <p className="text-green-600">
-                ✓ Successfully synced {syncStats.synced} products from {syncStats.categories} categories
-              </p>
-            </div>
-          )}
-
-          <p className="text-sm text-muted-foreground">
-            Sync products from G2Bulk to use their catalog. Products will be available for linking to your games.
+          <p className="text-[9px] text-muted-foreground font-bold uppercase leading-relaxed text-center px-4">
+            Fetching the catalog will synchronize all available game denominations from the KesorAPI node.
           </p>
-        </CardContent>
-      </Card>
-
-      {/* Webhook Info */}
-      <Card className="border-gold/30">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">📡 Webhook URL</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground mb-2">
-            G2Bulk will automatically send order status updates to this URL:
-          </p>
-          <code className="block p-3 bg-secondary rounded-lg text-sm break-all">
-            {`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/g2bulk-webhook`}
-          </code>
         </CardContent>
       </Card>
     </div>

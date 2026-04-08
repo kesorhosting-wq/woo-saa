@@ -6,11 +6,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { RefreshCw, CheckCircle2, Package, Clock, Database } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
-interface G2BulkSyncWidgetProps {
+interface KesorAPISyncWidgetProps {
   onSyncComplete?: () => void;
 }
 
-const G2BulkSyncWidget: React.FC<G2BulkSyncWidgetProps> = ({ onSyncComplete }) => {
+const KesorAPISyncWidget: React.FC<KesorAPISyncWidgetProps> = ({ onSyncComplete }) => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [productCount, setProductCount] = useState(0);
   const [categoryCount, setCategoryCount] = useState(0);
@@ -24,7 +24,7 @@ const G2BulkSyncWidget: React.FC<G2BulkSyncWidgetProps> = ({ onSyncComplete }) =
     try {
       // Get product count
       const { count: totalProducts } = await supabase
-        .from('g2bulk_products')
+        .from('kesorapi_products')
         .select('*', { count: 'exact', head: true })
         .eq('is_active', true);
 
@@ -32,7 +32,7 @@ const G2BulkSyncWidget: React.FC<G2BulkSyncWidgetProps> = ({ onSyncComplete }) =
 
       // Get unique game count (categories)
       const { data: games } = await supabase
-        .from('g2bulk_products')
+        .from('kesorapi_products')
         .select('game_name')
         .eq('is_active', true);
 
@@ -43,7 +43,7 @@ const G2BulkSyncWidget: React.FC<G2BulkSyncWidgetProps> = ({ onSyncComplete }) =
 
       // Get last update time from most recent product
       const { data: lastProduct } = await supabase
-        .from('g2bulk_products')
+        .from('kesorapi_products')
         .select('updated_at')
         .order('updated_at', { ascending: false })
         .limit(1)
@@ -53,16 +53,16 @@ const G2BulkSyncWidget: React.FC<G2BulkSyncWidgetProps> = ({ onSyncComplete }) =
         setLastSyncTime(new Date(lastProduct.updated_at));
       }
     } catch (error) {
-      console.error('Error loading G2Bulk stats:', error);
+      console.error('Error loading KesorAPI stats:', error);
     }
   };
 
   const handleSync = async () => {
     setIsSyncing(true);
     try {
-      toast({ title: 'Syncing G2Bulk products...', description: 'This may take a minute.' });
+      toast({ title: 'Syncing KesorAPI products...', description: 'This may take a minute.' });
 
-      const { data, error } = await supabase.functions.invoke('g2bulk-api', {
+      const { data, error } = await supabase.functions.invoke('kesorapi-api', {
         body: { action: 'sync_products' },
       });
 
@@ -157,4 +157,4 @@ const G2BulkSyncWidget: React.FC<G2BulkSyncWidgetProps> = ({ onSyncComplete }) =
   );
 };
 
-export default G2BulkSyncWidget;
+export default KesorAPISyncWidget;

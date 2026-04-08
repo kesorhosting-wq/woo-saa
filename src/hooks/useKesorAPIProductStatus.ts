@@ -1,22 +1,22 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-interface G2BulkProductStatus {
+interface KesorAPIProductStatus {
   productId: string;
   isActive: boolean;
   gameName: string;
   productName: string;
 }
 
-interface UseG2BulkProductStatusReturn {
-  productStatuses: Map<string, G2BulkProductStatus>;
+interface UseKesorAPIProductStatusReturn {
+  productStatuses: Map<string, KesorAPIProductStatus>;
   isLoading: boolean;
-  checkProductStatus: (productId: string) => G2BulkProductStatus | undefined;
-  getInactiveProducts: () => G2BulkProductStatus[];
+  checkProductStatus: (productId: string) => KesorAPIProductStatus | undefined;
+  getInactiveProducts: () => KesorAPIProductStatus[];
 }
 
-export const useG2BulkProductStatus = (): UseG2BulkProductStatusReturn => {
-  const [productStatuses, setProductStatuses] = useState<Map<string, G2BulkProductStatus>>(new Map());
+export const useKesorAPIProductStatus = (): UseKesorAPIProductStatusReturn => {
+  const [productStatuses, setProductStatuses] = useState<Map<string, KesorAPIProductStatus>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -26,16 +26,16 @@ export const useG2BulkProductStatus = (): UseG2BulkProductStatusReturn => {
   const loadProductStatuses = async () => {
     try {
       const { data, error } = await supabase
-        .from('g2bulk_products')
-        .select('g2bulk_product_id, is_active, game_name, product_name')
+        .from('kesorapi_products')
+        .select('kesorapi_product_id, is_active, game_name, product_name')
         .range(0, 4999);
 
       if (error) throw error;
 
-      const statusMap = new Map<string, G2BulkProductStatus>();
+      const statusMap = new Map<string, KesorAPIProductStatus>();
       (data || []).forEach(product => {
-        statusMap.set(product.g2bulk_product_id, {
-          productId: product.g2bulk_product_id,
+        statusMap.set(product.kesorapi_product_id, {
+          productId: product.kesorapi_product_id,
           isActive: product.is_active ?? true,
           gameName: product.game_name,
           productName: product.product_name,
@@ -44,17 +44,17 @@ export const useG2BulkProductStatus = (): UseG2BulkProductStatusReturn => {
 
       setProductStatuses(statusMap);
     } catch (error) {
-      console.error('Failed to load G2Bulk product statuses:', error);
+      console.error('Failed to load KesorAPI product statuses:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const checkProductStatus = (productId: string): G2BulkProductStatus | undefined => {
+  const checkProductStatus = (productId: string): KesorAPIProductStatus | undefined => {
     return productStatuses.get(productId);
   };
 
-  const getInactiveProducts = (): G2BulkProductStatus[] => {
+  const getInactiveProducts = (): KesorAPIProductStatus[] => {
     return Array.from(productStatuses.values()).filter(p => !p.isActive);
   };
 

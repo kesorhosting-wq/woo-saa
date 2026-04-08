@@ -174,7 +174,7 @@ serve(async (req) => {
       );
     }
 
-    log('INFO', 'Found Order', { orderId: order.id, status: order.status, g2bulk_product_id: order.g2bulk_product_id });
+    log('INFO', 'Found Order', { orderId: order.id, status: order.status, kesorapi_product_id: order.kesorapi_product_id });
 
     // ATOMIC UPDATE to "paid" — the DB trigger will auto-fire process-topup
     const { data: lockResult } = await supabase

@@ -11,7 +11,7 @@ function log(level: 'INFO' | 'WARN' | 'ERROR' | 'DEBUG', message: string, data?:
   const entry = {
     timestamp: new Date().toISOString(),
     level,
-    function: 'g2bulk-webhook',
+    function: 'kesorapi-webhook',
     message,
     ...data,
   };
@@ -66,7 +66,7 @@ async function autoRefundWallet(supabase: any, order: any) {
   }
 
   try {
-    console.log(`[G2Bulk-Webhook] Processing auto wallet refund for order ${order.id}`);
+    console.log(`[KesorAPI-Webhook] Processing auto wallet refund for order ${order.id}`);
 
     const { data: profile } = await supabase
       .from('profiles')
@@ -92,7 +92,7 @@ async function autoRefundWallet(supabase: any, order: any) {
         reference_id: `refund-${order.id}`
       });
 
-    console.log(`[G2Bulk-Webhook] Wallet refund successful: $${refundAmount} to user ${order.user_id}`);
+    console.log(`[KesorAPI-Webhook] Wallet refund successful: $${refundAmount} to user ${order.user_id}`);
 
     await sendTelegramNotification(
       `<b>💰 Auto Wallet Refund (Webhook)</b>\n` +
@@ -103,7 +103,7 @@ async function autoRefundWallet(supabase: any, order: any) {
       `🔢 Order ID: ${order.id}`
     );
   } catch (error: any) {
-    console.error(`[G2Bulk-Webhook] Auto refund error:`, error);
+    console.error(`[KesorAPI-Webhook] Auto refund error:`, error);
   }
 }
 
@@ -119,31 +119,31 @@ serve(async (req) => {
 
   try {
     // Security: Validate webhook authentication
-    // Check for G2Bulk signature or shared secret in Authorization header
-    const authHeader = req.headers.get('Authorization') || req.headers.get('X-G2Bulk-Signature');
+    // Check for KesorAPI signature or shared secret in Authorization header
+    const authHeader = req.headers.get('Authorization') || req.headers.get('X-KesorAPI-Signature');
     const webhookSecret = Deno.env.get('G2BULK_WEBHOOK_SECRET');
     
     // If webhook secret is configured, validate it
     if (webhookSecret) {
       const providedSecret = authHeader?.replace('Bearer ', '').trim();
       if (!providedSecret || providedSecret !== webhookSecret) {
-        console.error('[G2Bulk-Webhook] Unauthorized: Invalid or missing webhook secret');
+        console.error('[KesorAPI-Webhook] Unauthorized: Invalid or missing webhook secret');
         return new Response('Unauthorized', { status: 401 });
       }
-      console.log('[G2Bulk-Webhook] Webhook authentication successful');
+      console.log('[KesorAPI-Webhook] Webhook authentication successful');
     } else {
       // Log warning if no secret configured - still allow for backwards compatibility
       // but log the source IP for security monitoring
       const sourceIp = req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || 'unknown';
-      console.warn(`[G2Bulk-Webhook] No webhook secret configured. Request from IP: ${sourceIp}. Consider adding G2BULK_WEBHOOK_SECRET for security.`);
+      console.warn(`[KesorAPI-Webhook] No webhook secret configured. Request from IP: ${sourceIp}. Consider adding G2BULK_WEBHOOK_SECRET for security.`);
     }
 
-    // Parse the callback payload from G2Bulk
+    // Parse the callback payload from KesorAPI
     const payload = await req.json();
     
-    console.log('[G2Bulk-Webhook] Received callback:', JSON.stringify(payload));
+    console.log('[KesorAPI-Webhook] Received callback:', JSON.stringify(payload));
 
-    // G2Bulk callback payload structure:
+    // KesorAPI callback payload structure:
     // {
     //   "order_id": 42,
     //   "game_code": "pubgm",
@@ -159,14 +159,14 @@ serve(async (req) => {
     //   "timestamp": "2024-01-15T10:30:00Z"
     // }
 
-    const g2bulkOrderId = String(payload.order_id || '');
+    const kesorapiOrderId = String(payload.order_id || '');
     const status = String(payload.status || '');
     const message = String(payload.message || '');
     const remark = String(payload.remark || '');
     const deliveryItems = payload.delivery_items || [];
 
-    console.log('[G2Bulk-Webhook] Order details:', {
-      g2bulkOrderId,
+    console.log('[KesorAPI-Webhook] Order details:', {
+      kesorapiOrderId,
       status,
       message,
       remark
@@ -183,22 +183,22 @@ serve(async (req) => {
     
     if (internalOrderId) {
       orderQuery = orderQuery.eq('id', internalOrderId);
-    } else if (g2bulkOrderId) {
-      orderQuery = orderQuery.eq('g2bulk_order_id', g2bulkOrderId);
+    } else if (kesorapiOrderId) {
+      orderQuery = orderQuery.eq('kesorapi_order_id', kesorapiOrderId);
     } else {
-      console.error('[G2Bulk-Webhook] No order ID in callback');
+      console.error('[KesorAPI-Webhook] No order ID in callback');
       return new Response('OK', { status: 200 });
     }
 
     const { data: order, error: orderError } = await orderQuery.maybeSingle();
 
     if (orderError || !order) {
-      console.error('[G2Bulk-Webhook] Order not found:', orderError);
+      console.error('[KesorAPI-Webhook] Order not found:', orderError);
       return new Response('OK', { status: 200 });
     }
 
-    // Map G2Bulk status to our status
-    // G2Bulk statuses: PENDING, PROCESSING, COMPLETED, FAILED
+    // Map KesorAPI status to our status
+    // KesorAPI statuses: PENDING, PROCESSING, COMPLETED, FAILED
     let newStatus = order.status;
     let statusMessage = message;
     let cardCodesJson: unknown = null;
@@ -206,7 +206,7 @@ serve(async (req) => {
     switch (status.toUpperCase()) {
       case 'COMPLETED':
         newStatus = 'completed';
-        statusMessage = `G2Bulk order completed. Order: ${g2bulkOrderId}`;
+        statusMessage = `KesorAPI order completed. Order: ${kesorapiOrderId}`;
         
         // Handle delivery items (for card/voucher orders)
         if (deliveryItems && Array.isArray(deliveryItems) && deliveryItems.length > 0) {
@@ -221,17 +221,17 @@ serve(async (req) => {
         
       case 'FAILED':
         newStatus = 'failed';
-        statusMessage = `G2Bulk order failed. Order: ${g2bulkOrderId}. ${message}`;
+        statusMessage = `KesorAPI order failed. Order: ${kesorapiOrderId}. ${message}`;
         break;
         
       case 'PROCESSING':
         newStatus = 'processing';
-        statusMessage = `G2Bulk processing order. Order: ${g2bulkOrderId}`;
+        statusMessage = `KesorAPI processing order. Order: ${kesorapiOrderId}`;
         break;
         
       case 'PENDING':
         newStatus = 'processing';
-        statusMessage = `G2Bulk order pending. Order: ${g2bulkOrderId}`;
+        statusMessage = `KesorAPI order pending. Order: ${kesorapiOrderId}`;
         break;
     }
 
@@ -239,7 +239,7 @@ serve(async (req) => {
     const updateData: Record<string, unknown> = {
       status: newStatus,
       status_message: statusMessage,
-      g2bulk_order_id: g2bulkOrderId || order.g2bulk_order_id
+      kesorapi_order_id: kesorapiOrderId || order.kesorapi_order_id
     };
 
     if (cardCodesJson) {
@@ -252,9 +252,9 @@ serve(async (req) => {
       .eq('id', order.id);
 
     if (updateError) {
-      console.error('[G2Bulk-Webhook] Failed to update order:', updateError);
+      console.error('[KesorAPI-Webhook] Failed to update order:', updateError);
     } else {
-      console.log(`[G2Bulk-Webhook] Order ${order.id} updated to status: ${newStatus}`);
+      console.log(`[KesorAPI-Webhook] Order ${order.id} updated to status: ${newStatus}`);
 
       // Send Telegram notification for completed or failed orders
       if (newStatus === 'completed') {
@@ -269,7 +269,7 @@ serve(async (req) => {
           `👤 Player: ${order.player_id}${order.server_id ? ` (Server: ${order.server_id})` : ''}\n` +
           `💰 Amount: $${order.amount}\n` +
           `🔢 Order ID: ${order.id}\n` +
-          `📋 G2Bulk Order: ${g2bulkOrderId}${codesInfo}`
+          `📋 KesorAPI Order: ${kesorapiOrderId}${codesInfo}`
         );
       } else if (newStatus === 'failed') {
         await sendTelegramNotification(
@@ -279,7 +279,7 @@ serve(async (req) => {
           `👤 Player: ${order.player_id}${order.server_id ? ` (Server: ${order.server_id})` : ''}\n` +
           `💰 Amount: $${order.amount}\n` +
           `🔢 Order ID: ${order.id}\n` +
-          `📋 G2Bulk Order: ${g2bulkOrderId}\n` +
+          `📋 KesorAPI Order: ${kesorapiOrderId}\n` +
           `⚠️ Message: ${message}`,
           true
         );
@@ -289,14 +289,14 @@ serve(async (req) => {
       }
     }
 
-    // G2Bulk expects a 2xx response to acknowledge the callback
+    // KesorAPI expects a 2xx response to acknowledge the callback
     return new Response('OK', { 
       status: 200,
       headers: { 'Content-Type': 'text/plain' }
     });
 
   } catch (error: unknown) {
-    console.error('[G2Bulk-Webhook] Error:', error);
+    console.error('[KesorAPI-Webhook] Error:', error);
     // Still return OK to prevent retries
     return new Response('OK', { status: 200 });
   }

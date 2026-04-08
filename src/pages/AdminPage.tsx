@@ -15,22 +15,22 @@ import ApiSettingsTab from '@/components/admin/ApiSettingsTab';
 import GameVerificationConfigsTab from '@/components/admin/GameVerificationConfigsTab';
 import OrdersTab from '@/components/admin/OrdersTab';
 import KesorSettingsTab from '@/components/admin/KesorSettingsTab';
-import G2BulkProductSelector from '@/components/admin/G2BulkProductSelector';
-import G2BulkBalanceDisplay from '@/components/admin/G2BulkBalanceDisplay';
-import G2BulkCategorySelector from '@/components/admin/G2BulkCategorySelector';
-import G2BulkAutoImport from '@/components/admin/G2BulkAutoImport';
-import G2BulkSyncWidget from '@/components/admin/G2BulkSyncWidget';
-import G2BulkBulkLinker from '@/components/admin/G2BulkBulkLinker';
-import G2BulkLinkStats from '@/components/admin/G2BulkLinkStats';
-import G2BulkFullImport from '@/components/admin/G2BulkFullImport';
-import G2BulkDebugLogs from '@/components/admin/G2BulkDebugLogs';
+import KesorAPIProductSelector from '@/components/admin/KesorAPIProductSelector';
+import KesorAPIBalanceDisplay from '@/components/admin/KesorAPIBalanceDisplay';
+import KesorAPICategorySelector from '@/components/admin/KesorAPICategorySelector';
+import KesorAPIAutoImport from '@/components/admin/KesorAPIAutoImport';
+import KesorAPISyncWidget from '@/components/admin/KesorAPISyncWidget';
+import KesorAPIBulkLinker from '@/components/admin/KesorAPIBulkLinker';
+import KesorAPILinkStats from '@/components/admin/KesorAPILinkStats';
+import KesorAPIFullImport from '@/components/admin/KesorAPIFullImport';
+import KesorAPIDebugLogs from '@/components/admin/KesorAPIDebugLogs';
 import PackageStockBadge from '@/components/admin/PackageStockBadge';
 import AIGameImageGenerator, { AIBulkImageGenerator } from '@/components/admin/AIGameImageGenerator';
 import { AIBulkPackageIconGenerator } from '@/components/admin/AIPackageIconGenerator';
 import { PackageIconSearcher } from '@/components/admin/PackageIconSearcher';
 import GameImageSearch from '@/components/admin/GameImageSearch';
 import AppStoreImageSync, { AppStoreBulkSync } from '@/components/admin/AppStoreImageSync';
-import { useG2BulkProductStatus } from '@/hooks/useG2BulkProductStatus';
+import { useKesorAPIProductStatus } from '@/hooks/useKesorAPIProductStatus';
 import { AdminWalletTab } from '@/components/admin/AdminWalletTab';
 import DataExportTab from '@/components/admin/DataExportTab';
 import FontUploadSettings from '@/components/admin/FontUploadSettings';
@@ -63,8 +63,8 @@ const AdminPage: React.FC = () => {
     moveSpecialPackage
   } = useSite();
 
-  // G2Bulk product status hook for stock warnings
-  const { productStatuses, checkProductStatus } = useG2BulkProductStatus();
+  // KesorAPI product status hook for stock warnings
+  const { productStatuses, checkProductStatus } = useKesorAPIProductStatus();
 
   const handleSignOut = async () => {
     await signOut();
@@ -74,8 +74,8 @@ const AdminPage: React.FC = () => {
   // Game state
   const [editingGame, setEditingGame] = useState<string | null>(null);
   const [gameSearchQuery, setGameSearchQuery] = useState('');
-  const [newGame, setNewGame] = useState({ name: '', image: '', coverImage: '', g2bulkCategoryId: '', featured: false, defaultPackageIcon: '' });
-  const [editGameData, setEditGameData] = useState<{ name: string; image: string; coverImage: string; g2bulkCategoryId: string; featured: boolean; defaultPackageIcon: string }>({ name: '', image: '', coverImage: '', g2bulkCategoryId: '', featured: false, defaultPackageIcon: '' });
+  const [newGame, setNewGame] = useState({ name: '', image: '', coverImage: '', kesorapiCategoryId: '', featured: false, defaultPackageIcon: '' });
+  const [editGameData, setEditGameData] = useState<{ name: string; image: string; coverImage: string; kesorapiCategoryId: string; featured: boolean; defaultPackageIcon: string }>({ name: '', image: '', coverImage: '', kesorapiCategoryId: '', featured: false, defaultPackageIcon: '' });
   
   // Filter games based on search query
   const filteredGames = games.filter(game => 
@@ -86,13 +86,13 @@ const AdminPage: React.FC = () => {
   const [expandedGame, setExpandedGame] = useState<string | null>(null);
   const [packageListSort, setPackageListSort] = useState<'price' | 'manual'>('price');
   const [editingPackage, setEditingPackage] = useState<string | null>(null);
-  const [newPackage, setNewPackage] = useState({ name: '', amount: '', price: 0, currency: 'USD', icon: '', label: '', labelBgColor: '#dc2626', labelTextColor: '#ffffff', labelIcon: '', g2bulkProductId: '', g2bulkTypeId: '', quantity: '' as string });
-  const [editPackageData, setEditPackageData] = useState({ name: '', amount: '', price: 0, currency: 'USD', icon: '', label: '', labelBgColor: '#dc2626', labelTextColor: '#ffffff', labelIcon: '', g2bulkProductId: '', g2bulkTypeId: '', quantity: '' as string });
+  const [newPackage, setNewPackage] = useState({ name: '', amount: '', price: 0, currency: 'USD', icon: '', label: '', labelBgColor: '#dc2626', labelTextColor: '#ffffff', labelIcon: '', kesorapiProductId: '', kesorapiTypeId: '', quantity: '' as string });
+  const [editPackageData, setEditPackageData] = useState({ name: '', amount: '', price: 0, currency: 'USD', icon: '', label: '', labelBgColor: '#dc2626', labelTextColor: '#ffffff', labelIcon: '', kesorapiProductId: '', kesorapiTypeId: '', quantity: '' as string });
 
   // Special Package state
   const [editingSpecialPackage, setEditingSpecialPackage] = useState<string | null>(null);
-  const [newSpecialPackage, setNewSpecialPackage] = useState({ name: '', amount: '', price: 0, currency: 'USD', icon: '', label: '', labelBgColor: '#dc2626', labelTextColor: '#ffffff', labelIcon: '', g2bulkProductId: '', g2bulkTypeId: '', quantity: '' as string });
-  const [editSpecialPackageData, setEditSpecialPackageData] = useState({ name: '', amount: '', price: 0, currency: 'USD', icon: '', label: '', labelBgColor: '#dc2626', labelTextColor: '#ffffff', labelIcon: '', g2bulkProductId: '', g2bulkTypeId: '', quantity: '' as string });
+  const [newSpecialPackage, setNewSpecialPackage] = useState({ name: '', amount: '', price: 0, currency: 'USD', icon: '', label: '', labelBgColor: '#dc2626', labelTextColor: '#ffffff', labelIcon: '', kesorapiProductId: '', kesorapiTypeId: '', quantity: '' as string });
+  const [editSpecialPackageData, setEditSpecialPackageData] = useState({ name: '', amount: '', price: 0, currency: 'USD', icon: '', label: '', labelBgColor: '#dc2626', labelTextColor: '#ffffff', labelIcon: '', kesorapiProductId: '', kesorapiTypeId: '', quantity: '' as string });
 
   // Payment state
   const [newPayment, setNewPayment] = useState({ name: '', icon: '' });
@@ -110,8 +110,8 @@ const AdminPage: React.FC = () => {
       return;
     }
     
-    await addGame({ name: newGame.name, image: newGame.image, coverImage: newGame.coverImage || undefined, g2bulkCategoryId: newGame.g2bulkCategoryId || undefined, featured: newGame.featured, defaultPackageIcon: newGame.defaultPackageIcon || undefined });
-    setNewGame({ name: '', image: '', coverImage: '', g2bulkCategoryId: '', featured: false, defaultPackageIcon: '' });
+    await addGame({ name: newGame.name, image: newGame.image, coverImage: newGame.coverImage || undefined, kesorapiCategoryId: newGame.kesorapiCategoryId || undefined, featured: newGame.featured, defaultPackageIcon: newGame.defaultPackageIcon || undefined });
+    setNewGame({ name: '', image: '', coverImage: '', kesorapiCategoryId: '', featured: false, defaultPackageIcon: '' });
     toast({ title: "Game added!" });
   };
 
@@ -121,7 +121,7 @@ const AdminPage: React.FC = () => {
       name: game.name, 
       image: game.image,
       coverImage: game.coverImage || '',
-      g2bulkCategoryId: (game as Game & { g2bulkCategoryId?: string }).g2bulkCategoryId || '',
+      kesorapiCategoryId: (game as Game & { kesorapiCategoryId?: string }).kesorapiCategoryId || '',
       featured: game.featured || false,
       defaultPackageIcon: game.defaultPackageIcon || ''
     });
@@ -132,7 +132,7 @@ const AdminPage: React.FC = () => {
       name: editGameData.name,
       image: editGameData.image,
       coverImage: editGameData.coverImage || undefined,
-      g2bulkCategoryId: editGameData.g2bulkCategoryId || undefined,
+      kesorapiCategoryId: editGameData.kesorapiCategoryId || undefined,
       featured: editGameData.featured,
       defaultPackageIcon: editGameData.defaultPackageIcon || undefined
     });
@@ -157,11 +157,11 @@ const AdminPage: React.FC = () => {
       labelBgColor: newPackage.labelBgColor || undefined,
       labelTextColor: newPackage.labelTextColor || undefined,
       labelIcon: newPackage.labelIcon || undefined,
-      g2bulkProductId: newPackage.g2bulkProductId || undefined,
-      g2bulkTypeId: newPackage.g2bulkTypeId || undefined,
+      kesorapiProductId: newPackage.kesorapiProductId || undefined,
+      kesorapiTypeId: newPackage.kesorapiTypeId || undefined,
       quantity: newPackage.quantity ? parseInt(newPackage.quantity) : undefined
     });
-    setNewPackage({ name: '', amount: '', price: 0, currency: 'USD', icon: '', label: '', labelBgColor: '#dc2626', labelTextColor: '#ffffff', labelIcon: '', g2bulkProductId: '', g2bulkTypeId: '', quantity: '' });
+    setNewPackage({ name: '', amount: '', price: 0, currency: 'USD', icon: '', label: '', labelBgColor: '#dc2626', labelTextColor: '#ffffff', labelIcon: '', kesorapiProductId: '', kesorapiTypeId: '', quantity: '' });
     toast({ title: "Package added!" });
   };
 
@@ -177,8 +177,8 @@ const AdminPage: React.FC = () => {
       labelBgColor: pkg.labelBgColor || '#dc2626',
       labelTextColor: pkg.labelTextColor || '#ffffff',
       labelIcon: pkg.labelIcon || '',
-      g2bulkProductId: pkg.g2bulkProductId || '',
-      g2bulkTypeId: pkg.g2bulkTypeId || '',
+      kesorapiProductId: pkg.kesorapiProductId || '',
+      kesorapiTypeId: pkg.kesorapiTypeId || '',
       quantity: pkg.quantity != null ? String(pkg.quantity) : ''
     });
   };
@@ -208,11 +208,11 @@ const AdminPage: React.FC = () => {
       labelBgColor: newSpecialPackage.labelBgColor || undefined,
       labelTextColor: newSpecialPackage.labelTextColor || undefined,
       labelIcon: newSpecialPackage.labelIcon || undefined,
-      g2bulkProductId: newSpecialPackage.g2bulkProductId || undefined,
-      g2bulkTypeId: newSpecialPackage.g2bulkTypeId || undefined,
+      kesorapiProductId: newSpecialPackage.kesorapiProductId || undefined,
+      kesorapiTypeId: newSpecialPackage.kesorapiTypeId || undefined,
       quantity: newSpecialPackage.quantity ? parseInt(newSpecialPackage.quantity) : undefined
     });
-    setNewSpecialPackage({ name: '', amount: '', price: 0, currency: 'USD', icon: '', label: '', labelBgColor: '#dc2626', labelTextColor: '#ffffff', labelIcon: '', g2bulkProductId: '', g2bulkTypeId: '', quantity: '' });
+    setNewSpecialPackage({ name: '', amount: '', price: 0, currency: 'USD', icon: '', label: '', labelBgColor: '#dc2626', labelTextColor: '#ffffff', labelIcon: '', kesorapiProductId: '', kesorapiTypeId: '', quantity: '' });
     toast({ title: "Special package added!" });
   };
 
@@ -228,8 +228,8 @@ const AdminPage: React.FC = () => {
       labelBgColor: pkg.labelBgColor || '#dc2626',
       labelTextColor: pkg.labelTextColor || '#ffffff',
       labelIcon: pkg.labelIcon || '',
-      g2bulkProductId: pkg.g2bulkProductId || '',
-      g2bulkTypeId: pkg.g2bulkTypeId || '',
+      kesorapiProductId: pkg.kesorapiProductId || '',
+      kesorapiTypeId: pkg.kesorapiTypeId || '',
       quantity: pkg.quantity != null ? String(pkg.quantity) : ''
     });
   };
@@ -292,7 +292,7 @@ const AdminPage: React.FC = () => {
               <h1 className="font-display text-xl font-bold gold-text">Admin Panel</h1>
             </div>
             <div className="flex items-center gap-3">
-              <G2BulkBalanceDisplay />
+              <KesorAPIBalanceDisplay />
               <div className="flex items-center gap-1 text-sm text-muted-foreground">
                 <User className="w-4 h-4" />
                 <span className="max-w-[150px] truncate hidden sm:inline">{user?.email}</span>
@@ -1686,19 +1686,19 @@ const AdminPage: React.FC = () => {
             
             {/* Games Management */}
             <TabsContent value="games">
-              {/* G2Bulk Sync Widget */}
+              {/* KesorAPI Sync Widget */}
               <div className="mb-6">
-                <G2BulkSyncWidget />
+                <KesorAPISyncWidget />
               </div>
 
               {/* Full Import */}
               <div className="mb-6">
-                <G2BulkFullImport onImportComplete={refreshGames} />
+                <KesorAPIFullImport onImportComplete={refreshGames} />
               </div>
 
               {/* Bulk Linker */}
               <div className="mb-6">
-                <G2BulkBulkLinker 
+                <KesorAPIBulkLinker 
                   games={games} 
                   onLinkComplete={refreshGames} 
                 />
@@ -1769,17 +1769,17 @@ const AdminPage: React.FC = () => {
                       />
                     </div>
                     <div className="flex-1 min-w-[250px]">
-                      <label className="text-sm font-medium mb-2 block">Link to G2Bulk Category</label>
-                      <G2BulkCategorySelector
-                        value={newGame.g2bulkCategoryId}
+                      <label className="text-sm font-medium mb-2 block">Link to KesorAPI Category</label>
+                      <KesorAPICategorySelector
+                        value={newGame.kesorapiCategoryId}
                         onChange={(catId, catName) => {
                           setNewGame(prev => ({ 
                             ...prev, 
-                            g2bulkCategoryId: catId || '',
+                            kesorapiCategoryId: catId || '',
                             name: prev.name || catName || ''
                           }));
                         }}
-                        placeholder="Select G2Bulk game..."
+                        placeholder="Select KesorAPI game..."
                       />
                     </div>
                     <Button onClick={handleAddGame} className="bg-gold hover:bg-gold-dark text-primary-foreground">
@@ -1855,11 +1855,11 @@ const AdminPage: React.FC = () => {
                               />
                             </div>
                             <div className="flex-1 min-w-[200px]">
-                              <label className="text-xs text-muted-foreground mb-1 block">G2Bulk Category</label>
-                              <G2BulkCategorySelector
-                                value={editGameData.g2bulkCategoryId}
-                                onChange={(catId) => setEditGameData(prev => ({ ...prev, g2bulkCategoryId: catId || '' }))}
-                                placeholder="Link to G2Bulk..."
+                              <label className="text-xs text-muted-foreground mb-1 block">KesorAPI Category</label>
+                              <KesorAPICategorySelector
+                                value={editGameData.kesorapiCategoryId}
+                                onChange={(catId) => setEditGameData(prev => ({ ...prev, kesorapiCategoryId: catId || '' }))}
+                                placeholder="Link to KesorAPI..."
                               />
                             </div>
                             <div className="flex items-center gap-2">
@@ -1916,14 +1916,14 @@ const AdminPage: React.FC = () => {
                                 <p className="text-sm text-muted-foreground">
                                   {game.packages.length + game.specialPackages.length} packages
                                 </p>
-                                {game.g2bulkCategoryId && (
+                                {game.kesorapiCategoryId && (
                                   <span className="text-xs bg-green-500/20 text-green-600 px-2 py-0.5 rounded-full flex items-center gap-1">
                                     ✓ Linked
                                   </span>
                                 )}
                               </div>
                               <div className="mt-1">
-                                <G2BulkLinkStats 
+                                <KesorAPILinkStats 
                                   game={game} 
                                   productStatuses={productStatuses}
                                   compact 
@@ -2065,22 +2065,22 @@ const AdminPage: React.FC = () => {
                                     title="Quantity (optional)"
                                   />
                                 </div>
-                                {/* G2Bulk Product Selector for new package */}
-                                {game.g2bulkCategoryId && (
+                                {/* KesorAPI Product Selector for new package */}
+                                {game.kesorapiCategoryId && (
                                   <div className="border border-dashed border-gold/30 rounded-lg p-2 bg-gold/5">
                                     <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
                                       <Link2 className="w-3 h-3" />
-                                      Link to G2Bulk Product (optional)
+                                      Link to KesorAPI Product (optional)
                                     </p>
-                                    <G2BulkProductSelector
-                                      value={newPackage.g2bulkProductId}
+                                    <KesorAPIProductSelector
+                                      value={newPackage.kesorapiProductId}
                                       gameName={game.name}
-                                      g2bulkCategoryId={game.g2bulkCategoryId}
+                                      kesorapiCategoryId={game.kesorapiCategoryId}
                                       onChange={(productId, typeId) => {
                                         setNewPackage(prev => ({ 
                                           ...prev, 
-                                          g2bulkProductId: productId || '', 
-                                          g2bulkTypeId: typeId || '' 
+                                          kesorapiProductId: productId || '', 
+                                          kesorapiTypeId: typeId || '' 
                                         }));
                                       }}
                                     />
@@ -2145,13 +2145,13 @@ const AdminPage: React.FC = () => {
                                 </div>
                               </div>
 
-                              {/* G2Bulk Auto Import */}
-                              {game.g2bulkCategoryId && (
-                                <G2BulkAutoImport
+                              {/* KesorAPI Auto Import */}
+                              {game.kesorapiCategoryId && (
+                                <KesorAPIAutoImport
                                   gameId={game.id}
                                   gameName={game.name}
-                                  g2bulkCategoryId={game.g2bulkCategoryId}
-                                  existingProductIds={game.packages.filter(p => p.g2bulkProductId).map(p => p.g2bulkProductId!)}
+                                  kesorapiCategoryId={game.kesorapiCategoryId}
+                                  existingProductIds={game.packages.filter(p => p.kesorapiProductId).map(p => p.kesorapiProductId!)}
                                   onImport={async (products) => {
                                     for (const product of products) {
                                       await addPackage(game.id, {
@@ -2159,8 +2159,8 @@ const AdminPage: React.FC = () => {
                                         amount: product.amount,
                                         price: product.price,
                                         currency: 'USD',
-                                        g2bulkProductId: product.g2bulkProductId,
-                                        g2bulkTypeId: product.g2bulkTypeId
+                                        kesorapiProductId: product.kesorapiProductId,
+                                        kesorapiTypeId: product.kesorapiTypeId
                                       });
                                     }
                                   }}
@@ -2286,7 +2286,7 @@ const AdminPage: React.FC = () => {
                                         </div>
                                       </div>
                                     ) : (
-                                      <div className={`flex items-center gap-3 ${pkg.g2bulkProductId ? 'border-l-2 border-l-green-500 pl-2' : 'border-l-2 border-l-orange-400 pl-2'}`}>
+                                      <div className={`flex items-center gap-3 ${pkg.kesorapiProductId ? 'border-l-2 border-l-green-500 pl-2' : 'border-l-2 border-l-orange-400 pl-2'}`}>
                                         {pkg.icon ? (
                                           <img src={pkg.icon} alt={pkg.name} className="w-8 h-8 rounded object-cover" />
                                         ) : (
@@ -2297,7 +2297,7 @@ const AdminPage: React.FC = () => {
                                         <div className="flex-1 min-w-0">
                                           <div className="flex items-center gap-2 flex-wrap">
                                             <p className="font-medium text-sm">{pkg.name}</p>
-                                            {pkg.g2bulkProductId ? (
+                                            {pkg.kesorapiProductId ? (
                                               <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-green-500/10 text-green-600 text-[10px] rounded-full border border-green-500/20">
                                                 <Link2 className="w-3 h-3" />
                                                 Linked
@@ -2309,20 +2309,20 @@ const AdminPage: React.FC = () => {
                                               </span>
                                             )}
                                             <PackageStockBadge 
-                                              g2bulkProductId={pkg.g2bulkProductId}
-                                              productStatus={pkg.g2bulkProductId ? checkProductStatus(pkg.g2bulkProductId) : undefined}
+                                              kesorapiProductId={pkg.kesorapiProductId}
+                                              productStatus={pkg.kesorapiProductId ? checkProductStatus(pkg.kesorapiProductId) : undefined}
                                             />
                                           </div>
                                           <p className="text-xs text-muted-foreground">
                                             {pkg.amount} units{pkg.label && ` • ${pkg.label}`}
                                             {pkg.quantity != null && ` • Qty: ${pkg.quantity}`}
                                           </p>
-                                          <G2BulkProductSelector
-                                            value={pkg.g2bulkProductId}
+                                          <KesorAPIProductSelector
+                                            value={pkg.kesorapiProductId}
                                             gameName={game.name}
-                                            g2bulkCategoryId={game.g2bulkCategoryId}
+                                            kesorapiCategoryId={game.kesorapiCategoryId}
                                             onChange={(productId, typeId) => {
-                                              updatePackage(game.id, pkg.id, { g2bulkProductId: productId, g2bulkTypeId: typeId });
+                                              updatePackage(game.id, pkg.id, { kesorapiProductId: productId, kesorapiTypeId: typeId });
                                             }}
                                           />
                                         </div>
@@ -2370,8 +2370,8 @@ const AdminPage: React.FC = () => {
                                                 labelBgColor: pkg.labelBgColor || undefined,
                                                 labelTextColor: pkg.labelTextColor || undefined,
                                                 labelIcon: pkg.labelIcon || undefined,
-                                                g2bulkProductId: pkg.g2bulkProductId || undefined,
-                                                g2bulkTypeId: pkg.g2bulkTypeId || undefined,
+                                                kesorapiProductId: pkg.kesorapiProductId || undefined,
+                                                kesorapiTypeId: pkg.kesorapiTypeId || undefined,
                                                 quantity: pkg.quantity ?? undefined
                                               });
                                               toast({ title: "Package cloned!", description: `${pkg.name} has been duplicated` });
@@ -2395,8 +2395,8 @@ const AdminPage: React.FC = () => {
                                                 labelBgColor: pkg.labelBgColor || undefined,
                                                 labelTextColor: pkg.labelTextColor || undefined,
                                                 labelIcon: pkg.labelIcon || undefined,
-                                                g2bulkProductId: pkg.g2bulkProductId || undefined,
-                                                g2bulkTypeId: pkg.g2bulkTypeId || undefined,
+                                                kesorapiProductId: pkg.kesorapiProductId || undefined,
+                                                kesorapiTypeId: pkg.kesorapiTypeId || undefined,
                                                 quantity: pkg.quantity ?? undefined
                                               });
                                               toast({ title: "Cloned to Special Packages!", description: `${pkg.name} has been added to Special Packages` });
@@ -2467,22 +2467,22 @@ const AdminPage: React.FC = () => {
                                       title="Quantity (optional)"
                                     />
                                   </div>
-                                {/* G2Bulk Product Selector for new special package */}
-                                {game.g2bulkCategoryId && (
+                                {/* KesorAPI Product Selector for new special package */}
+                                {game.kesorapiCategoryId && (
                                   <div className="border border-dashed border-orange-500/30 rounded-lg p-2 bg-orange-500/5">
                                     <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
                                       <Link2 className="w-3 h-3" />
-                                      Link to G2Bulk Product (optional)
+                                      Link to KesorAPI Product (optional)
                                     </p>
-                                    <G2BulkProductSelector
-                                      value={newSpecialPackage.g2bulkProductId}
+                                    <KesorAPIProductSelector
+                                      value={newSpecialPackage.kesorapiProductId}
                                       gameName={game.name}
-                                      g2bulkCategoryId={game.g2bulkCategoryId}
+                                      kesorapiCategoryId={game.kesorapiCategoryId}
                                       onChange={(productId, typeId) => {
                                         setNewSpecialPackage(prev => ({ 
                                           ...prev, 
-                                          g2bulkProductId: productId || '', 
-                                          g2bulkTypeId: typeId || '' 
+                                          kesorapiProductId: productId || '', 
+                                          kesorapiTypeId: typeId || '' 
                                         }));
                                       }}
                                     />
@@ -2634,7 +2634,7 @@ const AdminPage: React.FC = () => {
                                         </div>
                                       </div>
                                     ) : (
-                                      <div className={`flex items-center gap-3 ${pkg.g2bulkProductId ? 'border-l-2 border-l-green-500 pl-2' : 'border-l-2 border-l-orange-400 pl-2'}`}>
+                                      <div className={`flex items-center gap-3 ${pkg.kesorapiProductId ? 'border-l-2 border-l-green-500 pl-2' : 'border-l-2 border-l-orange-400 pl-2'}`}>
                                         {pkg.icon ? (
                                           <img src={pkg.icon} alt={pkg.name} className="w-8 h-8 rounded object-cover" />
                                         ) : (
@@ -2645,7 +2645,7 @@ const AdminPage: React.FC = () => {
                                         <div className="flex-1 min-w-0">
                                           <div className="flex items-center gap-2 flex-wrap">
                                             <p className="font-medium text-sm">{pkg.name}</p>
-                                            {pkg.g2bulkProductId ? (
+                                            {pkg.kesorapiProductId ? (
                                               <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-green-500/10 text-green-600 text-[10px] rounded-full border border-green-500/20">
                                                 <Link2 className="w-3 h-3" />
                                                 Linked
@@ -2657,17 +2657,17 @@ const AdminPage: React.FC = () => {
                                               </span>
                                             )}
                                             <PackageStockBadge 
-                                              g2bulkProductId={pkg.g2bulkProductId}
-                                              productStatus={pkg.g2bulkProductId ? checkProductStatus(pkg.g2bulkProductId) : undefined}
+                                              kesorapiProductId={pkg.kesorapiProductId}
+                                              productStatus={pkg.kesorapiProductId ? checkProductStatus(pkg.kesorapiProductId) : undefined}
                                             />
                                           </div>
                                           <p className="text-xs text-muted-foreground">{pkg.amount} units{pkg.label && ` • ${pkg.label}`}</p>
-                                          <G2BulkProductSelector
-                                            value={pkg.g2bulkProductId}
+                                          <KesorAPIProductSelector
+                                            value={pkg.kesorapiProductId}
                                             gameName={game.name}
-                                            g2bulkCategoryId={game.g2bulkCategoryId}
+                                            kesorapiCategoryId={game.kesorapiCategoryId}
                                             onChange={(productId, typeId) => {
-                                              updateSpecialPackage(game.id, pkg.id, { g2bulkProductId: productId, g2bulkTypeId: typeId });
+                                              updateSpecialPackage(game.id, pkg.id, { kesorapiProductId: productId, kesorapiTypeId: typeId });
                                             }}
                                           />
                                         </div>
@@ -2715,8 +2715,8 @@ const AdminPage: React.FC = () => {
                                                 labelBgColor: pkg.labelBgColor || undefined,
                                                 labelTextColor: pkg.labelTextColor || undefined,
                                                 labelIcon: pkg.labelIcon || undefined,
-                                                g2bulkProductId: pkg.g2bulkProductId || undefined,
-                                                g2bulkTypeId: pkg.g2bulkTypeId || undefined
+                                                kesorapiProductId: pkg.kesorapiProductId || undefined,
+                                                kesorapiTypeId: pkg.kesorapiTypeId || undefined
                                               });
                                               toast({ title: "Cloned to Normal Packages!", description: `${pkg.name} has been added to Normal Packages` });
                                             }}
@@ -2892,7 +2892,7 @@ const AdminPage: React.FC = () => {
 
             {/* Orders */}
             <TabsContent value="orders" className="space-y-6">
-              <G2BulkDebugLogs />
+              <KesorAPIDebugLogs />
               <OrdersTab />
             </TabsContent>
 

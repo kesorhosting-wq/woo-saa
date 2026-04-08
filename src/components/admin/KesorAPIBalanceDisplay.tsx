@@ -10,7 +10,7 @@ interface BalanceData {
   username?: string;
 }
 
-const G2BulkBalanceDisplay: React.FC = () => {
+const KesorAPIBalanceDisplay: React.FC = () => {
   const [balance, setBalance] = useState<BalanceData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -21,14 +21,14 @@ const G2BulkBalanceDisplay: React.FC = () => {
       const { data } = await supabase
         .from('api_configurations')
         .select('is_enabled')
-        .eq('api_name', 'g2bulk')
+        .eq('api_name', 'kesorapi')
         .maybeSingle();
       
       if (data) {
         setIsEnabled(data.is_enabled || false);
       }
     } catch (err) {
-      console.error('Error checking G2Bulk config:', err);
+      console.error('Error checking KesorAPI config:', err);
     }
   }, []);
 
@@ -38,7 +38,7 @@ const G2BulkBalanceDisplay: React.FC = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const { data, error: fnError } = await supabase.functions.invoke('g2bulk-api', {
+      const { data, error: fnError } = await supabase.functions.invoke('kesorapi-api', {
         body: { action: 'get_account_balance' },
       });
 
@@ -60,7 +60,7 @@ const G2BulkBalanceDisplay: React.FC = () => {
         setError('Failed to fetch');
       }
     } catch (err) {
-      console.error('Error fetching G2Bulk balance:', err);
+      console.error('Error fetching KesorAPI balance:', err);
       setError('Error');
     } finally {
       setIsLoading(false);
@@ -119,7 +119,7 @@ const G2BulkBalanceDisplay: React.FC = () => {
             {/* Balance info */}
             <div className="flex flex-col">
               <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
-                G2Bulk Balance
+                KesorAPI Balance
               </span>
               {isLoading ? (
                 <RefreshCw className="w-5 h-5 animate-spin text-muted-foreground" />
@@ -161,7 +161,7 @@ const G2BulkBalanceDisplay: React.FC = () => {
         </TooltipTrigger>
         <TooltipContent side="bottom" className="p-3">
           <div className="text-center">
-            <p className="font-semibold">G2Bulk Account</p>
+            <p className="font-semibold">KesorAPI Account</p>
             {balance?.username && (
               <p className="text-sm text-muted-foreground">@{balance.username}</p>
             )}
@@ -175,4 +175,4 @@ const G2BulkBalanceDisplay: React.FC = () => {
   );
 };
 
-export default G2BulkBalanceDisplay;
+export default KesorAPIBalanceDisplay;

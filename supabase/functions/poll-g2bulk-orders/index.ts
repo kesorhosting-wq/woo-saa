@@ -6,29 +6,29 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const G2BULK_API_URL = 'https://api.g2bulk.com/v1';
+const G2BULK_API_URL = 'https://api.kesorapi.com/v1';
 
 function log(level: 'INFO' | 'WARN' | 'ERROR' | 'DEBUG', message: string, data?: Record<string, unknown>) {
-  const entry = { timestamp: new Date().toISOString(), level, function: 'poll-g2bulk-orders', message, ...data };
+  const entry = { timestamp: new Date().toISOString(), level, function: 'poll-kesorapi-orders', message, ...data };
   if (level === 'ERROR') console.error(JSON.stringify(entry));
   else if (level === 'WARN') console.warn(JSON.stringify(entry));
   else console.log(JSON.stringify(entry));
 }
 
-// Extract game_code from g2bulk_product_id OR from g2bulk_products table
-async function resolveGameCode(supabase: any, g2bulkProductId: string): Promise<string | null> {
-  // 1. Try g2bulk_products table first (most reliable)
+// Extract game_code from kesorapi_product_id OR from kesorapi_products table
+async function resolveGameCode(supabase: any, kesorapiProductId: string): Promise<string | null> {
+  // 1. Try kesorapi_products table first (most reliable)
   const { data: product } = await supabase
-    .from('g2bulk_products')
+    .from('kesorapi_products')
     .select('fields')
-    .eq('g2bulk_product_id', g2bulkProductId)
+    .eq('kesorapi_product_id', kesorapiProductId)
     .maybeSingle();
 
   if (product?.fields?.game_code) return product.fields.game_code;
 
   // 2. Fallback: parse from product ID format "game_CODE_typeId"
-  if (g2bulkProductId.startsWith('game_')) {
-    const parts = g2bulkProductId.split('_');
+  if (kesorapiProductId.startsWith('game_')) {
+    const parts = kesorapiProductId.split('_');
     if (parts.length >= 3) {
       // e.g. game_mlbb_2800 -> mlbb, game_mlbb_exclusive_712 -> mlbb_exclusive
       return parts.slice(1, -1).join('_');
@@ -51,29 +51,29 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get G2Bulk credentials
+    // Get KesorAPI credentials
     const { data: apiConfig, error: configError } = await supabase
       .from('api_configurations')
       .select('*')
-      .eq('api_name', 'g2bulk')
+      .eq('api_name', 'kesorapi')
       .single();
 
     if (configError || !apiConfig?.is_enabled || !apiConfig.api_secret) {
-      log('INFO', 'G2Bulk not configured or disabled');
+      log('INFO', 'KesorAPI not configured or disabled');
       return new Response(
-        JSON.stringify({ success: true, message: 'G2Bulk not configured', checked: 0 }),
+        JSON.stringify({ success: true, message: 'KesorAPI not configured', checked: 0 }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     const apiKey = apiConfig.api_secret;
 
-    // Get orders that are processing and have a G2Bulk order ID
+    // Get orders that are processing and have a KesorAPI order ID
     const { data: pendingOrders, error: ordersError } = await supabase
       .from('topup_orders')
       .select('*')
       .in('status', ['processing'])
-      .not('g2bulk_order_id', 'is', null)
+      .not('kesorapi_order_id', 'is', null)
       .order('created_at', { ascending: true })
       .limit(50);
 
@@ -98,19 +98,19 @@ serve(async (req) => {
 
     for (const order of pendingOrders) {
       try {
-        if (!order.g2bulk_product_id) {
-          log('WARN', `Order ${order.id} has no g2bulk_product_id, skipping`);
+        if (!order.kesorapi_product_id) {
+          log('WARN', `Order ${order.id} has no kesorapi_product_id, skipping`);
           continue;
         }
 
-        const gameCode = await resolveGameCode(supabase, order.g2bulk_product_id);
+        const gameCode = await resolveGameCode(supabase, order.kesorapi_product_id);
         if (!gameCode) {
-          log('WARN', `Cannot determine game code for order ${order.id}, product: ${order.g2bulk_product_id}`);
+          log('WARN', `Cannot determine game code for order ${order.id}, product: ${order.kesorapi_product_id}`);
           continue;
         }
 
         // Handle comma-separated order IDs (from multi-quantity fulfillments)
-        const orderIds = String(order.g2bulk_order_id).split(',').map((id: string) => id.trim()).filter(Boolean);
+        const orderIds = String(order.kesorapi_order_id).split(',').map((id: string) => id.trim()).filter(Boolean);
         let worstStatus = 'COMPLETED'; // assume best, downgrade if any fail
 
         for (const g2OrderId of orderIds) {
@@ -128,7 +128,7 @@ serve(async (req) => {
           });
 
           if (!response.ok) {
-            log('WARN', `G2Bulk API returned ${response.status} for order ${g2OrderId}`);
+            log('WARN', `KesorAPI API returned ${response.status} for order ${g2OrderId}`);
             worstStatus = 'PROCESSING'; // don't mark failed just because API is down
             continue;
           }
@@ -139,7 +139,7 @@ serve(async (req) => {
             if (s === 'FAILED') { worstStatus = 'FAILED'; break; }
             if (s === 'PROCESSING' || s === 'PENDING') worstStatus = 'PROCESSING';
           } else {
-            log('WARN', `G2Bulk API error for sub-order ${g2OrderId}:`, { message: result.message || result.detail });
+            log('WARN', `KesorAPI API error for sub-order ${g2OrderId}:`, { message: result.message || result.detail });
           }
 
           await new Promise(resolve => setTimeout(resolve, 200));
@@ -151,12 +151,12 @@ serve(async (req) => {
         switch (worstStatus) {
           case 'COMPLETED':
             newStatus = 'completed';
-            statusMessage = 'G2Bulk order completed successfully';
+            statusMessage = 'KesorAPI order completed successfully';
             completed++;
             break;
           case 'FAILED':
             newStatus = 'failed';
-            statusMessage = 'G2Bulk order failed';
+            statusMessage = 'KesorAPI order failed';
             failed++;
             break;
           case 'PROCESSING':

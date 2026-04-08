@@ -259,7 +259,7 @@ const TopupPage: React.FC = () => {
       setIsSubmitting(true);
       try {
         const { data: orderData, error: orderError } = await supabase.functions.invoke("process-topup", {
-          body: { game_name: game.name, package_name: pkg.name, player_id: userId.trim(), server_id: serverId.trim() || null, player_name: verifiedUser.username, amount: pkg.price, currency: settings.packageCurrency || "USD", payment_method: "Wallet", g2bulk_product_id: pkg.g2bulkProductId || null, fulfill_quantity: pkg.quantity && pkg.quantity > 0 ? pkg.quantity : 1 },
+          body: { game_name: game.name, package_name: pkg.name, player_id: userId.trim(), server_id: serverId.trim() || null, player_name: verifiedUser.username, amount: pkg.price, currency: settings.packageCurrency || "USD", payment_method: "Wallet", kesorapi_product_id: pkg.kesorapiProductId || null, fulfill_quantity: pkg.quantity && pkg.quantity > 0 ? pkg.quantity : 1 },
         });
         if (orderError) throw orderError;
         const orderId = orderData?.order_id;
@@ -279,7 +279,7 @@ const TopupPage: React.FC = () => {
     setIsSubmitting(true);
     try {
       const { data: orderData, error: orderError } = await supabase.functions.invoke("process-topup", {
-        body: { game_name: game.name, package_name: pkg.name, player_id: userId.trim(), server_id: serverId.trim() || null, player_name: verifiedUser.username, amount: pkg.price, currency: settings.packageCurrency || "USD", payment_method: paymentMethod?.name || "KHQR", g2bulk_product_id: pkg.g2bulkProductId || null, fulfill_quantity: pkg.quantity && pkg.quantity > 0 ? pkg.quantity : 1 },
+        body: { game_name: game.name, package_name: pkg.name, player_id: userId.trim(), server_id: serverId.trim() || null, player_name: verifiedUser.username, amount: pkg.price, currency: settings.packageCurrency || "USD", payment_method: paymentMethod?.name || "KHQR", kesorapi_product_id: pkg.kesorapiProductId || null, fulfill_quantity: pkg.quantity && pkg.quantity > 0 ? pkg.quantity : 1 },
       });
       if (orderError) throw orderError;
       const newOrderId = orderData?.order_id;

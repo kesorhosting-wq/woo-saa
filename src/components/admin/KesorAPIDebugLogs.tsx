@@ -17,7 +17,7 @@ interface LogEntry {
   duration?: number;
 }
 
-const G2BulkDebugLogs: React.FC = () => {
+const KesorAPIDebugLogs: React.FC = () => {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [expandedLogs, setExpandedLogs] = useState<Set<string>>(new Set());
@@ -26,11 +26,11 @@ const G2BulkDebugLogs: React.FC = () => {
   const fetchRecentOrders = async () => {
     setIsLoading(true);
     try {
-      // Fetch recent orders with G2Bulk activity
+      // Fetch recent orders with KesorAPI activity
       const { data: orders, error } = await supabase
         .from('topup_orders')
-        .select('id, created_at, updated_at, game_name, package_name, player_id, g2bulk_product_id, g2bulk_order_id, status, status_message')
-        .not('g2bulk_product_id', 'is', null)
+        .select('id, created_at, updated_at, game_name, package_name, player_id, kesorapi_product_id, kesorapi_order_id, status, status_message')
+        .not('kesorapi_product_id', 'is', null)
         .order('updated_at', { ascending: false })
         .limit(20);
 
@@ -40,15 +40,15 @@ const G2BulkDebugLogs: React.FC = () => {
       const logEntries: LogEntry[] = (orders || []).map(order => ({
         id: order.id,
         timestamp: order.updated_at,
-        action: order.g2bulk_order_id ? 'order_created' : 'order_pending',
+        action: order.kesorapi_order_id ? 'order_created' : 'order_pending',
         request: {
           game: order.game_name,
           package: order.package_name,
           player_id: order.player_id,
-          g2bulk_product_id: order.g2bulk_product_id,
+          kesorapi_product_id: order.kesorapi_product_id,
         },
         response: {
-          g2bulk_order_id: order.g2bulk_order_id,
+          kesorapi_order_id: order.kesorapi_order_id,
           status: order.status,
           message: order.status_message,
         },
@@ -64,11 +64,11 @@ const G2BulkDebugLogs: React.FC = () => {
     }
   };
 
-  const testG2BulkConnection = async () => {
+  const testKesorAPIConnection = async () => {
     setIsLoading(true);
     try {
       const startTime = Date.now();
-      const { data, error } = await supabase.functions.invoke('g2bulk-api', {
+      const { data, error } = await supabase.functions.invoke('kesorapi-api', {
         body: { action: 'get_account_balance' }
       });
       const duration = Date.now() - startTime;
@@ -101,7 +101,7 @@ const G2BulkDebugLogs: React.FC = () => {
     setIsLoading(true);
     try {
       const startTime = Date.now();
-      const { data, error } = await supabase.functions.invoke('g2bulk-api', {
+      const { data, error } = await supabase.functions.invoke('kesorapi-api', {
         body: { action: 'get_games' }
       });
       const duration = Date.now() - startTime;
@@ -167,12 +167,12 @@ const G2BulkDebugLogs: React.FC = () => {
             onClick={() => setIsVisible(!isVisible)}
           >
             <Bug className="w-5 h-5 text-purple-400" />
-            G2Bulk API Debug Logs
+            KesorAPI API Debug Logs
             {isVisible ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </CardTitle>
           {isVisible && (
             <div className="flex items-center gap-2">
-              <Button size="sm" variant="outline" onClick={testG2BulkConnection} disabled={isLoading}>
+              <Button size="sm" variant="outline" onClick={testKesorAPIConnection} disabled={isLoading}>
                 Test Connection
               </Button>
               <Button size="sm" variant="outline" onClick={testGetGames} disabled={isLoading}>
@@ -262,4 +262,4 @@ const G2BulkDebugLogs: React.FC = () => {
   );
 };
 
-export default G2BulkDebugLogs;
+export default KesorAPIDebugLogs;

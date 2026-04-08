@@ -24,7 +24,7 @@ const EXPORT_TABLES = [
   { key: 'payment_gateways', label: 'Payment Gateways', uniqueKey: 'slug' },
   { key: 'payment_qr_settings', label: 'Payment QR Settings', uniqueKey: 'payment_method' },
   { key: 'game_verification_configs', label: 'Game Verification Configs', uniqueKey: 'game_name' },
-  { key: 'g2bulk_products', label: 'G2Bulk Products', uniqueKey: 'g2bulk_product_id' },
+  { key: 'kesorapi_products', label: 'KesorAPI Products', uniqueKey: 'kesorapi_product_id' },
   { key: 'api_configurations', label: 'API Configurations', uniqueKey: 'api_name' },
 ] as const;
 

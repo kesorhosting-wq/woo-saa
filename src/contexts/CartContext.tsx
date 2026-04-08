@@ -16,9 +16,9 @@ export interface CartItem {
   playerName: string;
   paymentMethodId?: string;
   paymentMethodName?: string;
-  // G2Bulk integration
-  g2bulkProductId?: string;
-  g2bulkTypeId?: string;
+  // KesorAPI integration
+  kesorapiProductId?: string;
+  kesorapiTypeId?: string;
   fulfillQuantity?: number;
 }
 

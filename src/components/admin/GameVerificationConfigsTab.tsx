@@ -29,14 +29,14 @@ const GameVerificationConfigsTab: React.FC = () => {
   const [configs, setConfigs] = useState<VerificationConfig[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
-  const [syncingG2Bulk, setSyncingG2Bulk] = useState(false);
+  const [syncingKesorAPI, setSyncingKesorAPI] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editData, setEditData] = useState<Partial<VerificationConfig>>({});
   const [showAddForm, setShowAddForm] = useState(false);
   const [newConfig, setNewConfig] = useState({
     game_name: '',
     api_code: '',
-    api_provider: 'g2bulk',
+    api_provider: 'kesorapi',
     requires_zone: false,
     default_zone: '',
     alternate_api_codes: '',
@@ -93,7 +93,7 @@ const GameVerificationConfigsTab: React.FC = () => {
       setNewConfig({
         game_name: '',
         api_code: '',
-        api_provider: 'g2bulk',
+        api_provider: 'kesorapi',
         requires_zone: false,
         default_zone: '',
         alternate_api_codes: '',
@@ -191,7 +191,7 @@ const GameVerificationConfigsTab: React.FC = () => {
           const { error } = await supabase.from('game_verification_configs').insert({
             game_name: game.name,
             api_code: normalizedName,
-            api_provider: 'g2bulk',
+            api_provider: 'kesorapi',
             requires_zone: needsZone,
             is_active: true,
             alternate_api_codes: []
@@ -214,13 +214,13 @@ const GameVerificationConfigsTab: React.FC = () => {
     }
   };
 
-  // Sync game codes from G2Bulk API (fetches real game codes and updates configs)
-  const handleSyncFromG2Bulk = async () => {
-    setSyncingG2Bulk(true);
+  // Sync game codes from KesorAPI API (fetches real game codes and updates configs)
+  const handleSyncFromKesorAPI = async () => {
+    setSyncingKesorAPI(true);
     try {
-      toast({ title: 'Syncing codes from G2Bulk...', description: 'Fetching real API codes.' });
+      toast({ title: 'Syncing codes from KesorAPI...', description: 'Fetching real API codes.' });
 
-      const { data, error } = await supabase.functions.invoke('g2bulk-api', {
+      const { data, error } = await supabase.functions.invoke('kesorapi-api', {
         body: { action: 'sync_verification_codes' }
       });
 
@@ -230,11 +230,11 @@ const GameVerificationConfigsTab: React.FC = () => {
       }
 
       const result = data.data;
-      console.log('[G2Bulk Sync] Result:', result);
+      console.log('[KesorAPI Sync] Result:', result);
 
       // Show available codes for debugging
       if (result.availableCodes) {
-        console.log('[G2Bulk Sync] Available G2Bulk game codes:');
+        console.log('[KesorAPI Sync] Available KesorAPI game codes:');
         result.availableCodes.forEach((g: { code: string; name: string }) => {
           console.log(`  - ${g.code}: ${g.name}`);
         });
@@ -242,18 +242,18 @@ const GameVerificationConfigsTab: React.FC = () => {
 
       toast({
         title: 'Verification codes synced!',
-        description: `Updated ${result.updated} codes, ${result.matched} already correct. ${result.g2BulkGames} games available in G2Bulk.`
+        description: `Updated ${result.updated} codes, ${result.matched} already correct. ${result.g2BulkGames} games available in KesorAPI.`
       });
       fetchConfigs();
     } catch (error: unknown) {
-      console.error('G2Bulk sync error:', error);
+      console.error('KesorAPI sync error:', error);
       toast({
-        title: 'G2Bulk sync failed',
+        title: 'KesorAPI sync failed',
         description: error instanceof Error ? error.message : 'Check console for details',
         variant: 'destructive'
       });
     } finally {
-      setSyncingG2Bulk(false);
+      setSyncingKesorAPI(false);
     }
   };
 
@@ -277,7 +277,7 @@ const GameVerificationConfigsTab: React.FC = () => {
                 Game ID Verification Configs
               </CardTitle>
               <CardDescription className="mt-1">
-                Manage G2Bulk game codes for player ID verification. Use "Sync from G2Bulk" to fetch real game codes.
+                Manage KesorAPI game codes for player ID verification. Use "Sync from KesorAPI" to fetch real game codes.
               </CardDescription>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -300,16 +300,16 @@ const GameVerificationConfigsTab: React.FC = () => {
               </Button>
               <Button
                 size="sm"
-                onClick={handleSyncFromG2Bulk}
-                disabled={syncingG2Bulk}
+                onClick={handleSyncFromKesorAPI}
+                disabled={syncingKesorAPI}
                 className="bg-emerald-600 hover:bg-emerald-700 text-white"
               >
-                {syncingG2Bulk ? (
+                {syncingKesorAPI ? (
                   <RefreshCw className="w-4 h-4 mr-1 animate-spin" />
                 ) : (
                   <Globe className="w-4 h-4 mr-1" />
                 )}
-                Sync from G2Bulk
+                Sync from KesorAPI
               </Button>
               <Button
                 size="sm"
@@ -336,7 +336,7 @@ const GameVerificationConfigsTab: React.FC = () => {
                 />
               </div>
               <div>
-                <Label className="text-sm">API Code (G2Bulk)</Label>
+                <Label className="text-sm">API Code (KesorAPI)</Label>
                 <Input
                   value={newConfig.api_code}
                   onChange={(e) => setNewConfig(prev => ({ ...prev, api_code: e.target.value }))}
@@ -541,7 +541,7 @@ const GameVerificationConfigsTab: React.FC = () => {
                 {configs.length === 0 && (
                   <tr>
                     <td colSpan={6} className="p-8 text-center text-muted-foreground">
-                      No verification configs found. Click "Sync from G2Bulk" to fetch game codes.
+                      No verification configs found. Click "Sync from KesorAPI" to fetch game codes.
                     </td>
                   </tr>
                 )}
@@ -555,7 +555,7 @@ const GameVerificationConfigsTab: React.FC = () => {
       <Card className="border-blue-500/30 bg-blue-500/5">
         <CardContent className="p-4">
           <p className="text-sm text-muted-foreground">
-            <strong>G2Bulk Integration:</strong> Click "Sync from G2Bulk" to fetch the exact game codes from the G2Bulk API.
+            <strong>KesorAPI Integration:</strong> Click "Sync from KesorAPI" to fetch the exact game codes from the KesorAPI API.
             Games with multiple regional variants (e.g. mlbb, mlbb-ph, mlbb-id) will have alternate codes populated automatically.
             If verification fails, the system will try alternate codes before returning an error.
           </p>

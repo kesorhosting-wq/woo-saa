@@ -9,10 +9,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { Check, ChevronsUpDown, Link2, Link2Off, RefreshCw, Package, DollarSign, X, ArrowUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-interface G2BulkProduct {
+interface KesorAPIProduct {
   id: string;
-  g2bulk_product_id: string;
-  g2bulk_type_id: string;
+  kesorapi_product_id: string;
+  kesorapi_type_id: string;
   game_name: string;
   product_name: string;
   denomination: string;
@@ -20,26 +20,26 @@ interface G2BulkProduct {
   currency: string;
 }
 
-interface G2BulkProductSelectorProps {
+interface KesorAPIProductSelectorProps {
   value?: string;
   onChange: (productId: string | undefined, typeId: string | undefined) => void;
   gameName?: string;
-  g2bulkCategoryId?: string;
+  kesorapiCategoryId?: string;
 }
 
 type SortOption = 'game' | 'price-asc' | 'price-desc' | 'name';
 
-const G2BulkProductSelector: React.FC<G2BulkProductSelectorProps> = ({ 
+const KesorAPIProductSelector: React.FC<KesorAPIProductSelectorProps> = ({ 
   value, 
   onChange, 
   gameName,
-  g2bulkCategoryId 
+  kesorapiCategoryId 
 }) => {
   const [open, setOpen] = useState(false);
-  const [products, setProducts] = useState<G2BulkProduct[]>([]);
-  const [allProducts, setAllProducts] = useState<G2BulkProduct[]>([]);
+  const [products, setProducts] = useState<KesorAPIProduct[]>([]);
+  const [allProducts, setAllProducts] = useState<KesorAPIProduct[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedProduct, setSelectedProduct] = useState<G2BulkProduct | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<KesorAPIProduct | null>(null);
   const [minPrice, setMinPrice] = useState<string>('');
   const [maxPrice, setMaxPrice] = useState<string>('');
   const [sortBy, setSortBy] = useState<SortOption>('game');
@@ -48,7 +48,7 @@ const G2BulkProductSelector: React.FC<G2BulkProductSelectorProps> = ({
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('g2bulk_products')
+        .from('kesorapi_products')
         .select('*')
         .eq('is_active', true)
         .order('game_name', { ascending: true })
@@ -58,14 +58,14 @@ const G2BulkProductSelector: React.FC<G2BulkProductSelectorProps> = ({
 
       if (error) throw error;
 
-      const all = (data as G2BulkProduct[]) || [];
+      const all = (data as KesorAPIProduct[]) || [];
       setAllProducts(all);
 
       let filtered = [...all];
 
-      // Only filter if g2bulkCategoryId is provided
-      if (g2bulkCategoryId) {
-        const normalizedCategoryId = g2bulkCategoryId.trim().toLowerCase();
+      // Only filter if kesorapiCategoryId is provided
+      if (kesorapiCategoryId) {
+        const normalizedCategoryId = kesorapiCategoryId.trim().toLowerCase();
         filtered = filtered.filter((p) => {
           const normalizedGameName = p.game_name.trim().toLowerCase();
           return (
@@ -110,11 +110,11 @@ const G2BulkProductSelector: React.FC<G2BulkProductSelectorProps> = ({
 
       setProducts(filtered);
     } catch (error) {
-      console.error('Error loading G2Bulk products:', error);
+      console.error('Error loading KesorAPI products:', error);
     } finally {
       setLoading(false);
     }
-  }, [gameName, g2bulkCategoryId]);
+  }, [gameName, kesorapiCategoryId]);
 
   useEffect(() => {
     loadProducts();
@@ -122,7 +122,7 @@ const G2BulkProductSelector: React.FC<G2BulkProductSelectorProps> = ({
 
   useEffect(() => {
     if (value && allProducts.length > 0) {
-      const product = allProducts.find((p) => p.g2bulk_product_id === value);
+      const product = allProducts.find((p) => p.kesorapi_product_id === value);
       setSelectedProduct(product || null);
     } else {
       setSelectedProduct(null);
@@ -178,7 +178,7 @@ const G2BulkProductSelector: React.FC<G2BulkProductSelectorProps> = ({
       }
       acc[product.game_name].push(product);
       return acc;
-    }, {} as Record<string, G2BulkProduct[]>);
+    }, {} as Record<string, KesorAPIProduct[]>);
   }, [filteredAndSortedProducts, sortBy]);
 
   const handleSelect = (productId: string) => {
@@ -186,9 +186,9 @@ const G2BulkProductSelector: React.FC<G2BulkProductSelectorProps> = ({
       onChange(undefined, undefined);
       setSelectedProduct(null);
     } else {
-      const product = allProducts.find(p => p.g2bulk_product_id === productId);
+      const product = allProducts.find(p => p.kesorapi_product_id === productId);
       if (product) {
-        onChange(product.g2bulk_product_id, product.g2bulk_type_id);
+        onChange(product.kesorapi_product_id, product.kesorapi_type_id);
         setSelectedProduct(product);
       }
     }
@@ -212,7 +212,7 @@ const G2BulkProductSelector: React.FC<G2BulkProductSelectorProps> = ({
     return (
       <div className="text-xs text-muted-foreground flex items-center gap-1">
         <RefreshCw className="w-3 h-3 animate-spin" />
-        Loading G2Bulk products...
+        Loading KesorAPI products...
       </div>
     );
   }
@@ -221,7 +221,7 @@ const G2BulkProductSelector: React.FC<G2BulkProductSelectorProps> = ({
     return (
       <div className="text-xs text-muted-foreground flex items-center gap-1">
         <Link2Off className="w-3 h-3" />
-        No G2Bulk products available. Sync products in API tab first.
+        No KesorAPI products available. Sync products in API tab first.
       </div>
     );
   }
@@ -248,7 +248,7 @@ const G2BulkProductSelector: React.FC<G2BulkProductSelectorProps> = ({
               ) : (
                 <span className="flex items-center gap-2 text-muted-foreground">
                   <Package className="w-3 h-3" />
-                  Link G2Bulk Product
+                  Link KesorAPI Product
                   <Badge variant="outline" className="text-[10px] ml-1">
                     {products.length} available
                   </Badge>
@@ -321,19 +321,19 @@ const G2BulkProductSelector: React.FC<G2BulkProductSelectorProps> = ({
                   >
                     <Check className={cn("h-3 w-3", !value ? "opacity-100" : "opacity-0")} />
                     <Link2Off className="w-3 h-3 text-muted-foreground" />
-                    <span>No G2Bulk Link (Manual)</span>
+                    <span>No KesorAPI Link (Manual)</span>
                   </CommandItem>
                 </CommandGroup>
                 {Object.entries(groupedProducts).map(([groupName, gameProducts]) => (
                   <CommandGroup key={groupName} heading={sortBy === 'game' ? `${groupName} (${gameProducts.length})` : undefined}>
                     {gameProducts.map((product) => (
                       <CommandItem
-                        key={product.g2bulk_product_id}
+                        key={product.kesorapi_product_id}
                         value={`${product.product_name} ${product.denomination} ${product.game_name}`}
-                        onSelect={() => handleSelect(product.g2bulk_product_id)}
+                        onSelect={() => handleSelect(product.kesorapi_product_id)}
                         className="flex items-center gap-2 text-xs"
                       >
-                        <Check className={cn("h-3 w-3", value === product.g2bulk_product_id ? "opacity-100" : "opacity-0")} />
+                        <Check className={cn("h-3 w-3", value === product.kesorapi_product_id ? "opacity-100" : "opacity-0")} />
                         <span className="flex-1 truncate">{product.product_name}</span>
                         {sortBy !== 'game' && (
                           <Badge variant="outline" className="text-[10px] bg-muted">
@@ -377,4 +377,4 @@ const G2BulkProductSelector: React.FC<G2BulkProductSelectorProps> = ({
   );
 };
 
-export default G2BulkProductSelector;
+export default KesorAPIProductSelector;
