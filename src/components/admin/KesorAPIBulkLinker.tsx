@@ -65,14 +65,14 @@ const KesorAPIBulkLinker: React.FC<KesorAPIBulkLinkerProps> = ({ games, onLinkCo
         .range(0, 4999);
 
       if (error) throw error;
-      setProducts(data as KesorAPIProduct[] || []);
+      setProducts(data as unknown as KesorAPIProduct[] || []);
       
       // Generate suggestions
       const allSuggestions: MatchSuggestion[] = [];
       
       for (const game of games) {
         // Get products that might match this game
-        const gameProducts = (data as KesorAPIProduct[])?.filter(p => {
+        const gameProducts = (data as unknown as KesorAPIProduct[])?.filter(p => {
           const gameName = game.name.toLowerCase();
           const categoryId = game.kesorapiCategoryId?.toLowerCase() || '';
           const productGameName = p.game_name.toLowerCase();
@@ -218,8 +218,8 @@ const KesorAPIBulkLinker: React.FC<KesorAPIBulkLinkerProps> = ({ games, onLinkCo
 
       for (const match of toApply) {
         const tableName = match.isSpecialPackage ? 'special_packages' : 'packages';
-        const { error } = await supabase
-          .from(tableName)
+        const { error } = await (supabase
+          .from(tableName) as any)
           .update({
             kesorapi_product_id: match.suggestedProduct!.kesorapi_product_id,
             kesorapi_type_id: match.suggestedProduct!.kesorapi_type_id,
@@ -265,7 +265,7 @@ const KesorAPIBulkLinker: React.FC<KesorAPIBulkLinkerProps> = ({ games, onLinkCo
           .range(0, 4999);
 
         if (error) throw error;
-        productData = data as KesorAPIProduct[] || [];
+        productData = data as unknown as KesorAPIProduct[] || [];
       }
 
       // Generate suggestions on the fly
@@ -330,8 +330,8 @@ const KesorAPIBulkLinker: React.FC<KesorAPIBulkLinkerProps> = ({ games, onLinkCo
       let errorCount = 0;
 
       for (const match of allMatches) {
-        const { error } = await supabase
-          .from(match.tableName as 'packages' | 'special_packages')
+        const { error } = await (supabase
+          .from(match.tableName as 'packages' | 'special_packages') as any)
           .update({
             kesorapi_product_id: match.productId,
             kesorapi_type_id: match.typeId,

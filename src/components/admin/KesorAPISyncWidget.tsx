@@ -62,7 +62,7 @@ const KesorAPISyncWidget: React.FC<KesorAPISyncWidgetProps> = ({ onSyncComplete 
     try {
       toast({ title: 'Syncing KesorAPI products...', description: 'This may take a minute.' });
 
-      const { data, error } = await supabase.functions.invoke('kesorapi-api', {
+      const { data, error } = await supabase.functions.invoke('g2bulk-api', {
         body: { action: 'sync_products' },
       });
 
