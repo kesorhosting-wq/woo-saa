@@ -179,6 +179,42 @@ export type Database = {
         }
         Relationships: []
       }
+      kesorapi_products: {
+        Row: {
+          created_at: string
+          fields: Json | null
+          game_name: string
+          id: string
+          is_active: boolean | null
+          kesorapi_product_id: string
+          price: number
+          product_name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          fields?: Json | null
+          game_name: string
+          id?: string
+          is_active?: boolean | null
+          kesorapi_product_id: string
+          price?: number
+          product_name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          fields?: Json | null
+          game_name?: string
+          id?: string
+          is_active?: boolean | null
+          kesorapi_product_id?: string
+          price?: number
+          product_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       packages: {
         Row: {
           amount: string
