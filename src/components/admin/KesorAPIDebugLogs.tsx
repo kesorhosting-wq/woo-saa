@@ -27,8 +27,8 @@ const KesorAPIDebugLogs: React.FC = () => {
     setIsLoading(true);
     try {
       // Fetch recent orders with KesorAPI activity
-      const { data: orders, error } = await supabase
-        .from('topup_orders')
+      const { data: orders, error } = await (supabase
+        .from('topup_orders') as any)
         .select('id, created_at, updated_at, game_name, package_name, player_id, kesorapi_product_id, kesorapi_order_id, status, status_message')
         .not('kesorapi_product_id', 'is', null)
         .order('updated_at', { ascending: false })
