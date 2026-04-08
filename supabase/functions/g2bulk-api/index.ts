@@ -6,8 +6,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// KesorAPI API Base URL
-const G2BULK_API_URL = 'https://api.kesorapi.com/v1';
+// KesorAPI API Base URL - read from api_configurations.api_uid if set, else default
+const DEFAULT_KESOR_API_URL = 'http://45.132.75.208:8085/api/v1';
 
 // Structured logging helper
 function log(level: 'INFO' | 'WARN' | 'ERROR' | 'DEBUG', message: string, data?: Record<string, unknown>) {
@@ -50,7 +50,7 @@ function buildKesorAPIRequest(
   }
 
   return {
-    url: `${G2BULK_API_URL}${endpoint}`,
+    url: `${(globalThis as any).__kesorApiUrl || DEFAULT_KESOR_API_URL}${endpoint}`,
     options,
   };
 }
@@ -148,6 +148,10 @@ serve(async (req) => {
     }
 
     const apiKey = apiConfig.api_secret;
+    // Use api_uid as custom base URL if set
+    if (apiConfig.api_uid) {
+      (globalThis as any).__kesorApiUrl = apiConfig.api_uid.replace(/\/$/, '');
+    }
 
     if (!apiKey) {
       return new Response(
