@@ -47,14 +47,14 @@ export type Database = {
         }
         Relationships: []
       }
-      kesorapi_products: {
+      g2bulk_products: {
         Row: {
           created_at: string
           currency: string | null
           denomination: string | null
           fields: Json | null
-          kesorapi_product_id: string
-          kesorapi_type_id: string
+          g2bulk_product_id: string
+          g2bulk_type_id: string
           game_name: string
           id: string
           is_active: boolean | null
@@ -68,8 +68,8 @@ export type Database = {
           currency?: string | null
           denomination?: string | null
           fields?: Json | null
-          kesorapi_product_id: string
-          kesorapi_type_id: string
+          g2bulk_product_id: string
+          g2bulk_type_id: string
           game_name: string
           id?: string
           is_active?: boolean | null
@@ -83,8 +83,8 @@ export type Database = {
           currency?: string | null
           denomination?: string | null
           fields?: Json | null
-          kesorapi_product_id?: string
-          kesorapi_type_id?: string
+          g2bulk_product_id?: string
+          g2bulk_type_id?: string
           game_name?: string
           id?: string
           is_active?: boolean | null
@@ -141,7 +141,7 @@ export type Database = {
           default_package_icon: string | null
           description: string | null
           featured: boolean | null
-          kesorapi_category_id: string | null
+          g2bulk_category_id: string | null
           id: string
           image: string | null
           name: string
@@ -155,7 +155,7 @@ export type Database = {
           default_package_icon?: string | null
           description?: string | null
           featured?: boolean | null
-          kesorapi_category_id?: string | null
+          g2bulk_category_id?: string | null
           id?: string
           image?: string | null
           name: string
@@ -169,7 +169,7 @@ export type Database = {
           default_package_icon?: string | null
           description?: string | null
           featured?: boolean | null
-          kesorapi_category_id?: string | null
+          g2bulk_category_id?: string | null
           id?: string
           image?: string | null
           name?: string
@@ -183,8 +183,8 @@ export type Database = {
         Row: {
           amount: string
           created_at: string
-          kesorapi_product_id: string | null
-          kesorapi_type_id: string | null
+          g2bulk_product_id: string | null
+          g2bulk_type_id: string | null
           game_id: string
           icon: string | null
           id: string
@@ -194,15 +194,15 @@ export type Database = {
           label_text_color: string | null
           name: string
           price: number
-          quantity: number | null
+          quantity: number
           sort_order: number | null
           updated_at: string
         }
         Insert: {
           amount: string
           created_at?: string
-          kesorapi_product_id?: string | null
-          kesorapi_type_id?: string | null
+          g2bulk_product_id?: string | null
+          g2bulk_type_id?: string | null
           game_id: string
           icon?: string | null
           id?: string
@@ -212,15 +212,15 @@ export type Database = {
           label_text_color?: string | null
           name: string
           price: number
-          quantity?: number | null
+          quantity?: number
           sort_order?: number | null
           updated_at?: string
         }
         Update: {
           amount?: string
           created_at?: string
-          kesorapi_product_id?: string | null
-          kesorapi_type_id?: string | null
+          g2bulk_product_id?: string | null
+          g2bulk_type_id?: string | null
           game_id?: string
           icon?: string | null
           id?: string
@@ -230,7 +230,7 @@ export type Database = {
           label_text_color?: string | null
           name?: string
           price?: number
-          quantity?: number | null
+          quantity?: number
           sort_order?: number | null
           updated_at?: string
         }
@@ -316,175 +316,6 @@ export type Database = {
         }
         Relationships: []
       }
-      preorder_games: {
-        Row: {
-          created_at: string
-          game_id: string
-          id: string
-          is_active: boolean | null
-          sort_order: number | null
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          game_id: string
-          id?: string
-          is_active?: boolean | null
-          sort_order?: number | null
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          game_id?: string
-          id?: string
-          is_active?: boolean | null
-          sort_order?: number | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "preorder_games_game_id_fkey"
-            columns: ["game_id"]
-            isOneToOne: true
-            referencedRelation: "games"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      preorder_orders: {
-        Row: {
-          amount: number
-          card_codes: Json | null
-          created_at: string
-          currency: string | null
-          fulfill_quantity: number | null
-          kesorapi_order_id: string | null
-          kesorapi_product_id: string | null
-          game_name: string
-          id: string
-          package_name: string
-          payment_method: string | null
-          player_id: string
-          player_name: string | null
-          scheduled_fulfill_at: string | null
-          server_id: string | null
-          status: string | null
-          status_message: string | null
-          updated_at: string
-          user_id: string | null
-        }
-        Insert: {
-          amount: number
-          card_codes?: Json | null
-          created_at?: string
-          currency?: string | null
-          fulfill_quantity?: number | null
-          kesorapi_order_id?: string | null
-          kesorapi_product_id?: string | null
-          game_name: string
-          id?: string
-          package_name: string
-          payment_method?: string | null
-          player_id: string
-          player_name?: string | null
-          scheduled_fulfill_at?: string | null
-          server_id?: string | null
-          status?: string | null
-          status_message?: string | null
-          updated_at?: string
-          user_id?: string | null
-        }
-        Update: {
-          amount?: number
-          card_codes?: Json | null
-          created_at?: string
-          currency?: string | null
-          fulfill_quantity?: number | null
-          kesorapi_order_id?: string | null
-          kesorapi_product_id?: string | null
-          game_name?: string
-          id?: string
-          package_name?: string
-          payment_method?: string | null
-          player_id?: string
-          player_name?: string | null
-          scheduled_fulfill_at?: string | null
-          server_id?: string | null
-          status?: string | null
-          status_message?: string | null
-          updated_at?: string
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      preorder_packages: {
-        Row: {
-          amount: string
-          created_at: string
-          kesorapi_product_id: string | null
-          kesorapi_type_id: string | null
-          game_id: string
-          icon: string | null
-          id: string
-          label: string | null
-          label_bg_color: string | null
-          label_icon: string | null
-          label_text_color: string | null
-          name: string
-          price: number
-          quantity: number | null
-          scheduled_fulfill_at: string | null
-          sort_order: number | null
-          updated_at: string
-        }
-        Insert: {
-          amount: string
-          created_at?: string
-          kesorapi_product_id?: string | null
-          kesorapi_type_id?: string | null
-          game_id: string
-          icon?: string | null
-          id?: string
-          label?: string | null
-          label_bg_color?: string | null
-          label_icon?: string | null
-          label_text_color?: string | null
-          name: string
-          price: number
-          quantity?: number | null
-          scheduled_fulfill_at?: string | null
-          sort_order?: number | null
-          updated_at?: string
-        }
-        Update: {
-          amount?: string
-          created_at?: string
-          kesorapi_product_id?: string | null
-          kesorapi_type_id?: string | null
-          game_id?: string
-          icon?: string | null
-          id?: string
-          label?: string | null
-          label_bg_color?: string | null
-          label_icon?: string | null
-          label_text_color?: string | null
-          name?: string
-          price?: number
-          quantity?: number | null
-          scheduled_fulfill_at?: string | null
-          sort_order?: number | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "preorder_packages_game_id_fkey"
-            columns: ["game_id"]
-            isOneToOne: false
-            referencedRelation: "preorder_games"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       profiles: {
         Row: {
           created_at: string
@@ -515,6 +346,38 @@ export type Database = {
         }
         Relationships: []
       }
+      reseller_api_keys: {
+        Row: {
+          api_key: string
+          created_at: string
+          id: string
+          is_active: boolean
+          user_id: string
+        }
+        Insert: {
+          api_key: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          user_id: string
+        }
+        Update: {
+          api_key?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reseller_api_keys_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       site_settings: {
         Row: {
           created_at: string
@@ -543,8 +406,8 @@ export type Database = {
         Row: {
           amount: string
           created_at: string
-          kesorapi_product_id: string | null
-          kesorapi_type_id: string | null
+          g2bulk_product_id: string | null
+          g2bulk_type_id: string | null
           game_id: string
           icon: string | null
           id: string
@@ -554,15 +417,15 @@ export type Database = {
           label_text_color: string | null
           name: string
           price: number
-          quantity: number | null
+          quantity: number
           sort_order: number | null
           updated_at: string
         }
         Insert: {
           amount: string
           created_at?: string
-          kesorapi_product_id?: string | null
-          kesorapi_type_id?: string | null
+          g2bulk_product_id?: string | null
+          g2bulk_type_id?: string | null
           game_id: string
           icon?: string | null
           id?: string
@@ -572,15 +435,15 @@ export type Database = {
           label_text_color?: string | null
           name: string
           price: number
-          quantity?: number | null
+          quantity?: number
           sort_order?: number | null
           updated_at?: string
         }
         Update: {
           amount?: string
           created_at?: string
-          kesorapi_product_id?: string | null
-          kesorapi_type_id?: string | null
+          g2bulk_product_id?: string | null
+          g2bulk_type_id?: string | null
           game_id?: string
           icon?: string | null
           id?: string
@@ -590,7 +453,7 @@ export type Database = {
           label_text_color?: string | null
           name?: string
           price?: number
-          quantity?: number | null
+          quantity?: number
           sort_order?: number | null
           updated_at?: string
         }
@@ -610,9 +473,8 @@ export type Database = {
           card_codes: Json | null
           created_at: string
           currency: string | null
-          fulfill_quantity: number | null
-          kesorapi_order_id: string | null
-          kesorapi_product_id: string | null
+          g2bulk_order_id: string | null
+          g2bulk_product_id: string | null
           game_name: string
           id: string
           package_name: string
@@ -630,9 +492,8 @@ export type Database = {
           card_codes?: Json | null
           created_at?: string
           currency?: string | null
-          fulfill_quantity?: number | null
-          kesorapi_order_id?: string | null
-          kesorapi_product_id?: string | null
+          g2bulk_order_id?: string | null
+          g2bulk_product_id?: string | null
           game_name: string
           id?: string
           package_name: string
@@ -650,9 +511,8 @@ export type Database = {
           card_codes?: Json | null
           created_at?: string
           currency?: string | null
-          fulfill_quantity?: number | null
-          kesorapi_order_id?: string | null
-          kesorapi_product_id?: string | null
+          g2bulk_order_id?: string | null
+          g2bulk_product_id?: string | null
           game_name?: string
           id?: string
           package_name?: string
@@ -767,7 +627,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "user"
+      app_role: "admin" | "user" | "reseller"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -895,7 +755,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "user"],
+      app_role: ["admin", "user", "reseller"],
     },
   },
 } as const
