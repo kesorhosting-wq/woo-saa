@@ -65,14 +65,14 @@ const KesorAPIBulkLinker: React.FC<KesorAPIBulkLinkerProps> = ({ games, onLinkCo
         .range(0, 4999);
 
       if (error) throw error;
-      setProducts(data as KesorAPIProduct[] || []);
+      setProducts(data as unknown as KesorAPIProduct[] || []);
       
       // Generate suggestions
       const allSuggestions: MatchSuggestion[] = [];
       
       for (const game of games) {
         // Get products that might match this game
-        const gameProducts = (data as KesorAPIProduct[])?.filter(p => {
+        const gameProducts = (data as unknown as KesorAPIProduct[])?.filter(p => {
           const gameName = game.name.toLowerCase();
           const categoryId = game.kesorapiCategoryId?.toLowerCase() || '';
           const productGameName = p.game_name.toLowerCase();
@@ -265,7 +265,7 @@ const KesorAPIBulkLinker: React.FC<KesorAPIBulkLinkerProps> = ({ games, onLinkCo
           .range(0, 4999);
 
         if (error) throw error;
-        productData = data as KesorAPIProduct[] || [];
+        productData = data as unknown as KesorAPIProduct[] || [];
       }
 
       // Generate suggestions on the fly
