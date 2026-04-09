@@ -38,7 +38,7 @@ const KesorAPIBalanceDisplay: React.FC = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const { data, error: fnError } = await supabase.functions.invoke('g2bulk-api', {
+      const { data, error: fnError } = await supabase.functions.invoke('kesorapi-api', {
         body: { action: 'get_account_balance' },
       });
 

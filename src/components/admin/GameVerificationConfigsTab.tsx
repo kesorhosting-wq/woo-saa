@@ -220,7 +220,7 @@ const GameVerificationConfigsTab: React.FC = () => {
     try {
       toast({ title: 'Syncing codes from KesorAPI...', description: 'Fetching real API codes.' });
 
-      const { data, error } = await supabase.functions.invoke('g2bulk-api', {
+      const { data, error } = await supabase.functions.invoke('kesorapi-api', {
         body: { action: 'sync_verification_codes' }
       });
 

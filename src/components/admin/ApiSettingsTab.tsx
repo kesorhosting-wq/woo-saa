@@ -5,8 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Key, Eye, EyeOff, Save, RefreshCw, Check, X, Wallet, Download, Package, Cpu, CheckCircle2, ShieldAlert } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Key, Eye, EyeOff, Save, RefreshCw, Check, X, Wallet, Download, Package, Cpu } from 'lucide-react';
 
 interface ApiConfig {
   id?: string;

@@ -61,7 +61,7 @@ const KesorAPIAutoImport: React.FC<KesorAPIAutoImportProps> = ({
 
       if (error) throw error;
 
-      let filtered = data as unknown as KesorAPIProduct[] || [];
+      let filtered = data as KesorAPIProduct[] || [];
 
       // Filter by kesorapiCategoryId (which is game_name) if provided
       if (kesorapiCategoryId) {

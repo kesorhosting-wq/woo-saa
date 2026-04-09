@@ -43,7 +43,7 @@ const KesorAPIFullImport: React.FC<KesorAPIFullImportProps> = ({ onImportComplet
   const loadAvailableGames = async () => {
     setIsLoadingGames(true);
     try {
-      const { data, error } = await supabase.functions.invoke('g2bulk-api', {
+      const { data, error } = await supabase.functions.invoke('kesorapi-api', {
         body: { action: 'get_kesorapi_games_list' },
       });
 
@@ -75,7 +75,7 @@ const KesorAPIFullImport: React.FC<KesorAPIFullImportProps> = ({ onImportComplet
     setResult(null);
 
     try {
-      const { data, error } = await supabase.functions.invoke('g2bulk-api', {
+      const { data, error } = await supabase.functions.invoke('kesorapi-api', {
         body: { 
           action: 'bulk_import_all',
           price_markup_percent: markup,

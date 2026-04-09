@@ -70,7 +70,7 @@ const KesorAPICategorySelector: React.FC<KesorAPICategorySelectorProps> = ({
   const fetchFromKesorAPI = useCallback(async () => {
     setFetching(true);
     try {
-      const { data: syncData, error: syncError } = await supabase.functions.invoke('g2bulk-api', {
+      const { data: syncData, error: syncError } = await supabase.functions.invoke('kesorapi-api', {
         body: { action: 'sync_products' }
       });
 
